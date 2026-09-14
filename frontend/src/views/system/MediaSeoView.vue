@@ -367,7 +367,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("mediaSeo.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("mediaSeo.subtitle") }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("mediaSeo.subtitle") }}</p>
       </div>
       <!-- `v-if` ile kaldırılıyor, Tailwind `hidden` ile değil: scoped stilin
            [data-v] eki `.hidden`'ı ezip bloğu telefonda geri getiriyor. -->
@@ -597,10 +597,12 @@
           type="button"
           class="hdr-btn-outlined ms__funnel"
           :class="{ 'ms__funnel--on': activeFilterCount }"
+          :aria-label="t('mediaSeo.filter.title')"
           @click="filtersOpen = true"
         >
           <AppIcon name="filter" :size="13" />
-          <span>{{ t("mediaSeo.filter.title") }}</span>
+          <!-- Telefonda metin gizlenir, ikon aramanın yanında kalır (MediaOptimize kalıbı). -->
+          <span class="ms__funnel-text">{{ t("mediaSeo.filter.title") }}</span>
           <span v-if="activeFilterCount" class="ms__funnel-count">{{ activeFilterCount }}</span>
         </button>
 
@@ -731,8 +733,19 @@
         :class="`ms__tone--${worst(row)}`"
         @click="s.select(row)"
       >
+        <!-- Sol çapa: tablo görünümündeki küçük resmin aynısı. Telefonda
+             satır ızgaraya dönüşüp iki satırı boydan boya kaplıyor. -->
+        <img
+          v-if="row.thumb_url || canRenderThumb(row.file_url)"
+          class="ms__fthumb ms__lthumb"
+          :src="row.thumb_url || row.file_url"
+          :alt="row.file_name"
+          loading="lazy"
+          decoding="async"
+        />
+        <span v-else class="ms__fthumb ms__fthumb--ph ms__lthumb">{{ extOf(row) }}</span>
         <span class="ms__lname">
-          {{ row.file_name || "—" }}
+          <span class="ms__lname-text">{{ row.file_name || "—" }}</span>
           <small class="ms__galt" :title="row.alt || ''">{{ altOf(row) }}</small>
         </span>
         <span class="ms__lfindings">
@@ -746,7 +759,7 @@
             {{ t("mediaSeo.clean") }}
           </span>
         </span>
-        <span class="ms__score" :class="scoreClass(row.score?.overall)">{{
+        <span class="ms__score ms__lscore" :class="scoreClass(row.score?.overall)">{{
           row.score?.overall ?? "—"
         }}</span>
       </div>
@@ -991,6 +1004,8 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
+    gap: media.$s-2;
+    flex-wrap: wrap;
   }
 
   .ms__pipeline-nums {
@@ -1051,6 +1066,21 @@
     position: relative;
     flex: 1 1 14rem;
     min-width: 12rem;
+
+    // 14rem taban + huni düğmesi 320px'te tek satıra sığmıyor, huni tek
+    // başına alt satıra düşüyordu. Dar ekranda taban 0: arama huniden artan
+    // yeri doldurur, ikisi hep aynı satırda.
+    @media (max-width: media.$m-bp-rail) {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  // Telefonda huni metni gizlenir, ikon kalır: arama ile yan yana sığsın.
+  @media (max-width: media.$m-bp-rail) {
+    .ms__funnel-text {
+      display: none;
+    }
   }
 
   .ms__search-icon {
@@ -1259,13 +1289,19 @@
     &:last-child {
       border-bottom: 0;
     }
-    &:hover {
-      background: $l-bg-soft;
+    // Hover yalnız imleçli cihazda: dokunmatikte tap sonrası satır "seçili"
+    // görünüp takılı kalıyordu (sticky hover).
+    @include media.hoverable {
+      &:hover {
+        background: $l-bg-soft;
+      }
     }
     @include dark {
       border-color: $d-border;
-      &:hover {
-        background: $d-bg-hover;
+      @include media.hoverable {
+        &:hover {
+          background: $d-bg-hover;
+        }
       }
     }
   }
@@ -1283,6 +1319,91 @@
     display: flex;
     gap: media.$s-1;
     flex-wrap: wrap;
+  }
+
+  // Dokunmatik satır (≤1023): MediaOptimize `.mo__row` kalıbı — sol çapa |
+  // tek omurga (ad üstte tam genişlik, altında çipler yatay sarmalı) | skor.
+  //
+  // Tek satır flex'te ad `flex: 1 1 auto; min-width: 0` ile çip şeridinin
+  // artığına sıkışıyordu: 320px'te 8 karaktere ("faraslar-ve-…") kırpılıyor,
+  // çipler de dar kaldıkları için dikey yığılıyordu. Izgarada ad ve çipler
+  // AYNI sütunda; ad en az bir tam satır, çipler yanyana sarar.
+  @media (max-width: media.$m-bp-rail) {
+    .ms__lrow {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      column-gap: media.$s-3;
+      row-gap: media.$s-1;
+      align-items: center;
+      padding-block: media.$s-3;
+    }
+
+    // Küçük resim iki satırı boydan boya kaplar; satırın çapası. İki sınıf:
+    // `.ms__fthumb` taban kuralı (26px) dosyada daha sonra geliyor, tek
+    // sınıfla aynı özgüllükte olup bunu ezerdi.
+    .ms__lrow .ms__lthumb {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      width: 2.75rem;
+      height: 2.75rem;
+      align-self: center;
+    }
+
+    .ms__lname {
+      grid-column: 2;
+      grid-row: 1;
+      // Tam genişlik; kesintisiz uzun adlar ("684138828_17916286806361498_…")
+      // sarmazsa sütunu genişletip sayfayı yatay kaydırır — `anywhere` şart.
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.3;
+    }
+
+    // En fazla iki satır ad; kırpma yalnız ada — kap kırpılsaydı iki satırlık
+    // adın altındaki alt metin satırı görünmez oluyordu.
+    .ms__lname-text {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+    }
+
+    .ms__lfindings {
+      grid-column: 2;
+      grid-row: 2;
+      min-width: 0;
+      gap: media.$s-1 media.$s-1;
+    }
+
+    .ms__lrow .ms__lscore {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+
+  // Telefonda sayfa yatay dolgusunu bırakır (MediaOptimize ile aynı karar):
+  // main 16 + sayfa 16 + satır 12 + çapa 44 + skor 32 + boşluklar derken
+  // 320px'te çip sütununa 129px kalıyor, "Alt metni yok" + "Başlık yok"
+  // (169px) yan yana sığmayıp dikey yığılıyordu. Dolgu gidince 161px.
+  @media (max-width: 639px) {
+    .ms {
+      padding-inline: 0;
+    }
+  }
+
+  // iPhone SE sınıfı: çapa bir kademe küçük, sütun boşluğu dar — çip
+  // sütunu 177px'e çıkar, iki çip tek satıra sığar.
+  @media (max-width: media.$m-bp-xs) {
+    .ms__lrow {
+      column-gap: media.$s-2;
+    }
+
+    .ms__lrow .ms__lthumb {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
   }
 
   .ms__chip {
@@ -1373,6 +1494,14 @@
     justify-content: space-between;
     gap: media.$s-3;
     flex-wrap: wrap;
+
+    // Dar ekranda sayaç üstte ortalı, sayfalayıcı altta tam genişlik.
+    @media (max-width: media.$m-bp-rail) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: media.$s-1;
+      text-align: center;
+    }
   }
 
   .ms__count {
@@ -1503,6 +1632,12 @@
     @media (min-width: 1024px) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+
+    // iPhone SE sınıfı: iki sütunda kart 120px'e iniyor, "TARANAN GÖRSEL"
+    // etiketi ve açıklama üçer satıra bölünüyordu. Tek sütun.
+    @media (max-width: media.$m-bp-xs) {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .ms__wcard {
@@ -1559,7 +1694,9 @@
 
   .ms__meter {
     height: 4px;
-    margin-top: media.$s-1;
+    // `auto`: içerik yüksekliği kartlar arasında değişiyor (açıklama bir ya da
+    // üç satır); ölçer alta yaslanınca üç kartın çizgisi aynı hizaya gelir.
+    margin-top: auto;
     border-radius: 999px;
     overflow: hidden;
     background: $l-bg-muted;
@@ -1677,13 +1814,14 @@
   .ms__empty {
     padding: media.$s-6;
     text-align: center;
-    color: $l-text-400;
+    // Okunacak metin: `$l-text-400` beyazda 2.74:1 (scss.md §8), 500 5.41:1.
+    color: $l-text-500;
     @include media.text("body");
     &--err {
       color: $c-error;
     }
     @include dark {
-      color: $d-text-faint;
+      color: $d-text-muted;
     }
   }
 
@@ -1711,6 +1849,27 @@
       }
       th {
         color: $d-text-muted;
+      }
+    }
+  }
+
+  // Sol menü açıkken 1024px'te dosya ve alt metni kalan alanı paylaşır.
+  // Uzun metinlerin tablonun son sütunlarını ekran dışına itmesini önler.
+  @media (max-width: media.$m-bp-detail) {
+    .ms__table {
+      table-layout: fixed;
+
+      th:nth-child(3) {
+        width: 5rem;
+      }
+      th:nth-child(4) {
+        width: 6rem;
+      }
+      th:nth-child(5) {
+        width: 4rem;
+      }
+      th:nth-child(6) {
+        width: 8rem;
       }
     }
   }

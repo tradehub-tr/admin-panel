@@ -48,6 +48,13 @@
     margin-top: 0.125rem;
   }
 
+  // Metin sütunu daralabilmeli: dosya yolu gibi kırılmayan bir sözcük
+  // 320px'te notu kartın dışına taşırıyordu (ölçüldü 2026-09-08: 347px).
+  > :not(svg) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
   @if $tone == "unmeasured" {
     background: transparent;
     border: 1px dashed $l-border-alt;
@@ -224,6 +231,80 @@
   }
 }
 
+/// "Teknik ayrıntı" katı — varsayılan KAPALI `<details>`. Ekranı patron
+/// okur (2026-09-08): dosya:satır künyeleri, durum kodları ve uzun
+/// geliştirici notları bu katın altında durur; özet satırı küçük ve soluk,
+/// içerik küçük punto, kod parçaları kırılabilir (dar ekranda taşmaz).
+@mixin tech-fold {
+  margin: media.$s-2 0 0;
+  @include media.text("xs");
+  @include media.muted(1);
+
+  > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    list-style: none;
+    cursor: pointer;
+    padding: media.$s-05 media.$s-1;
+    margin-inline-start: -(media.$s-1);
+    border-radius: media.$r-sm;
+    font-weight: 620;
+    @include media.focus-ring;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+      width: 0.3rem;
+      height: 0.3rem;
+      border-right: 1.5px solid currentcolor;
+      border-bottom: 1.5px solid currentcolor;
+      transform: rotate(-45deg);
+      transition: transform $t-fast;
+    }
+  }
+
+  &[open] > summary::before {
+    transform: rotate(45deg);
+  }
+
+  > :not(summary) {
+    margin-top: media.$s-1;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  code {
+    @include mono;
+    font-size: 0.6875rem;
+    overflow-wrap: anywhere;
+  }
+
+  dt {
+    margin-top: media.$s-2;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.6875rem;
+  }
+
+  dd {
+    margin: media.$s-05 0 0;
+    @include media.muted(2);
+  }
+}
+
+/// Geniş tablo kabı — tablo telefonda SAYFAYI değil bu kutuyu kaydırır.
+@mixin table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 /// Açılır ayrıntı (`<details>`) — özet satırı düğme gibi.
 @mixin disclosure {
   border-top: 1px solid $l-border-alt;
@@ -237,6 +318,7 @@
     display: flex;
     align-items: center;
     gap: media.$s-2;
+    min-height: 2.75rem;
     list-style: none;
     cursor: pointer;
     padding: media.$s-1 0;
@@ -249,19 +331,32 @@
       display: none;
     }
 
-    &::before {
+    // Ok SAĞDA ve hep aynı sütunda (2026-09-09, öneri 1). Solda dururken
+    // iki satıra kırılan başlık okun altına kayıyor, satır yükseklikleri
+    // 44–76 px arasında değişiyordu; göz iki ucu tarıyordu.
+    &::after {
       content: "";
-      width: 0.4rem;
-      height: 0.4rem;
-      border-right: 2px solid currentcolor;
-      border-bottom: 2px solid currentcolor;
-      transform: rotate(-45deg);
+      flex: none;
+      width: 0.45rem;
+      height: 0.45rem;
+      margin-inline: auto media.$s-1;
+      border-right: 2px solid $l-text-500;
+      border-bottom: 2px solid $l-text-500;
+      transform: rotate(45deg);
       transition: transform $t-fast;
-      margin-inline: media.$s-05 media.$s-1;
+
+      @include dark {
+        border-color: $d-text-muted;
+      }
+    }
+
+    // Telefonda tüm satırlar aynı boy: alt satırı olan da olmayan da 56 px.
+    @media (max-width: media.$m-bp-md) {
+      min-height: 3.5rem;
     }
   }
 
-  &[open] > summary::before {
-    transform: rotate(45deg);
+  &[open] > summary::after {
+    transform: rotate(-135deg);
   }
 }

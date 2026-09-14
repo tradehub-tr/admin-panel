@@ -1,4 +1,6 @@
 @use "variables" as *;
+// Yalnız kırılma noktası ve boşluk tokenları için; media.scss kural üretmez.
+@use "media" as media;
 
 // ── Table Header Cell ────────────────────────────────────────
 .tbl-th {
@@ -80,16 +82,37 @@ table.table-fixed {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: media.$s-2;
   padding: 12px 20px;
   border-top: 1px solid $l-border;
 
   @include dark {
     border-color: $d-border-inner !important;
   }
+
+  // Dokunmatik (≤1023): tek satır + space-between SARMIYORDU — "1–50 / 1823"
+  // + sayfa boyutu seçici + 7 düğme 320px'te 425px tutuyor, sayfa yatay
+  // kayıyordu (ölçüldü: `.list-pagination` w=425, kap w=256). Dört medya
+  // ekranı bunu `:deep()` ile yerel yamalıyordu; kalıp buraya taşındı.
+  // Sarmalı, ortalanmış, yatay dolgu daraltılmış.
+  @media (max-width: media.$m-bp-rail) {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-inline: media.$s-2;
+  }
+}
+
+// Sayfa bilgisi + boyut seçici: tek grup, sarınca birlikte taşınır.
+.list-pagination-group {
+  display: flex;
+  align-items: center;
+  gap: media.$s-2;
 }
 
 .list-pagination-info {
   font-size: 12px;
+  // Flex küçülmesi "1–50 /" ve "2931"i iki satıra bölüyordu; aralık tek parça.
+  white-space: nowrap;
   // `tbl-th` ile aynı kök sebep: `$l-text-400` beyaz üstünde 2.74:1.
   // "1–3 / 3" sayfa bilgisi okunabilir olmalı — dekoratif değil.
   color: $l-text-500; // beyazla 5.41:1
@@ -103,6 +126,11 @@ table.table-fixed {
   display: flex;
   align-items: center;
   gap: 4px;
+
+  @media (max-width: media.$m-bp-rail) {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 .list-pagination-btn {
@@ -113,6 +141,13 @@ table.table-fixed {
   min-width: 32px;
   min-height: 32px;
   padding: 4px 6px;
+
+  // Dokunmatikte 44×44 hedef (medya.md §Responsive, WCAG 2.5.8). Bileşen
+  // telefonda 3 sayfa gösterdiği için 5 düğme × 44 + boşluk 320px'e sığar.
+  @media (max-width: media.$m-bp-rail) {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
   font-size: 12px;
   font-weight: 500;
   border: 1px solid transparent;

@@ -76,6 +76,12 @@
     align-items: center;
     min-width: 7rem;
 
+    // Telefonda ölçerler alta sarınca genel not tek başına sola yaslı
+    // kalıyordu; tam satır alıp ortalanır.
+    @media (max-width: media.$m-bp-rail) {
+      flex: 1 1 100%;
+    }
+
     strong {
       @include media.text("display");
       font-weight: 800;
@@ -110,9 +116,24 @@
 
   .msc__bars {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    // 8rem: 390px telefonda kart içi 294px — 9rem'de iki sütun (300px)
+    // sığmayıp sekiz ölçer alt alta 8 satır tutuyordu; 8rem'de iki sütun.
+    // En uzun etiket "Erişilebilirlik" 12px'te ~85px, değerle birlikte sığar.
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     gap: media.$s-3;
     flex: 1 1 20rem;
+    min-width: 0;
+  }
+
+  // Ölçer sütunu daralınca uzun etiket değeri itmesin: etiket kırpılır,
+  // değer sağda tam kalır.
+  .msc__bar-head span {
+    min-width: 0;
+    @include media.truncate;
+  }
+
+  .msc__bar-head strong {
+    flex: none;
   }
 
   .msc__bar-head {

@@ -24,7 +24,7 @@
    * çalışırsa bugünkü veriyi dünkiyle ezer. Bu yüzden akış üç adım ve sıra
    * atlanamıyor — yedek seç, planı gör, sonra uygula.
    */
-  const { t, locale } = useI18n();
+  const { t, te, locale } = useI18n();
   const { isXl: isDesktop } = useBreakpoint();
   const b = useMediaBackup();
 
@@ -43,6 +43,21 @@
   // Biçimlendirme ortak modülde (TUR-124) — dört ekranda dört farklı
   // görünüm vardı, biri kullanıcının saat dilimini hiç dikkate almıyordu.
   const tarih = (iso) => formatDateTime(iso, locale.value);
+
+  /**
+   * Yedek etiketinin insan dilindeki hâli.
+   *
+   * Sunucu etiketi makine adıyla gönderiyor (`scheduled`, `manual`,
+   * `t054_phase5`). Ekranda ham hâliyle kod parçası gibi duruyordu; bilinen
+   * etiketler çevriliyor, bilinmeyenlerde alt çizgi boşluğa dönüp ilk harf
+   * büyütülüyor — hiç değilse cümle gibi okunsun.
+   */
+  function etiket(label) {
+    const key = `mediaBackup.label.${label}`;
+    if (te(key)) return t(key);
+    const duz = String(label).replace(/_/g, " ").trim();
+    return duz.charAt(0).toLocaleUpperCase(locale.value) + duz.slice(1);
+  }
 
   /**
    * Dokunmatikte detay ALT SAYFA olarak açılıyor (MOGEM-625).
@@ -213,10 +228,14 @@
                    yanında tek sütun oluşturur. -->
               <span class="mbk__settext">
                 <span class="mbk__setdate">{{ tarih(s.created) }}</span>
-                <span class="mbk__setmeta">
-                  {{ t("mediaBackup.setMeta", { files: s.file_count, records: s.record_count }) }}
+                <!-- Dosya·kayıt ile etiket aynı satırı paylaşır; dar ekranda
+                     etiket kendiliğinden alt satıra iner, metin kırılmaz. -->
+                <span class="mbk__setsub">
+                  <span class="mbk__setmeta">
+                    {{ t("mediaBackup.setMeta", { files: s.file_count, records: s.record_count }) }}
+                  </span>
+                  <span v-if="s.label" class="mbk__setlabel">{{ etiket(s.label) }}</span>
                 </span>
-                <span v-if="s.label" class="mbk__setlabel">{{ s.label }}</span>
               </span>
             </button>
             <!-- Silme ayrı düğme: satıra tıklamak seçer, silmez. Yıkıcı işlem
@@ -231,7 +250,7 @@
               :aria-label="t('mediaBackup.deleteSet')"
               @click="askDelete(s)"
             >
-              <AppIcon name="trash-2" :size="14" />
+              <AppIcon name="trash-2" :size="16" />
             </button>
           </li>
         </ul>
@@ -254,18 +273,21 @@
           v-if="b.selectedSet.value && (isDesktop || detaySheet)"
           class="mbk__panel mbk__detay"
         >
-          <header class="mbk__panelhead">
+          <header class="mbk__panelhead mbk__panelhead--detay">
             <h2>{{ tarih(b.selectedSet.value.created) }}</h2>
+            <!-- Kapatma yalnız dokunmatikte: masaüstünde panel kalıcı.
+                 Eylem grubunun DIŞINDA duruyor ki telefonda başlıkla aynı
+                 satırda sağa yaslansın, doğrulama düğmeleri altta tam satır
+                 alsın. -->
+            <button
+              type="button"
+              class="mbk__mini mbk__sheet-close"
+              :aria-label="t('common.close')"
+              @click="detaySheet = false"
+            >
+              <AppIcon name="x" :size="16" />
+            </button>
             <div class="mbk__row-actions">
-              <!-- Kapatma yalnız dokunmatikte: masaüstünde panel kalıcı. -->
-              <button
-                type="button"
-                class="mbk__mini mbk__sheet-close"
-                :aria-label="t('common.close')"
-                @click="detaySheet = false"
-              >
-                <AppIcon name="x" :size="14" />
-              </button>
               <button
                 type="button"
                 class="mbk__mini"
@@ -600,12 +622,26 @@
     align-items: center;
     gap: media.$s-2;
     flex-wrap: wrap;
+
+    // Telefonda iki düğme başlığın altında sıkışıyordu ("Eskileri temizle"
+    // yarım, "Yedek Al" sağa yapışık). Başlık zaten tam satır; düğmeler de
+    // tam satırı eşit ikiye bölüyor, iPhone SE sınıfında alt alta iniyor.
+    @media (max-width: media.$m-bp-md) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 100%;
+    }
+
+    @media (max-width: media.$m-bp-xs) {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   // ── Durum şeridi ────────────────────────────────────────────────────
   .mbk__stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
     gap: media.$s-2;
     margin-bottom: media.$s-4;
 
@@ -624,8 +660,12 @@
     @include media.surface("soft");
 
     strong {
+      // Değer alta yaslı: etiket bir ya da iki satır olsun, dört kartın
+      // rakamı aynı çizgide durur.
+      margin-top: auto;
       @include media.text("display");
       font-weight: 700;
+      line-height: 1.2;
       @include media.numeric;
     }
   }
@@ -643,6 +683,16 @@
     @include media.muted(1);
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    line-height: 1.2;
+
+    // 2×2 ızgarada iki satır ayrı yükseklikteydi: "SAKLANAN YEDEK" ikiye
+    // kırılınca alt satırdaki kartlar uzuyor, rakamlar farklı hizada
+    // kalıyordu. Etikete iki satırlık sabit pay veriliyor (MediaOptimizeView
+    // `.mo__stat-label` ile aynı desen); masaüstünde dördü tek satırda
+    // olduğu için paya gerek yok.
+    @media (max-width: 1023px) {
+      min-height: 2.4em;
+    }
   }
 
   // ── Yerleşim ────────────────────────────────────────────────────────
@@ -744,6 +794,7 @@
 
   .mbk__set--on {
     @include media.selected;
+    // Sol sarı şerit: seçimin tek kalıcı işareti, dokunmatikte de kalıyor.
     box-shadow: inset 3px 0 0 $brand;
 
     .mbk__setmeta {
@@ -756,24 +807,42 @@
   .mbk__setdate {
     @include media.text("sm");
     font-weight: 600;
+    @include media.numeric;
     @include media.truncate;
+  }
+
+  // Dosya·kayıt ve etiket tek satırda; sığmazsa etiket alt satıra iner.
+  .mbk__setsub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: media.$s-05 media.$s-2;
+    min-width: 0;
   }
 
   .mbk__setmeta {
     @include media.text("xs");
     @include media.muted(1);
     @include media.numeric;
+    white-space: nowrap;
   }
 
+  // Etiket bilgi verir, çağırmaz: marka sarısı seçili satırın vurgusuyla
+  // yarışıyordu, ikincil ton yeterli.
   .mbk__setlabel {
-    @include media.chip("brand");
-    align-self: flex-start;
-    margin-top: 2px;
+    @include media.chip("neutral");
+    font-weight: 500;
   }
 
   .mbk__del {
     flex: 0 0 auto;
-    padding: 0 media.$s-3;
+    display: grid;
+    place-items: center;
+    // 44×44 dokunma alanı (medya.md §Responsive) — eskiden 14px ikon ve
+    // yalnız yatay dolgu vardı, parmakla tutturmak zordu.
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
     border: 0;
     background: none;
     cursor: pointer;
@@ -795,12 +864,20 @@
   // ── Doğrulama şeridi ────────────────────────────────────────────────
   .mbk__verify {
     display: flex;
-    align-items: center;
+    // Metin telefonda iki-üç satıra iniyor; ikon ortada asılı kalmasın,
+    // ilk satırla hizalansın.
+    align-items: flex-start;
     gap: media.$s-1;
     margin: media.$s-3 media.$s-3 0;
     padding: media.$s-2 media.$s-3;
     border-radius: media.$r-md;
+    line-height: 1.4;
     @include media.text("xs");
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 0.15em;
+    }
   }
 
   .mbk__verify--ok {
@@ -908,9 +985,18 @@
     margin-top: media.$s-2;
     cursor: pointer;
 
+    input {
+      flex-shrink: 0;
+      width: 1.125rem;
+      height: 1.125rem;
+      margin: 0.1em 0 0;
+      accent-color: $brand;
+    }
+
     span {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     strong {
@@ -927,14 +1013,20 @@
 
   .mbk__warn {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: media.$s-1;
     margin: media.$s-2 0 0;
     padding: media.$s-2 media.$s-3;
     border-radius: media.$r-md;
     color: $c-warning-text;
     background: media.$tint-warning;
+    line-height: 1.4;
     @include media.text("xs");
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 0.15em;
+    }
 
     @include dark {
       color: $c-warning;
@@ -946,15 +1038,32 @@
     gap: media.$s-2;
     flex-wrap: wrap;
     margin-top: media.$s-3;
+
+    // Telefonda "Eksik n dosyayı getir" + "Geri Yükle" yan yana sığmayıp
+    // ikincisi öksüz kalıyordu; alt alta tam genişlik.
+    @media (max-width: media.$m-bp-sm) {
+      flex-direction: column;
+
+      .mbk__btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   }
 
   .mbk__safe {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: media.$s-1;
     margin: media.$s-2 0 0;
     color: $c-success-text;
+    line-height: 1.4;
     @include media.text("xs");
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 0.2em;
+    }
 
     @include dark {
       color: $c-success;
@@ -1045,7 +1154,15 @@
     gap: media.$s-1;
     margin: media.$s-2 0 0;
     color: $c-warning-text;
+    line-height: 1.4;
     @include media.text("xs");
+
+    // İkon ilk satırın ortasına: `flex-start` tek başına onu satırın
+    // tepesine, üst simge gibi asıyordu.
+    svg {
+      flex-shrink: 0;
+      margin-top: 0.2em;
+    }
 
     @include dark {
       color: $c-warning;
@@ -1062,15 +1179,31 @@
   .mbk__btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: media.$s-1;
     padding: media.$s-1 media.$s-3;
     border-radius: media.$r-md;
     border: 1px solid $l-border;
     background: none;
     color: inherit;
+    white-space: nowrap;
     cursor: pointer;
     @include media.text("xs");
     @include media.hoverable;
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    // Dokunmatikte 44px hedef; masaüstünde denetim sayfasının ince ölçüsü.
+    @media (max-width: media.$m-bp-md) {
+      @include media.tap-target;
+      font-weight: 560;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
 
     &:disabled {
       opacity: 0.45;
@@ -1096,6 +1229,7 @@
   .mbk__mini {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: media.$s-1;
     padding: media.$s-05 media.$s-2;
     border-radius: media.$r-sm;
@@ -1103,8 +1237,20 @@
     background: none;
     cursor: pointer;
     color: inherit;
+    white-space: nowrap;
     @include media.text("xs");
     @include media.hoverable;
+
+    // Dokunmatikte küçük düğme yok: 40px yükseklik, biraz daha geniş dolgu.
+    @media (max-width: media.$m-bp-md) {
+      min-height: 2.5rem;
+      padding: media.$s-1 media.$s-3;
+      border-radius: media.$r-md;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
 
     &:disabled {
       opacity: 0.45;
@@ -1134,18 +1280,23 @@
     .mbk__set {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
-      align-items: stretch;
+      align-items: center;
       gap: media.$s-3;
       padding: media.$s-3;
+      min-height: 3.5rem;
     }
 
+    // Ölçüldü (320px): 56px'lik çapa + 12px boşluk + iki yanda 12px dolgu +
+    // silme düğmesi metne 150px bırakıyordu; "20 Ağu 2026 09:14" kırpılıyor,
+    // "7754 dosya · 5071 kayıt" ikiye bölünüyordu. Çapa 36px'e iniyor ve
+    // satır boyu uzamak yerine ortalanıyor — metne 170px kalıyor, ikisi de
+    // tek satırda.
     .mbk__seticon {
       display: flex;
       align-items: center;
       justify-content: center;
-      align-self: stretch;
-      width: calc(var(--m-thumb, 2.5rem) * 1.4);
-      min-height: calc(var(--m-thumb, 2.5rem) * 1.4);
+      width: 2.25rem;
+      height: 2.25rem;
       border-radius: media.$r-sm;
       background: $l-bg-muted;
       color: $l-text-500;
@@ -1156,12 +1307,45 @@
       }
     }
 
+    .mbk__set--on .mbk__seticon {
+      background: rgba($brand, 0.22);
+      color: $brand-text;
+
+      @include dark {
+        color: $brand;
+      }
+    }
+
     .mbk__settext {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 1px;
+      gap: 2px;
       min-width: 0;
+    }
+
+    // Detay başlığı: tarih + kapat aynı satırda, doğrulama düğmeleri altta
+    // tam satır. Eskiden üçü başlığın yanına sıkışıp iki satıra kırılıyordu.
+    .mbk__panelhead--detay {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+
+      .mbk__row-actions {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: media.$s-2;
+      }
+    }
+  }
+
+  // Telefonda sayfanın kendi yatay dolgusu kalkıyor (MediaOptimizeView ile
+  // aynı karar): main 16 + sayfa 16 + panel 12 = her yanda 44px, 320px'te
+  // içeriğe 232px kalıyordu. Kartlar main'in 16px'ine dayanır.
+  @media (max-width: media.$m-bp-sm) {
+    .mpage {
+      padding-inline: 0;
     }
   }
 
@@ -1186,6 +1370,9 @@
 
     .mbk__panelhead .mbk__sheet-close {
       display: inline-flex;
+      width: 2.5rem;
+      min-height: 2.5rem;
+      padding: 0;
     }
 
     .mbk__detay {

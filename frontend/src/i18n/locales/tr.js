@@ -7178,6 +7178,8 @@ export default {
     yes: "Evet",
     no: "Hayır",
     secretPlaceholder: "Değiştirmek için yeni değeri yazın",
+    showSecret: "Anahtarı göster",
+    hideSecret: "Anahtarı gizle",
     secretHint:
       "Boş bırakılırsa kayıtlı anahtar korunur. Kayıtlı değer hiçbir zaman geri gösterilmez.",
     imgproxyNote:
@@ -7227,6 +7229,9 @@ export default {
       requested: "İstenen kip",
       adapter: "Adaptör",
       boto3: "boto3 kurulu",
+      boto3Yes: "Kurulu",
+      boto3No: "Kurulu değil",
+      match: "İstenen kip kurulan kiple aynı; düşüş yok.",
       degraded: "Düşüş yaşandı: {from} istendi, yerel diske düşüldü.",
     },
     test: {
@@ -7948,6 +7953,12 @@ export default {
     lastSet: "Son yedek silinemez",
     daily: "Günlük",
     setMeta: "{files} dosya · {records} kayıt",
+    // Sunucunun makine etiketleri; listede bilinmeyen etiket alt çizgisiz ve
+    // ilk harfi büyük gösterilir.
+    label: {
+      scheduled: "Zamanlanmış",
+      manual: "Elle",
+    },
     stat: {
       sets: "Yedek sayısı",
       size: "Kapladığı yer",
@@ -10603,125 +10614,253 @@ export default {
     },
   },
   mediaSimulator: {
+    // Metin dili (2026-09-08): ekranı yazılımcı değil patron okur. Kod
+    // sabitleri, dosya:satır künyeleri ve uzun geliştirici notları ekranda
+    // "Teknik ayrıntı" altında kapalı durur; görünen her metin kısa ve düz.
+    techDetails: "Teknik ayrıntı",
     mode: {
-      image: "Görsel türevi",
+      image: "Görsel",
       video: "Video",
     },
     deviceClass: {
       phone: "Telefon",
       tablet: "Tablet",
-      laptop: "Laptop",
+      laptop: "Dizüstü",
       desktop: "Masaüstü",
     },
     frames: {
       decorNote:
-        "Kart iskeleti (başlık/fiyat/butonlar) dekordur — veriden ölçülen tek değer karo genişliğidir.",
+        "Kart iskeleti (başlık, fiyat, düğmeler) temsilîdir; ölçülen tek değer görsel kutusunun genişliğidir.",
       regions: "{n} bölge",
-      switchHint: "Yerleşimin değiştiği kırılım noktası",
-      realImages:
-        "Karolar gerçek Media Rendition dosyalarıyla dolu ({profile}) — bu cihazın indireceği dosyanın ta kendisi.",
-      fallback: "{wanted} türevi henüz üretilmemiş — karolar {served} türevleriyle dolduruldu.",
-      noImages:
-        "Bu profil için üretilmiş türev yok — karolar şematik. Görsel yokluğu arıza değildir.",
+      switchHint: "Sayfa düzeninin değiştiği ekran genişliği",
+      realImages: "Karolarda bu cihazın gerçekten indireceği dosya var ({profile}).",
+      fallback: "{wanted} boyutu henüz üretilmemiş; karolar {served} boyutuyla dolduruldu.",
+      noImages: "Bu boyut için üretilmiş görsel yok; karolar şematik gösteriliyor.",
     },
     gate: {
-      ackLabel: "{warning}: {n} kombinasyonda çıkıyor. Gördüm ve kabul ediyorum.",
+      title: "Yayın onayı",
+      lead: "Yayımlamadan önce zorunlu yerleşimleri her cihaz sınıfında en az bir kez görmeniz gerekir.",
+      ackLabel: "{warning}: {n} kombinasyonda görülüyor. Gördüm ve kabul ediyorum.",
       goto: "Bu yerleşime git",
-      noAsset: "Varlık seçilmedi — kapı açılsa da kayıt gönderilecek bir varlık yok.",
+      noAsset: "Dosya seçilmedi; onay verilse de gönderilecek bir kayıt yok.",
       notSeen: "görülmedi",
-      progress: "{done}/{total} yerleşim sınıfı görüldü",
+      progress: "{done}/{total} yerleşim görüldü",
       publish: "Onayla ve yayınla",
       seen: "görüldü",
       serverGap:
-        "Onay kanıtı artık sunucuda da zorlanıyor: kanıtsız gelen onayı `save_intent` 417 `MEDIA_PREVIEW_REQUIRED` ile reddeder. Sunucunun DOĞRULAYAMADIĞI şu: görünürlük süresi istemci beyanıdır — bu kapı yerleşimleri gerçekten göstererek o beyanı dürüst kılar.",
-      threshold: "Bir yerleşim, kutusunun %{pct} kadarı ekranda ve {ms} ms boyunca kaldığında ",
-      warningsTitle: "Uyarılı yerleşimler — açık kabul gerekir",
+        "Onay kaydı sunucuda da denetlenir; ancak yerleşimin ekranda ne kadar kaldığı bilgisi tarayıcının beyanıdır.",
+      serverGapTech:
+        "Onay kanıtı sunucuda zorlanıyor: kanıtsız gelen onayı `save_intent` 417 `MEDIA_PREVIEW_REQUIRED` ile reddeder. Sunucunun doğrulayamadığı şu: görünürlük süresi istemci beyanıdır — bu kapı yerleşimleri gerçekten göstererek o beyanı dürüst kılar.",
+      payloadTitle: "Sunucuya gidecek kayıt",
+      threshold:
+        "Bir yerleşim, kutusunun %{pct} kadarı en az {ms} ms boyunca ekranda kaldığında görülmüş sayılır.",
+      warningsTitle: "Uyarılı yerleşimler — onaylamanız gerekir",
     },
     title: "Önizleme Simülatörü",
-    subtitle: "Hangi cihaz, hangi bölgede hangi türevi indirir — ve o türev yeter mi?",
+    subtitle:
+      "Yüklenen bir görselin hangi cihazda, sayfanın hangi bölgesinde, hangi boyutta indiğini ve o boyutun yetip yetmediğini gösterir.",
     unmeasured: {
-      detail: "Ayrıntı",
-      title: "Bu sayfadaki hiçbir sayı gerçek cihazda ölçülmedi",
-      devices: "Cihaz verisi",
-      placements: "Yerleşim verisi",
+      detail: "Teknik ayrıntı",
+      title:
+        "Bu sayfadaki sayılar gerçek cihazda ölçülmedi; tarayıcı emülasyonu ve CSS hesabıyla türetildi.",
+      devices: "Cihaz ölçüleri",
+      placements: "Bölge ölçüleri",
       browser:
-        "Simülatör ağ durumunu, veri tasarrufu modunu ve önbellekte zaten duran daha büyük adayı MODELLEMEZ; yalnız 'ideal koşulda hangi basamak iner' sorusunu yanıtlar. Gerçek dağılım ancak alandan ölçülür. Tarayıcı doğrulaması bu görevde YAPILMADI.",
+        "Simülatör ağ hızını, veri tasarrufu modunu ve tarayıcı önbelleğini hesaba katmaz; yalnız ideal koşulda hangi boyutun ineceğini söyler.",
+    },
+    // Veri dosyasındaki durum kodlarının insan karşılığı (labels.js eşler).
+    measurement: {
+      code: "Durum kodu",
+      unverifiedRegions: "Henüz gerçek tarayıcıda doğrulanmayan bölgeler: {list}.",
+      emulated: {
+        label: "Tahmini değerler",
+        desc: "Cihaz ölçüleri gerçek cihazda değil, tarayıcı emülasyonuyla belirlendi.",
+      },
+      partial: {
+        label: "Kısmen doğrulandı",
+        desc: "{total} bölgenin {done} tanesi gerçek tarayıcıda ölçüldü; kalanı CSS hesabına dayanıyor.",
+      },
+      verified: {
+        label: "Doğrulandı",
+        desc: "Değerler gerçek tarayıcıda ölçüldü.",
+      },
+      unverified: {
+        label: "Doğrulanmadı",
+        desc: "Değerler gerçek tarayıcıda ölçülmedi.",
+      },
+      unknown: {
+        label: "Doğrulanmadı",
+        desc: "Bu verinin ölçüm durumu bilinmiyor.",
+      },
+    },
+    // Verideki bölge kimliklerinin insan adı — yalnız başlığı veride olmayanlar
+    // (dışarıda bırakılanlar + ölçüm notunda sayılanlar). Yoksa labels.js
+    // kimliği biçimlendirir.
+    regionName: {
+      home: {
+        category_bento: "Ana sayfa · kategori vitrini",
+        recommendation_slider: "Ana sayfa · öneri kaydırıcısı",
+        tailored_grid: "Ana sayfa · Size Özel ızgarası",
+      },
+      listing: {
+        brand_grid: "Listeleme · marka ızgarası",
+      },
+      product_detail: {
+        related_slider: "Ürün detay · ilgili ürünler",
+        lightbox_thumb: "Ürün detay · büyük görüntüleme küçük kareleri",
+        main_image: "Ürün detay · ana görsel",
+      },
+      cart_checkout: {
+        sku_row: "Sepet · çeşit satırı",
+        product_item: "Sepet · ürün satırı",
+        drawer_thumb: "Sepet · çekmece görseli",
+      },
+      seller_shop: {
+        template_tiles: "Mağaza · şablon karoları",
+      },
+    },
+    // Her bölge için tek cümlelik "bu neresi" özeti — sonuç kartında teknik
+    // künyenin yerine görünür.
+    regionSummary: {
+      home: {
+        hero_showcase_grid:
+          "Ana sayfadaki ürün vitrini kartları; ekran genişledikçe 2'den 7'ye kadar sütun.",
+        top_deals: "Ana sayfadaki En İyi Fırsatlar kartları.",
+        tailored_grid: "Ana sayfadaki Size Özel / Çok Satanlar kartları.",
+      },
+      listing: {
+        card_grid: "Ürün listeleme sayfasındaki kartlar; soldaki filtre kolonu açıkken.",
+        brand_grid: "Marka ve kategori sayfalarındaki kartlar; filtre kolonu yok.",
+      },
+      product_detail: {
+        main_image:
+          "Ürün detay sayfasının büyük ana görseli; telefonda ekranı kaplar, masaüstünde galeri sütununda durur.",
+        thumb_rail: "Ürün detaydaki küçük galeri kareleri.",
+        lightbox_main:
+          "Görsele tıklayınca açılan büyük görüntüleme penceresi; boyutu ekran yüksekliğine bağlıdır.",
+        lightbox_thumb: "Büyük görüntüleme penceresinin altındaki küçük kareler.",
+        related_slider: "Ürün detayın altındaki İlgili Ürünler kaydırıcısı.",
+      },
+      cart_checkout: {
+        summary_strip: "Sepet ve ödeme özetindeki küçük ürün görselleri.",
+        sku_row: "Sepetteki ürün çeşidi satırındaki küçük görsel.",
+        product_item: "Sepetteki ürün satırının başlık görseli.",
+        drawer_thumb: "Yan sepet çekmecesindeki küçük görsel.",
+      },
+      seller_shop: {
+        product_grid: "Mağaza sayfasındaki ürün kartları.",
+      },
+    },
+    // Her cihaz için tek cümlelik "neden listede" özeti.
+    deviceSummary: {
+      "iphone-se-3": "Hâlâ satılan en dar ekran; en küçük görsel boyutlarını sınar.",
+      "galaxy-s23": "Android tarafının en yaygın ölçüsü (360 px, 3× ekran yoğunluğu).",
+      "iphone-14": "iOS'un en yaygın gövdesi (390 px, 3× ekran yoğunluğu).",
+      "moto-g-power":
+        "Google'ın hız ölçümlerinde (Lighthouse) kullanılan telefon; küsuratlı ekran yoğunluğu (1,75×).",
+      "iphone-15-pro-max": "Telefonlar arasında en yüksek görsel talebi (430 px, 3×).",
+      "ipad-mini-6":
+        "Tablet düzeninin başladığı 768 px sınırının hemen altında; sınır davranışını sınar.",
+      "ipad-pro-11":
+        "Dikey tablet: ürün detayı hâlâ mobil düzende, bu yüzden en büyük tekil görsel talebi buradan çıkar.",
+      "ipad-pro-11-landscape": "Yatay tablet: 1024–1280 px bandının tek temsilcisi.",
+      "surface-pro-9": "Windows dizüstü, %150 ölçek; küsuratlı ikinci ekran yoğunluğu (1,5×).",
+      "macbook-air-13": "En yaygın dizüstü (1440 px, 2×).",
+      "macbook-pro-16": "2× yoğunlukta en geniş ekran; kart görsellerinin en büyük talebi.",
+      "desktop-1080p":
+        "Sıradan masaüstü ekranı (1× yoğunluk); 1× boyutların doğru seçildiğini gösterir.",
+      "desktop-1440p":
+        "Daha geniş masaüstü; sayfa 1840 px'te doyduğu için kutu boyutları değişmez.",
     },
     devices: {
       title: "Cihaz",
-      help: "13 referans cihaz. Ok tuşlarıyla gezin, Home/End ile uçlara gidin.",
+      help: "13 örnek cihaz. Ok tuşlarıyla gezin, Home/End ile uçlara gidin.",
     },
     placements: {
-      title: "Yerleşim",
+      title: "Sayfa ve bölge",
       help: "5 sayfa, 15 bölge. Ok tuşlarıyla gezin, Home/End ile uçlara gidin.",
     },
     result: {
-      flowDpr: "×{dpr} DPR",
-      flowStep: "basamak",
+      flowDpr: "× {dpr} ekran yoğunluğu",
+      flowStep: "boyut",
+      bytes: "Dosya boyutu",
       bytesNote:
-        "Bayt TAHMİN EDİLMEZ: yalnız gerçek Media Rendition satırının `bytes` alanından okunur. Tablo boşken sayı yerine sebebi yazar.",
-      bytesUnknown: "Bilinmiyor — türev henüz üretilmedi",
-      lcpBadge: "LCP adayı",
+        "Dosya boyutu tahmin edilmez; yalnız gerçekten üretilmiş dosyanın kaydından (Media Rendition) okunur.",
+      bytesUnknown: "Henüz üretilmedi",
+      flowSum:
+        "Kutu {box} px × {dpr} yoğunluk = {required} px gerekir; bir üst basamak {chosen} ({width} px) iner, {overshoot}× fazlalık.",
+      flowSumNone: "Kutu {box} px × {dpr} yoğunluk = {required} px gerekir; uygun boyut yok.",
+      lcpBadge: "Açılış görseli (LCP)",
       lcpNote:
-        'LCP adayı: bu görsel lazy-load EDİLMEMELİ — loading="eager" ve fetchpriority="high" ile inmeli.',
+        'Sayfa açılışında ilk görünen büyük görsel: hemen yüklenmeli, gecikmeli (lazy-load) yüklenmemeli — kodda loading="eager" ve fetchpriority="high".',
       overflowText:
-        "Kutu {boxPx} px, cihazın viewport'u {viewportPx} px — {overflowPx} px taşıyor ({ratio}×). Gereken piksel TAM kutudan hesaplanır; ekranda hiç görünmeyecek bir genişlik için basamak seçiliyor olabilir.",
-      title: "Seçim sonucu",
-      box: "CSS kutusu",
-      required: "Gereken piksel",
-      chosen: "Seçilen basamak",
-      none: "Seçim yok",
+        "Kutu {boxPx} px, ekran genişliği {viewportPx} px: kutu ekrandan {overflowPx} px taşıyor ({ratio}×). Gereken genişlik tam kutuya göre hesaplanır; ekranda görünmeyecek bir genişlik için boyut seçiliyor olabilir.",
+      title: "Sonuç",
+      box: "Ekrandaki kutu",
+      required: "Gereken genişlik",
+      chosen: "İnen boyut",
+      none: "Uygun boyut yok",
       overshoot: "Fazlalık",
-      zoomRequired: "Zoom'da gereken",
-      deficit: "Eksik piksel",
-      clean: "Bu kombinasyonda uyarı yok.",
-      sizesTitle: "Üretilen sizes",
-      srcsetTitle: "Üretilen srcset",
-      attrNote:
-        "Bu iki dizge elle yazılmaz: kutu kuralından üretilir, kırılım noktası değişince kendiliğinden değişir. URL şablonu yalnız okunurluk içindir; gerçek adresi teslim sözleşmesi üretir.",
-      provenance: "Bu sayı nereden geldi",
-      renderPoint: "Render noktası",
-      derivedFrom: "Türetildiği CSS",
-      anomaly: "Anomali",
-      multiplierReason: "Talep çarpanının sebebi",
-      conflict: "Kod yorumu çelişkisi",
+      zoomRequired: "Yakınlaştırmada gereken",
+      deficit: "Eksik",
+      clean: "Uyarı yok",
+      verdict: {
+        ok: "Yeterli: {chosen} px iniyor, {required} px gerekiyor.",
+        short:
+          "Kaynak yetersiz — büyütme yapılmaz. {chosen} px var, {required} px gerekiyor ({deficit} px eksik). Daha büyük bir görsel yükleyin.",
+        zoomShort:
+          "Kutuya yetiyor ama {multiplier}× yakınlaştırmada yetmiyor: {zoom} px gerekir, {chosen} px iniyor.",
+        none: "Bu alan için tanımlı görsel boyutu yok.",
+      },
+      regionAbout: "Bölge",
+      deviceAbout: "Cihaz",
+      codeFold: "Tarayıcıya giden kod (sizes / srcset)",
+      sizesTitle: "sizes — kutu kuralı",
+      srcsetTitle: "srcset — boyut listesi",
+      attrNote: "Bu iki satır elle yazılmaz; kutu kuralından otomatik üretilir. Adresler örnektir.",
+      provenance: "Sayının kaynağı",
+      renderPoint: "Kodda çizildiği yer",
+      derivedFrom: "Hesabın dayandığı CSS",
+      anomaly: "Dikkat edilecek nokta",
+      multiplierReason: "Yakınlaştırma çarpanının sebebi",
+      conflict: "Koddaki yorumla çelişki",
       reportDelta: "Rapordan sapma",
       deviceWhy: "Bu cihaz neden listede",
     },
     live: {
       result:
-        "{device}, {region}: kutu {box} piksel, gereken {required} piksel, seçilen basamak {profile}, {width} piksel.",
-      noProfile: "{device}, {region}: bu slotta profil tanımlı değil, seçim yapılamadı.",
+        "{device}, {region}: kutu {box} piksel, gereken {required} piksel, inen boyut {profile}, {width} piksel.",
+      noProfile: "{device}, {region}: bu alan için tanımlı görsel boyutu yok.",
     },
     warn: {
       kaynak_yetersiz:
-        "Merdivenin en büyük basamağı bile yetmiyor: {chosen} piksel var, {required} piksel gerekiyor ({deficit} piksel eksik). Görsel bulanık basılır; büyütme yapılmıyor (FR-028 upscale yasağı).",
+        "Yüklenen görsel yeterince büyük değil: en büyük boyut {chosen} px, gereken {required} px ({deficit} px eksik). Büyütme yapılmaz; görsel bulanık görünür.",
       asiri_servis:
-        "Seçilen basamak politikadaki {cap}× tavanını aşıyor: {chosen} piksel iniyor, {required} piksel yetiyordu. Merdivende basamak eksik, boşuna bayt iniyor.",
+        "İnen boyut gereğinden çok büyük: {chosen} px iniyor, {required} px yeterdi (izin verilen tavan {cap}×). Boşuna veri harcanıyor; boyut listesinde ara bir basamak eksik.",
       zoom_yetersiz:
-        "Hover-zoom görseli {multiplier}× ölçekliyor; o ölçekte {zoom} piksel gerekir, seçilen basamak {chosen} piksel. Tarayıcı sizes'ı görür, zoom'u görmez.",
-      profil_yok: "Bu slotta hiç profil tanımlı değil.",
+        "Yakınlaştırmada yetersiz: büyüteç görseli {multiplier}× büyütüyor, bunun için {zoom} px gerekir; inen boyut {chosen} px.",
+      profil_yok: "Bu alan için tanımlı görsel boyutu yok.",
     },
     warnShort: {
       kaynak_yetersiz: "kaynak yetersiz",
       asiri_servis: "aşırı servis",
       zoom_yetersiz: "zoom yetersiz",
-      profil_yok: "profil yok",
+      profil_yok: "boyut tanımsız",
     },
     probe: {
-      loading: "Gerçek türev satırı sorgulanıyor…",
-      found: "{profile} türevi üretilmiş.",
+      loading: "Üretilmiş dosya aranıyor…",
+      found: "{profile} boyutu üretilmiş.",
       notGenerated:
-        "Türev henüz üretilmedi — boru hattı bayrakları kapalı, Media Rendition tablosu boş. Hesaplanan hedef genişlik: {width} piksel ({profile}).",
-      denied: "Türev satırlarını görme yetkiniz yok; hesaplanan hedef genişlik {width} piksel.",
-      failed: "Türev sorgusu başarısız oldu; hesaplanan hedef genişlik {width} piksel.",
+        "Bu boyut ({profile}, {width} px) henüz üretilmedi; Media Rendition tablosu boş.",
+      denied: "Üretilmiş dosyaları görme yetkiniz yok; hedef genişlik {width} px.",
+      failed: "Dosya sorgusu başarısız oldu; hedef genişlik {width} px.",
     },
     matrix: {
       show: "65 kombinasyonu göster",
       hide: "Kombinasyonları gizle",
       viewFrames: "Çerçeveler",
       viewTable: "Tablo",
-      title: "Tüm kombinasyonlar",
+      title: "Tüm cihaz ve sayfa kombinasyonları",
       allRegions: "15 bölgenin tamamını göster (195 kombinasyon)",
       caption:
         "{total} kombinasyon · kaynak yetersiz {insufficient} · aşırı servis {overshoot} · zoom yetersiz {zoom}",
@@ -10729,7 +10868,7 @@ export default {
         combo: "Cihaz / bölge",
         box: "Kutu",
         required: "Gereken",
-        chosen: "Seçilen",
+        chosen: "İnen boyut",
         overshoot: "Fazlalık",
         warnings: "Uyarı",
       },
@@ -10741,39 +10880,96 @@ export default {
       bitrate: "Bit hızı (kbps)",
       dataTitle: "Mobil veri — ilk 10 saniye",
       firstWindow: "İlk {s} saniyede tahmini {bytes} iner (bit hızı × süre ÷ 8).",
-      firstWindowEmpty: "Bit hızı girilmedi — ilk {s} saniyenin baytı hesaplanmadı.",
-      noBudget:
-        "Karşılaştırılacak mobil veri tavanı panel verisinde YOK: sync-simulator.mjs video_decision.json'dan yalnız poster bloğunu türetiyor; HLS merdiveni (360p 800 · 480p 1400 · 720p 2800 · 1080p 5000 kbps) ve 2.500 kbps geçiş tavanı vendor'lanmadı.",
-      safeTitle: "Güvenli alan — kapağa binen arayüz",
+      firstWindowEmpty: "Bit hızı girilmedi; ilk {s} saniyenin verisi hesaplanmadı.",
+      noBudget: "Karşılaştırılacak bir mobil veri sınırı panelde tanımlı değil.",
+      noBudgetTech:
+        "sync-simulator.mjs, video_decision.json'dan yalnız poster bloğunu türetiyor; HLS merdiveni (360p 800 · 480p 1400 · 720p 2800 · 1080p 5000 kbps) ve 2.500 kbps geçiş tavanı vendor'lanmadı. Bit hızı için varsayılan yazılmadı.",
+      safeTitle: "Kapağın üstüne binen öğeler",
       safeVerdict:
-        "Kapak alanının %{pct} kadarı arayüz ögesiyle örtülü, {unmeasured} ögenin yüksekliği ÖLÇÜLMEDİ. Örtülen yerde önemli içerik olup olmadığı ancak kırpma niyetinin güvenli alanıyla birlikte söylenebilir; bu kart onu bilmiyor.",
+        "Kapağın %{pct} kadarı düğme ve çubuklarla örtülü; {unmeasured} öğenin yüksekliği bilinmiyor. Örtülen yerde önemli içerik olup olmadığını bu kart bilemez.",
       stageNote:
-        "{device} · kapak kutusu {width}×{height} px ({aspect}). Genişlik VEKİL bölgeden gelir, yükseklik oranından türer.",
-      surfaceTitle: "Video yüzeyi",
-      zoneUnmeasured: "ÖLÇÜLMEDİ",
-      attr: {
-        controls: "controls",
-        preload: "preload",
+        "{device}: kapak kutusu {width}×{height} px ({aspect}). Genişlik vekil bölgeden, yükseklik orandan hesaplandı.",
+      surfaceTitle: "Videonun yeri",
+      surface: {
+        company_cover_video: "Mağaza kapak videosu",
+        product_video: "Ürün tanıtım videosu",
       },
-      title: "Video posteri",
+      stateTitle: "Önizleme durumu",
+      surfaceShort: {
+        company_cover_video: "Mağaza kapağı",
+        product_video: "Ürün tanıtımı",
+      },
+      stateShort: {
+        poster: "İlk kare",
+        autoplay: "Otomatik",
+        reduced: "Az hareket",
+      },
+      state: {
+        poster: "Kapak görseli (ilk kare)",
+        autoplay: "Otomatik oynatma",
+        reduced: "Hareket azaltma tercihi",
+      },
+      noAutoplay:
+        "Bu yerde otomatik oynatma yok; video kullanıcı tıklamadan başlamaz. Önizleme bu yüzden kapak görselinden farksızdır.",
+      reducedNoop:
+        "Hareket azaltma tercihi burada bir şey değiştirmez; zaten otomatik oynatma yok.",
+      zone: {
+        controlBar: "Kontrol çubuğu",
+        playButton: "Oynat düğmesi",
+        nativeControls: "Tarayıcının kendi kontrolleri",
+      },
+      zoneUnmeasured: "ölçülmedi",
+      sourceLabel: "Kaynak kod",
+      attrTitle: "Video etiketi ayarları",
+      attr: {
+        autoplay: "Otomatik oynatma",
+        muted: "Sessiz başlar",
+        loop: "Döngü",
+        playsinline: "Sayfa içinde oynar",
+        poster: "Kapak görseli",
+        controls: "Kontroller",
+        preload: "Ön yükleme",
+      },
+      yes: "var",
+      no: "yok",
+      controls: {
+        native: "tarayıcı çizer",
+        custom: "uygulama çizer",
+      },
+      title: "Video kapak görseli",
       noEndpoint:
-        "Poster üretimini çağıran bir API ucu YOK. Burada gerçek bir poster gösterilmiyor; yalnız 'üretilseydi hangi basamak inerdi' hesaplanıyor. Uydurma uca istek atılmıyor.",
+        "Kapak görseli üretimi henüz bağlı değil; burada gerçek bir kapak gösterilmiyor, yalnız hangi boyutun ineceği hesaplanıyor.",
       proxy:
-        "ÖLÇÜLMEDİ: yerleşim verisinde video bölgesi yok. Poster {region} kutusunda basılacağı varsayıldı; gerçek video yerleşimi ölçülene kadar sonuç yaklaşıktır.",
-      width: "Poster genişliği",
+        "Yaklaşık sonuç: video için ayrı bir ölçüm yok, kapağın {region} kutusunda gösterileceği varsayıldı.",
+      proxyTech:
+        "ÖLÇÜLMEDİ: placements.json video için bölge ölçmemiş. Vekil bölge {region}; gerçek video yerleşimi ölçülene kadar sonuç yaklaşıktır. Poster üretimini çağıran API ucu yok, uydurma uca istek atılmıyor.",
+      width: "Kapak genişliği",
       format: "Biçim",
-      maxBytes: "Bayt tavanı",
-      window: "Kare penceresi",
-      gate: "Parlaklık kapısı",
-      noRegion: "Vekil bölge veride bulunamadı — poster seçimi hesaplanamadı.",
-      caption: "{n} cihaz · poster merdiveni {ladder} piksel · yetersiz {insufficient}",
+      maxBytes: "Dosya boyutu tavanı",
+      window: "Kare seçme aralığı",
+      gate: "Parlaklık sınırı",
+      noRegion: "Vekil bölge veride bulunamadı; kapak boyutu hesaplanamadı.",
+      caption: "{n} cihaz · üretilen kapak boyutları {ladder} px · yetersiz {insufficient}",
       verdict: "Sonuç",
-      enough: "yeter",
-      short: "{px} piksel eksik",
+      enough: "Yeterli",
+      short: "{px} px eksik",
     },
     excluded: {
-      title: "Ölçülemeyen bölgeler",
-      lead: "Bu bölgelerin kutu genişliği statik CSS'ten çıkarılamadı. Gizlenmediler; sebebi aşağıda.",
+      title: "Hesaplanamayan bölgeler",
+      lead: "Bu bölgelerin görsel genişliği sayfa açılmadan bilinemiyor; o yüzden simülasyonda yer almıyorlar.",
+      summary: {
+        home: {
+          category_bento:
+            "Sütun sayısı sayfa açılınca belirleniyor; kutu genişliği önceden hesaplanamıyor.",
+          recommendation_slider:
+            "Kaydırıcıdaki kart genişliğini iki ayrı kural çekişiyor; hangisinin kazandığı ancak tarayıcıda görülür.",
+        },
+        seller_shop: {
+          template_tiles:
+            "Mağaza şablonunun bölüm genişlikleri mağaza sahibinin düzen ayarından geliyor; sabit bir değer yok.",
+        },
+      },
+      unknownReason: "Bu bölgenin kutu genişliği önceden hesaplanamıyor.",
     },
     videoDecision: {
       field: {
@@ -10802,41 +10998,66 @@ export default {
         extra_streams: "Video+ses dışında fazladan akış var",
         default: "Hiçbir kurala takılmadı — dosya zaten teslim edilebilir",
       },
-      title: "Video karar tablosu — gerekçesiyle",
-      lead: "{n} kural sıralıdır ve İLK EŞLEŞEN KAZANIR. Aşağıdaki her sayı vendor'lanmış dosyadan gelir; kararı referans motor verdi, panel yalnız gerekçeyi açıyor.",
+      // Karar kodlarının insan karşılığı — kod ekranda yalnız teknik ayrıntıda.
+      action: {
+        PASSTHROUGH: "Dosyaya dokunulmaz",
+        REMUX: "Yalnız kap düzeltilir",
+        TRANSCODE: "Yeniden kodlanır",
+        REJECT: "Reddedilir",
+      },
+      ruleCode: "Kural kodu",
+      decisionCode: "Karar kodu",
+      sourceFiles: "Kaynak dosyalar",
+      title: "Video işleme kararı",
+      lead: "Yüklenen bir videoya ne yapılacağına {n} sıralı kural karar verir; ilk eşleşen kural kazanır. Sayılar kaynak dosyadan gelir, kararı sunucudaki motor verdi.",
       inputTitle: "Değerlendirilecek video",
-      measuredGroup: "Gerçek dosyalar — ffprobe ile ölçüldü",
-      syntheticGroup: "Belirli bir kuralı tetikleyen örnek (sentetik)",
+      measuredGroup: "Gerçek dosyalar",
+      // Ölçülmüş dosyaların seçicideki insan adı; ham dosya adı teknik ayrıntıda.
+      file: {
+        real_satici_720x720_28s: "Satıcı videosu · kare 720 px · 28 sn",
+        real_uretim_h264_1280: "Üretim çıktısı · 1280 px · H.264",
+        real_uretim_preview_480: "Üretim önizlemesi · 480 px",
+        video_16x9_1080p: "Yatay 16:9 · 1080p",
+        video_bloated_720p_8m: "Şişkin dosya · 720p · 8 Mbps",
+        video_efficient_720p_750k: "Verimli dosya · 720p · 750 kbps",
+        video_long_540s_320x240: "Uzun video · 9 dk · 320×240",
+        video_real_seller_1080p_2997fps: "Satıcı videosu · 1080p · 29,97 fps",
+        video_silent_noaudio_720p: "Sessiz video · 720p",
+        video_square_352: "Kare video · 352 px",
+        video_vertical_9x16: "Dikey 9:16",
+      },
+      syntheticGroup: "Kural örnekleri (yapay)",
       choose: "Kural örneği seç…",
-      measuredNote: "Bu künye {env} konteynerinde gerçek ffprobe koşumuyla ÖLÇÜLDÜ ({file}).",
+      measuredNote: "Bu dosya gerçek ortamda ölçüldü ({env}).",
       syntheticNote:
-        "SENTETİK künye — ölçüm DEĞİL. Ölçülmüş {base} künyesinden tek alan değiştirildi: {why}. Kararı yine referans motor verdi.",
+        "Yapay örnek, gerçek ölçüm değil: {base} dosyasından tek alan değiştirildi ({why}). Kararı yine sunucudaki motor verdi.",
       verdictTitle: "Karar",
       parityBreak:
-        "SAPMA: panelin hesabı ({panel}) referans motorun kararından ({ref}) farklı. Ekranda gösterilen gerekçeye GÜVENME, senkron koştur.",
-      todayAgrees: "Bugünkü hat ({today}) bu künyede karar tablosuyla AYNI sonucu veriyor.",
-      todayDiffers: "Bugünkü hat {today} diyor, karar tablosu {table} diyor — SAPMA.",
-      becauseTitle: "Karar neden böyle — eşik karşılaştırması",
-      defaultWhy: "{n} kuralın hiçbiri eşleşmedi; tablo varsayılana düştü.",
-      opAll: "TÜMÜ (VE)",
-      opAny: "EN AZ BİRİ (VEYA)",
-      opNot: "DEĞİL",
+        "Uyuşmazlık: panelin hesabı ({panel}) sunucudaki motorun kararından ({ref}) farklı. Ekrandaki gerekçeye güvenmeyin; veri senkronu gerekiyor.",
+      todayAgrees: "Bugün çalışan sistem ({today}) bu dosyada aynı karara varıyor.",
+      todayDiffers:
+        "Bugün çalışan sistem {today} diyor, yeni karar tablosu {table} diyor; fark var.",
+      becauseTitle: "Neden bu karar",
+      defaultWhy: "{n} kuralın hiçbiri eşleşmedi; varsayılan karar uygulandı.",
+      opAll: "Tümü (ve)",
+      opAny: "En az biri (veya)",
+      opNot: "Değil",
       note: {
         source: "Kaynak",
         note: "Not",
-        gap_today: "BUGÜNKÜ HATTA YOK",
-        diverges_from_today: "BUGÜNKÜ HATTAN AYRILIYOR",
+        gap_today: "Bugünkü sistemde yok",
+        diverges_from_today: "Bugünkü sistemden ayrılıyor",
         why_two_conditions: "Neden iki koşul",
         measured: "Ölçüm",
         cost: "Maliyet",
       },
       notCertain:
-        "Karar KESİN DEĞİL: şu kurallar vendor'lanmamış alanların VARSAYILAN değeriyle değerlendirildi — {rules}. Gerçek değer kararı değiştirebilirdi.",
+        "Karar kesin değil: {rules} kuralları ölçülmemiş alanların varsayılan değeriyle değerlendirildi; gerçek değer kararı değiştirebilir.",
       traceTitle: "Kurallar sırayla — ilk eşleşen kazanır",
-      traceCaption: "{total} kuralın {looked} tanesine bakıldı; eşleşmeden sonrasına BAKILMAZ.",
+      traceCaption: "{total} kuralın {looked} tanesine bakıldı; eşleşmeden sonrasına bakılmaz.",
       col: {
         rule: "Kural",
-        action: "Aksiyon",
+        action: "Karar",
         threshold: "Eşik",
         state: "Durum",
         var: "Değişken",
@@ -10844,48 +11065,48 @@ export default {
         origin: "Köken",
         source: "Nereden",
       },
-      assumed: "VARSAYILAN",
+      assumed: "varsayılan",
       state: {
-        hit: "EŞLEŞTİ",
+        hit: "eşleşti",
         miss: "eşleşmedi",
         skipped: "bakılmadı",
       },
       noCondition: "koşul yok",
-      gateTitle: "Fayda kapısı — çıktı yeterince küçülmezse atılır",
+      gateTitle: "Kazanç kontrolü — çıktı yeterince küçülmezse atılır",
       gate: {
-        id: "Kapı",
+        id: "Kontrol",
         ratio: "En az kazanç",
         src: "Kaynak",
         max: "Çıktı en fazla",
         ceiling: "Hız tavanı",
       },
       gateApplies:
-        "Karar TRANSCODE: çıktı {max} baytı AŞARSA çıktı ATILIR ve kaynak korunur. Hız tavanı ({ceiling} kbps) kapıdan TÜRETİLİR — sabit bir çarpan değildir.",
-      gateExempt: "{action} kapıdan MUAF.",
-      gateNoOutput: "{action} yeni dosya üretmez — fayda kapısı işlemez.",
-      fallbackTitle: "Kapıdan düşerse — REMUX'a geri çekilme",
+        "Karar yeniden kodlama: çıktı {max} boyutunu aşarsa çıktı atılır, kaynak korunur. Hız tavanı ({ceiling} kbps) bu kontrolden türetilir, sabit bir çarpan değildir.",
+      gateExempt: '"{action}" kararı bu kontrolden muaf.',
+      gateNoOutput: '"{action}" kararı yeni dosya üretmez; kontrol uygulanmaz.',
+      fallbackTitle: "Kontrolden düşerse — kap düzeltmeye geri dönüş",
       fallbackYes:
-        "Geri çekilme UYGULANIR — {why}. REMUX kapıdan muaf olduğu için bu ikinci koşum her zaman teslim edilebilir bir dosya bırakır.",
-      fallbackNo: "Geri çekilme UYGULANMAZ — {why}.",
-      qualityTitle: "Kalite kapısı",
+        "Geri dönüş uygulanır: {why}. Kap düzeltme bu kontrolden muaf olduğu için ikinci adım her zaman teslim edilebilir bir dosya bırakır.",
+      fallbackNo: "Geri dönüş uygulanmaz: {why}.",
+      qualityTitle: "Kalite kontrolü",
       quality: {
         vmaf: "VMAF en az",
         duration: "Süre sapması en fazla",
       },
       gapsTitle: "Ölçülmeyen alanlar — varsayılan değerle değerlendirildi",
-      noGaps: "Bu künyede kararın okuduğu her alan vendor'lanmış.",
-      notVendored: "ÖLÇÜLMEDİ",
-      gapValue: "Karar, VideoFacts varsayılanıyla verildi: {value}.",
+      noGaps: "Bu dosyada kararın baktığı her alan ölçülmüş.",
+      notVendored: "ölçülmedi",
+      gapValue: "Karar varsayılan değerle verildi: {value}.",
       gapRules: "Etkilediği kural: {rules}",
       gapNoRule: "Hiçbir kural bu alana bakmıyor.",
-      varsTitle: "Ölçülen {n} değişkenin tamamı",
+      varsTitle: "Dosyanın ölçülen {n} değeri",
       origin: {
-        measured: "ÖLÇÜM",
-        derived: "TÜRETİLDİ",
-        synthetic: "SENTETİK GİRDİ",
-        unvendored: "VENDOR'LANMADI",
+        measured: "ölçüldü",
+        derived: "türetildi",
+        synthetic: "yapay girdi",
+        unvendored: "ölçülmedi",
       },
-      targetTitle: "TRANSCODE çıktı hedefi ve gerekçesi",
+      targetTitle: "Yeniden kodlama hedefi ve gerekçesi",
       target: {
         codec: "Kodek",
         width: "En fazla genişlik",
@@ -10895,7 +11116,7 @@ export default {
         audio: "Ses",
       },
       todayLine:
-        "Bugünkü hat iki eşikle karar veriyor: genişlik > {width} VEYA bitrate > {bitrate}.",
+        "Bugün çalışan sistem iki eşikle karar veriyor: genişlik > {width} veya bit hızı > {bitrate}.",
     },
   },
   sellerBackup: {

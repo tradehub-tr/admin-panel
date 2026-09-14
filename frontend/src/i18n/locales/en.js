@@ -7153,6 +7153,8 @@ export default {
     yes: "Yes",
     no: "No",
     secretPlaceholder: "Type a new value to change it",
+    showSecret: "Show key",
+    hideSecret: "Hide key",
     secretHint: "Leave blank to keep the stored key. The stored value is never shown back.",
     imgproxyNote:
       "Today only the connection test reads this section; no image goes through imgproxy until the delivery path is wired.",
@@ -7201,6 +7203,9 @@ export default {
       requested: "Requested mode",
       adapter: "Adapter",
       boto3: "boto3 installed",
+      boto3Yes: "Installed",
+      boto3No: "Not installed",
+      match: "Requested mode matches the resolved mode; no downgrade.",
       degraded: "Downgraded: {from} was requested, fell back to local disk.",
     },
     test: {
@@ -7923,6 +7928,10 @@ export default {
     lastSet: "The last backup cannot be deleted",
     daily: "Daily",
     setMeta: "{files} files · {records} records",
+    label: {
+      scheduled: "Scheduled",
+      manual: "Manual",
+    },
     stat: {
       sets: "Backups",
       size: "Storage used",
@@ -10583,8 +10592,9 @@ export default {
     },
   },
   mediaSimulator: {
+    techDetails: "Technical details",
     mode: {
-      image: "Image renditions",
+      image: "Image",
       video: "Video",
     },
     deviceClass: {
@@ -10595,113 +10605,230 @@ export default {
     },
     frames: {
       decorNote:
-        "The card skeleton (title/price/buttons) is decorative — the only measured value is the tile width.",
+        "The card skeleton (title, price, buttons) is illustrative; the only measured value is the image box width.",
       regions: "{n} regions",
-      switchHint: "Breakpoint where the layout changes",
-      realImages:
-        "Tiles are filled with real Media Rendition files ({profile}) — the very file this device would download.",
-      fallback: "The {wanted} rendition is not generated yet — tiles use {served} instead.",
-      noImages:
-        "No renditions generated for this profile — tiles stay schematic. Missing images are not a fault.",
+      switchHint: "Screen width where the page layout changes",
+      realImages: "Tiles show the file this device would actually download ({profile}).",
+      fallback: "The {wanted} size is not generated yet; tiles use the {served} size instead.",
+      noImages: "No generated image for this size; tiles are shown schematically.",
     },
     gate: {
-      ackLabel: "{warning}: occurs in {n} combinations. I have seen and accept this.",
+      title: "Publish approval",
+      lead: "Before publishing, you must view the required placements at least once on every device class.",
+      ackLabel: "{warning}: appears in {n} combinations. I have seen and accept this.",
       goto: "Go to this placement",
-      noAsset: "No asset selected — even if the gate opens, there is no asset to submit.",
+      noAsset: "No file selected; even with approval there is nothing to submit.",
       notSeen: "not seen",
-      progress: "{done}/{total} placement classes seen",
+      progress: "{done}/{total} placements seen",
       publish: "Approve and publish",
       seen: "seen",
       serverGap:
-        "Approval proof is now enforced on the server too: `save_intent` rejects an approval without proof with 417 MEDIA_PREVIEW_REQUIRED. What the server CANNOT verify: dwell time is a client declaration — this gate keeps that declaration honest by actually showing the placements.",
-      threshold: "A placement counts as seen once {pct}% of its box is on screen for {ms} ms",
-      warningsTitle: "Placements with warnings — explicit acknowledgement required",
+        "The approval record is also checked on the server; however, how long a placement stayed on screen is reported by the browser.",
+      serverGapTech:
+        "Approval proof is enforced on the server: `save_intent` rejects an approval without proof with 417 `MEDIA_PREVIEW_REQUIRED`. What the server cannot verify: dwell time is a client declaration — this gate keeps that declaration honest by actually showing the placements.",
+      payloadTitle: "Record sent to the server",
+      threshold:
+        "A placement counts as seen once {pct}% of its box stays on screen for at least {ms} ms.",
+      warningsTitle: "Placements with warnings — your confirmation is required",
     },
     title: "Preview Simulator",
-    subtitle: "Which device downloads which rendition in which region — and is it enough?",
+    subtitle:
+      "Shows which size of an uploaded image is downloaded on which device, in which region of the page, and whether that size is enough.",
     unmeasured: {
-      detail: "Details",
-      title: "None of the numbers on this page were measured on a real device",
-      devices: "Device data",
-      placements: "Placement data",
+      detail: "Technical details",
+      title:
+        "The numbers on this page were not measured on real devices; they come from browser emulation and CSS arithmetic.",
+      devices: "Device sizes",
+      placements: "Region sizes",
       browser:
-        "The simulator does NOT model network conditions, data-saver mode, or a larger candidate already sitting in cache; it answers only 'which step would be picked under ideal conditions'. The real distribution can only be measured in the field. No browser verification was done for this task.",
+        "The simulator ignores network speed, data-saver mode and the browser cache; it only says which size would download under ideal conditions.",
+    },
+    measurement: {
+      code: "Status code",
+      unverifiedRegions: "Regions not yet verified in a real browser: {list}.",
+      emulated: {
+        label: "Estimated values",
+        desc: "Device sizes come from browser emulation, not from real devices.",
+      },
+      partial: {
+        label: "Partially verified",
+        desc: "{done} of {total} regions were measured in a real browser; the rest rely on CSS arithmetic.",
+      },
+      verified: {
+        label: "Verified",
+        desc: "Values were measured in a real browser.",
+      },
+      unverified: {
+        label: "Not verified",
+        desc: "Values were not measured in a real browser.",
+      },
+      unknown: {
+        label: "Not verified",
+        desc: "The measurement status of this data is unknown.",
+      },
+    },
+    regionName: {
+      home: {
+        category_bento: "Home · category showcase",
+        recommendation_slider: "Home · recommendation slider",
+        tailored_grid: "Home · For You grid",
+      },
+      listing: {
+        brand_grid: "Listing · brand grid",
+      },
+      product_detail: {
+        related_slider: "Product detail · related products",
+        lightbox_thumb: "Product detail · lightbox thumbnails",
+        main_image: "Product detail · main image",
+      },
+      cart_checkout: {
+        sku_row: "Cart · variant row",
+        product_item: "Cart · product row",
+        drawer_thumb: "Cart · drawer thumbnail",
+      },
+      seller_shop: {
+        template_tiles: "Shop · template tiles",
+      },
+    },
+    regionSummary: {
+      home: {
+        hero_showcase_grid:
+          "Product showcase cards on the home page; 2 to 7 columns as the screen widens.",
+        top_deals: "Top Deals cards on the home page.",
+        tailored_grid: "For You / Best Sellers cards on the home page.",
+      },
+      listing: {
+        card_grid: "Cards on the product listing page, with the filter column open.",
+        brand_grid: "Cards on brand and category pages; no filter column.",
+      },
+      product_detail: {
+        main_image:
+          "The large main image on the product page; full width on phones, in the gallery column on desktop.",
+        thumb_rail: "Small gallery thumbnails on the product page.",
+        lightbox_main:
+          "The large viewer that opens when the image is clicked; its size depends on screen height.",
+        lightbox_thumb: "Small thumbnails below the large viewer.",
+        related_slider: "The Related Products slider below the product page.",
+      },
+      cart_checkout: {
+        summary_strip: "Small product images in the cart and checkout summary.",
+        sku_row: "Small image in a cart variant row.",
+        product_item: "Header image of a cart product row.",
+        drawer_thumb: "Small image in the side cart drawer.",
+      },
+      seller_shop: {
+        product_grid: "Product cards on the shop page.",
+      },
+    },
+    deviceSummary: {
+      "iphone-se-3": "The narrowest screen still on sale; tests the smallest image sizes.",
+      "galaxy-s23": "The most common Android size (360 px, 3× pixel density).",
+      "iphone-14": "The most common iOS body (390 px, 3× pixel density).",
+      "moto-g-power":
+        "The phone Google's speed audits (Lighthouse) use; fractional pixel density (1.75×).",
+      "iphone-15-pro-max": "The highest image demand among phones (430 px, 3×).",
+      "ipad-mini-6": "Just below the 768 px tablet layout switch; tests the boundary.",
+      "ipad-pro-11":
+        "Portrait tablet: the product page is still in mobile layout, so the largest single image demand comes from here.",
+      "ipad-pro-11-landscape":
+        "Landscape tablet: the only representative of the 1024–1280 px band.",
+      "surface-pro-9": "Windows laptop at 150% scale; the second fractional pixel density (1.5×).",
+      "macbook-air-13": "The most common laptop (1440 px, 2×).",
+      "macbook-pro-16": "The widest screen at 2× density; the largest demand for card images.",
+      "desktop-1080p":
+        "A plain desktop screen (1× density); shows that 1× sizes are picked correctly.",
+      "desktop-1440p": "A wider desktop; the page caps at 1840 px, so box sizes do not change.",
     },
     devices: {
       title: "Device",
-      help: "13 reference devices. Navigate with arrow keys, Home/End for the ends.",
+      help: "13 sample devices. Navigate with arrow keys, Home/End for the ends.",
     },
     placements: {
-      title: "Placement",
+      title: "Page and region",
       help: "5 pages, 15 regions. Navigate with arrow keys, Home/End for the ends.",
     },
     result: {
-      flowDpr: "×{dpr} DPR",
-      flowStep: "step",
+      flowDpr: "× {dpr} pixel density",
+      flowStep: "size",
+      bytes: "File size",
       bytesNote:
-        "Bytes are NEVER estimated: they are read only from a real Media Rendition row's `bytes` field. When the table is empty, the reason is shown instead of a number.",
-      bytesUnknown: "Unknown — rendition not generated yet",
-      lcpBadge: "LCP candidate",
+        "File size is never estimated; it is read only from the record of an actually generated file (Media Rendition).",
+      bytesUnknown: "Not generated yet",
+      flowSum:
+        "Box {box} px × {dpr} density = {required} px needed; the next step up, {chosen} ({width} px), is served — {overshoot}× surplus.",
+      flowSumNone: "Box {box} px × {dpr} density = {required} px needed; no suitable size.",
+      lcpBadge: "Opening image (LCP)",
       lcpNote:
-        'LCP candidate: this image must NOT be lazy-loaded — it should load with loading="eager" and fetchpriority="high".',
+        'The first large image seen when the page opens: it must load immediately, not lazy-loaded — in code, loading="eager" and fetchpriority="high".',
       overflowText:
-        "The box is {boxPx} px while the device viewport is {viewportPx} px — {overflowPx} px overflow ({ratio}×). Required pixels are computed from the FULL box; a step may be chosen for a width that never appears on screen.",
-      title: "Selection result",
-      box: "CSS box",
-      required: "Required pixels",
-      chosen: "Chosen step",
-      none: "No selection",
+        "The box is {boxPx} px, the screen is {viewportPx} px wide: the box overflows the screen by {overflowPx} px ({ratio}×). The required width is computed from the full box; a size may be picked for a width that never appears on screen.",
+      title: "Result",
+      box: "Box on screen",
+      required: "Required width",
+      chosen: "Downloaded size",
+      none: "No suitable size",
       overshoot: "Overshoot",
       zoomRequired: "Required at zoom",
-      deficit: "Missing pixels",
-      clean: "No warnings for this combination.",
-      sizesTitle: "Generated sizes",
-      srcsetTitle: "Generated srcset",
+      deficit: "Missing",
+      clean: "No warnings",
+      verdict: {
+        ok: "Enough: {chosen} px downloads, {required} px needed.",
+        short:
+          "Source too small — no upscaling. {chosen} px available, {required} px needed ({deficit} px missing). Upload a larger image.",
+        zoomShort:
+          "Enough for the box but not at {multiplier}× zoom: {zoom} px needed, {chosen} px downloads.",
+        none: "No image size is defined for this area.",
+      },
+      regionAbout: "Region",
+      deviceAbout: "Device",
+      codeFold: "Code sent to the browser (sizes / srcset)",
+      sizesTitle: "sizes — box rule",
+      srcsetTitle: "srcset — size list",
       attrNote:
-        "Neither string is hand-written: both are generated from the box rule and change on their own when a breakpoint moves. The URL template is for readability only; the real address comes from the delivery contract.",
-      provenance: "Where this number came from",
-      renderPoint: "Render point",
-      derivedFrom: "Derived from CSS",
-      anomaly: "Anomaly",
-      multiplierReason: "Why the demand multiplier",
-      conflict: "Code comment conflict",
+        "These two lines are not hand-written; they are generated from the box rule. The addresses are examples.",
+      provenance: "Source of the number",
+      renderPoint: "Where it is drawn in code",
+      derivedFrom: "CSS the calculation relies on",
+      anomaly: "Point of attention",
+      multiplierReason: "Why the zoom multiplier",
+      conflict: "Conflict with a code comment",
       reportDelta: "Deviation from the report",
       deviceWhy: "Why this device is listed",
     },
     live: {
       result:
-        "{device}, {region}: box {box} pixels, required {required} pixels, chosen step {profile}, {width} pixels.",
-      noProfile: "{device}, {region}: no profile defined for this slot, no selection possible.",
+        "{device}, {region}: box {box} pixels, required {required} pixels, downloaded size {profile}, {width} pixels.",
+      noProfile: "{device}, {region}: no image size is defined for this area.",
     },
     warn: {
       kaynak_yetersiz:
-        "Even the largest step falls short: {chosen} pixels available, {required} pixels needed ({deficit} pixels missing). The image renders blurry; no upscaling is done (FR-028).",
+        "The uploaded image is not large enough: largest size {chosen} px, required {required} px ({deficit} px missing). No upscaling; the image looks blurry.",
       asiri_servis:
-        "The chosen step exceeds the policy ceiling of {cap}×: {chosen} pixels are downloaded where {required} would have sufficed. A step is missing from the ladder and bytes are wasted.",
+        "The downloaded size is far larger than needed: {chosen} px downloads where {required} px would do (allowed ceiling {cap}×). Data is wasted; an intermediate size is missing from the list.",
       zoom_yetersiz:
-        "Hover zoom scales the image by {multiplier}×; that needs {zoom} pixels, but the chosen step is {chosen} pixels. The browser sees sizes, not the zoom.",
-      profil_yok: "No profile is defined for this slot.",
+        "Not enough at zoom: the magnifier scales the image by {multiplier}×, which needs {zoom} px; the downloaded size is {chosen} px.",
+      profil_yok: "No image size is defined for this area.",
     },
     warnShort: {
       kaynak_yetersiz: "source short",
       asiri_servis: "over-served",
       zoom_yetersiz: "zoom short",
-      profil_yok: "no profile",
+      profil_yok: "no size defined",
     },
     probe: {
-      loading: "Querying the real rendition row…",
-      found: "The {profile} rendition has been generated.",
+      loading: "Looking for the generated file…",
+      found: "The {profile} size has been generated.",
       notGenerated:
-        "No rendition generated yet — pipeline flags are off and the Media Rendition table is empty. Computed target width: {width} pixels ({profile}).",
-      denied: "You may not view rendition rows; computed target width is {width} pixels.",
-      failed: "The rendition query failed; computed target width is {width} pixels.",
+        "This size ({profile}, {width} px) is not generated yet; the Media Rendition table is empty.",
+      denied: "You may not view generated files; target width {width} px.",
+      failed: "The file query failed; target width {width} px.",
     },
     matrix: {
       show: "Show all 65 combinations",
       hide: "Hide combinations",
       viewFrames: "Frames",
       viewTable: "Table",
-      title: "All combinations",
+      title: "All device and page combinations",
       allRegions: "Show all 15 regions (195 combinations)",
       caption:
         "{total} combinations · source short {insufficient} · over-served {overshoot} · zoom short {zoom}",
@@ -10709,7 +10836,7 @@ export default {
         combo: "Device / region",
         box: "Box",
         required: "Required",
-        chosen: "Chosen",
+        chosen: "Downloaded size",
         overshoot: "Overshoot",
         warnings: "Warning",
       },
@@ -10721,42 +10848,107 @@ export default {
       bitrate: "Bitrate (kbps)",
       dataTitle: "Mobile data — first 10 seconds",
       firstWindow: "About {bytes} downloads in the first {s} seconds (bitrate × duration ÷ 8).",
-      firstWindowEmpty: "No bitrate entered — bytes for the first {s} seconds were not computed.",
-      noBudget:
-        "The mobile data ceiling to compare against is NOT in the panel data: sync-simulator.mjs derives only the poster block from video_decision.json; the HLS ladder (360p 800 · 480p 1400 · 720p 2800 · 1080p 5000 kbps) and the 2,500 kbps switch ceiling were not vendored.",
-      safeTitle: "Safe area — UI overlapping the cover",
+      firstWindowEmpty: "No bitrate entered; data for the first {s} seconds was not computed.",
+      noBudget: "No mobile data limit to compare against is defined in the panel.",
+      noBudgetTech:
+        "sync-simulator.mjs derives only the poster block from video_decision.json; the HLS ladder (360p 800 · 480p 1400 · 720p 2800 · 1080p 5000 kbps) and the 2,500 kbps switch ceiling were not vendored. No default bitrate was written.",
+      safeTitle: "Elements overlapping the cover",
       safeVerdict:
-        "About {pct}% of the cover area is covered by UI elements; the height of {unmeasured} element(s) was NOT MEASURED. Whether important content sits under the overlap can only be judged together with the crop intent's safe area, which this card does not know.",
+        "About {pct}% of the cover is covered by buttons and bars; the height of {unmeasured} element(s) is unknown. This card cannot tell whether important content sits under the overlap.",
       stageNote:
-        "{device} · cover box {width}×{height} px ({aspect}). Width comes from the PROXY region; height is derived from the ratio.",
-      surfaceTitle: "Video surface",
-      zoneUnmeasured: "NOT MEASURED",
-      attr: {
-        controls: "controls",
-        preload: "preload",
+        "{device}: cover box {width}×{height} px ({aspect}). Width comes from the proxy region, height from the ratio.",
+      surfaceTitle: "Where the video sits",
+      surface: {
+        company_cover_video: "Shop cover video",
+        product_video: "Product promo video",
       },
-      title: "Video poster",
+      stateTitle: "Preview state",
+      surfaceShort: {
+        company_cover_video: "Shop cover",
+        product_video: "Product promo",
+      },
+      stateShort: {
+        poster: "First frame",
+        autoplay: "Autoplay",
+        reduced: "Less motion",
+      },
+      state: {
+        poster: "Cover image (first frame)",
+        autoplay: "Autoplay",
+        reduced: "Reduced-motion preference",
+      },
+      noAutoplay:
+        "No autoplay here; the video does not start until the user clicks. The preview is therefore identical to the cover image.",
+      reducedNoop:
+        "The reduced-motion preference changes nothing here; there is no autoplay anyway.",
+      zone: {
+        controlBar: "Control bar",
+        playButton: "Play button",
+        nativeControls: "Browser's own controls",
+      },
+      zoneUnmeasured: "not measured",
+      sourceLabel: "Source code",
+      attrTitle: "Video tag settings",
+      attr: {
+        autoplay: "Autoplay",
+        muted: "Starts muted",
+        loop: "Loop",
+        playsinline: "Plays inline",
+        poster: "Cover image",
+        controls: "Controls",
+        preload: "Preload",
+      },
+      yes: "yes",
+      no: "no",
+      controls: {
+        native: "drawn by the browser",
+        custom: "drawn by the app",
+      },
+      title: "Video cover image",
       noEndpoint:
-        "There is NO API endpoint that triggers poster generation. No real poster is shown here; only 'which step would be downloaded if one existed' is computed. No request is sent to an invented endpoint.",
+        "Cover image generation is not wired up yet; no real cover is shown here, only which size would download is computed.",
       proxy:
-        "NOT MEASURED: the placement data has no video region. The poster is assumed to render in the {region} box; until the real video placement is measured this result is approximate.",
-      width: "Poster width",
+        "Approximate result: there is no separate measurement for video, the cover is assumed to show in the {region} box.",
+      proxyTech:
+        "NOT MEASURED: placements.json has no video region. Proxy region {region}; until the real video placement is measured the result is approximate. There is no API endpoint for poster generation; no request is sent to an invented one.",
+      width: "Cover width",
       format: "Format",
-      maxBytes: "Byte ceiling",
-      window: "Frame window",
-      gate: "Brightness gate",
-      noRegion:
-        "The proxy region was not found in the data — poster selection could not be computed.",
-      caption: "{n} devices · poster ladder {ladder} pixels · insufficient {insufficient}",
+      maxBytes: "File size ceiling",
+      window: "Frame pick range",
+      gate: "Brightness limit",
+      noRegion: "The proxy region was not found in the data; cover size could not be computed.",
+      caption: "{n} devices · generated cover sizes {ladder} px · insufficient {insufficient}",
       verdict: "Verdict",
-      enough: "enough",
-      short: "{px} pixels short",
+      enough: "Enough",
+      short: "{px} px short",
     },
     excluded: {
-      title: "Regions that could not be measured",
-      lead: "The box width of these regions could not be derived from static CSS. They are not hidden; the reason is below.",
+      title: "Regions that cannot be computed",
+      lead: "The image width of these regions cannot be known before the page opens; they are therefore not part of the simulation.",
+      summary: {
+        home: {
+          category_bento:
+            "The column count is decided when the page opens; the box width cannot be computed in advance.",
+          recommendation_slider:
+            "Two separate rules compete for the card width in the slider; which one wins is only visible in a browser.",
+        },
+        seller_shop: {
+          template_tiles:
+            "Section widths of the shop template come from the shop owner's layout settings; there is no fixed value.",
+        },
+      },
+      unknownReason: "The box width of this region cannot be computed in advance.",
     },
     videoDecision: {
+      action: {
+        PASSTHROUGH: "File left untouched",
+        REMUX: "Container fixed only",
+        TRANSCODE: "Re-encoded",
+        REJECT: "Rejected",
+      },
+      ruleCode: "Rule code",
+      decisionCode: "Decision code",
+      sourceFiles: "Source files",
       field: {
         audio_bitrate_bps: "Audio bitrate",
         audio_channels: "Audio channel count",
@@ -10787,10 +10979,22 @@ export default {
       lead: "{n} rules are ordered and the FIRST MATCH WINS. Every number below comes from the vendored file; the reference engine made the decision, the panel only unfolds the reasoning.",
       inputTitle: "Video under evaluation",
       measuredGroup: "Real files — measured with ffprobe",
+      file: {
+        real_satici_720x720_28s: "Seller video · square 720 px · 28 s",
+        real_uretim_h264_1280: "Pipeline output · 1280 px · H.264",
+        real_uretim_preview_480: "Pipeline preview · 480 px",
+        video_16x9_1080p: "Landscape 16:9 · 1080p",
+        video_bloated_720p_8m: "Bloated file · 720p · 8 Mbps",
+        video_efficient_720p_750k: "Efficient file · 720p · 750 kbps",
+        video_long_540s_320x240: "Long video · 9 min · 320×240",
+        video_real_seller_1080p_2997fps: "Seller video · 1080p · 29.97 fps",
+        video_silent_noaudio_720p: "Silent video · 720p",
+        video_square_352: "Square video · 352 px",
+        video_vertical_9x16: "Portrait 9:16",
+      },
       syntheticGroup: "Example that triggers a specific rule (synthetic)",
       choose: "Choose a rule example…",
-      measuredNote:
-        "This probe record was MEASURED with a real ffprobe run in the {env} container ({file}).",
+      measuredNote: "This file was measured in a real environment ({env}).",
       syntheticNote:
         "SYNTHETIC probe record — NOT a measurement. A single field was changed from the measured {base} record: {why}. The decision was still made by the reference engine.",
       verdictTitle: "Decision",

@@ -153,7 +153,7 @@ test("kutu viewport'a sığıyorsa taşma satırı BASILMIYOR", async () => {
 test("türev satırı yokken bayt TAHMİN EDİLMİYOR", async () => {
   const s = sel("iphone-14", "listing/card_grid");
   const html = await render(RESULT, { selection: s, sizes: "", srcset: "", probeState: "empty" });
-  assert.match(html, /türev henüz üretilmedi/i);
+  assert.match(html, /henüz üretilmedi/i);
   assert.doesNotMatch(html, /\d+[.,]\d\s*KB/, "bayt uydurulmamalı");
 });
 
@@ -168,13 +168,14 @@ test("türev satırı varsa bayt onun `bytes` alanından okunuyor", async () => 
   });
   // Biçim yerelleştirilmiş (TR ondalık ayıracı virgül) — sayı orada, birim orada.
   assert.match(html, /50[.,]0\s*KB/i, "bayt gösterilmedi");
-  assert.doesNotMatch(html, /türev henüz üretilmedi/i);
+  assert.doesNotMatch(html, /henüz üretilmedi/i);
 });
 
 test("bayt kaynağı kartta yazılı — 'nereden geldi' sorusu açık bırakılmıyor", async () => {
   const s = sel("iphone-14", "listing/card_grid");
   const html = await render(RESULT, { selection: s, sizes: "", srcset: "" });
-  assert.match(html, /TAHMİN EDİLMEZ/);
+  // Metin dili 2026-09-08: "TAHMİN EDİLMEZ" → "tahmin edilmez"; iddia aynı.
+  assert.match(html, /tahmin edilmez/i);
   assert.match(html, /Media Rendition/);
 });
 
@@ -191,9 +192,11 @@ test("iki video yüzeyi de kaynak dosya:satır künyesiyle gösteriliyor", async
 
 test("üç önizleme durumu da düğme olarak var (poster / otomatik / reduced-motion)", async () => {
   const html = await render(POSTER, posterProps);
-  assert.match(html, /Poster \(ilk kare\)/);
+  // Düğme metinleri insan dilinde (2026-09-08): "poster" → "Kapak görseli",
+  // "prefers-reduced-motion" → "Hareket azaltma tercihi". Üç durum yine var.
+  assert.match(html, /Kapak görseli \(ilk kare\)/);
   assert.match(html, /Otomatik oynatma/);
-  assert.match(html, /prefers-reduced-motion/);
+  assert.match(html, /Hareket azaltma tercihi/);
   assert.equal((html.match(/aria-pressed="true"/g) || []).length, 2, "iki grupta birer aktif");
 });
 

@@ -671,6 +671,32 @@
     @include media.chip("brand");
   }
 
+  .mud__fields .mud__chip {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: media.$m-bp-sm) {
+    .mud__use {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .mud__use-main {
+      grid-column: 1 / -1;
+    }
+
+    .mud__status {
+      justify-self: start;
+    }
+
+    .mud__allmedia {
+      grid-column: 2;
+    }
+  }
+
   .mud__redundant {
     @include media.chip("warning");
   }

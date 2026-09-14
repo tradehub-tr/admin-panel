@@ -24,14 +24,14 @@
 
     <div v-else-if="loadError" class="state error">
       {{ loadError }}
-      <button type="button" class="hdr-btn-ghost retry-btn" @click="load">
+      <button type="button" class="hdr-btn-outlined retry-btn" @click="load">
         {{ t("mediaStorage.retry") }}
       </button>
     </div>
 
     <template v-else-if="form">
       <!-- Fabrikanın gerçekte kurduğu plan. "Neden hâlâ yerel diskteyim"in tek dürüst cevabı. -->
-      <section v-if="status" class="panel status-panel">
+      <section v-if="status" class="card panel status-panel">
         <h2>{{ t("mediaStorage.status.title") }}</h2>
         <dl class="status-grid">
           <div>
@@ -48,9 +48,33 @@
           </div>
           <div>
             <dt>{{ t("mediaStorage.status.boto3") }}</dt>
-            <dd>{{ status.boto3_available ? t("mediaStorage.yes") : t("mediaStorage.no") }}</dd>
+            <dd>
+              <!-- "Evet/Hayır" yerine durum rozeti (öneri 5, 2026-09-09). -->
+              <span
+                class="status-pill"
+                :class="status.boto3_available ? 'status-pill--ok' : 'status-pill--off'"
+              >
+                <AppIcon :name="status.boto3_available ? 'check' : 'x'" :size="12" />
+                {{
+                  status.boto3_available
+                    ? t("mediaStorage.status.boto3Yes")
+                    : t("mediaStorage.status.boto3No")
+                }}
+              </span>
+            </dd>
           </div>
         </dl>
+        <p
+          v-if="
+            status.plan?.mode &&
+            status.plan?.requested_mode === status.plan?.mode &&
+            !status.plan?.degraded
+          "
+          class="status-ok"
+        >
+          <AppIcon name="check" :size="14" />
+          {{ t("mediaStorage.status.match") }}
+        </p>
         <p v-if="status.plan?.degraded" class="warn-line">
           {{ t("mediaStorage.status.degraded", { from: status.plan.downgraded_from }) }}
           <span v-if="status.plan.reasons?.length">— {{ status.plan.reasons.join(", ") }}</span>
@@ -59,18 +83,26 @@
       </section>
 
       <!-- 1 · Birincil depolama -->
-      <section class="panel">
+      <section class="card panel">
         <h2>{{ t("mediaStorage.section.primary") }}</h2>
         <div class="field-grid">
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.backend") }}</span>
-            <select v-model="form.backend" class="field-input" data-testid="storage-mode">
+            <span class="form-label field-label">{{ t("mediaStorage.field.backend") }}</span>
+            <select
+              v-model="form.backend"
+              class="form-input field-input"
+              data-testid="storage-mode"
+            >
               <option v-for="mode in BACKENDS" :key="mode" :value="mode">{{ mode }}</option>
             </select>
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.changeReason") }}</span>
-            <textarea v-model="form.change_reason" class="field-input" rows="2"></textarea>
+            <span class="form-label field-label">{{ t("mediaStorage.field.changeReason") }}</span>
+            <textarea
+              v-model="form.change_reason"
+              class="form-input field-input"
+              rows="2"
+            ></textarea>
           </label>
         </div>
 
@@ -88,12 +120,12 @@
       </section>
 
       <!-- 2 · S3 -->
-      <section class="panel">
+      <section class="card panel">
         <div class="panel-head">
           <h2>{{ t("mediaStorage.section.s3") }}</h2>
           <button
             type="button"
-            class="hdr-btn-ghost"
+            class="hdr-btn-outlined"
             data-testid="s3-test-connection"
             :disabled="testing === 's3'"
             @click="test('s3')"
@@ -143,51 +175,66 @@
             <span>{{ t("mediaStorage.field.s3UploadRenditions") }}</span>
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.s3Endpoint") }}</span>
+            <span class="form-label field-label">{{ t("mediaStorage.field.s3Endpoint") }}</span>
             <input
               v-model="form.s3_endpoint"
               data-testid="s3-endpoint"
               type="text"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.s3Region") }}</span>
+            <span class="form-label field-label">{{ t("mediaStorage.field.s3Region") }}</span>
             <input
               v-model="form.s3_region"
               data-testid="s3-region"
               type="text"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.s3Bucket") }}</span>
+            <span class="form-label field-label">{{ t("mediaStorage.field.s3Bucket") }}</span>
             <input
               v-model="form.s3_bucket"
               data-testid="s3-bucket"
               type="text"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.s3AccessKey") }}</span>
+            <span class="form-label field-label">{{ t("mediaStorage.field.s3AccessKey") }}</span>
             <input
               v-model="form.s3_access_key"
               data-testid="s3-access-key"
               type="text"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.s3SecretKey") }}</span>
-            <input
-              v-model="secrets.s3_secret_key"
-              data-testid="s3-secret-key"
-              type="password"
-              class="field-input"
-              autocomplete="new-password"
-              :placeholder="t('mediaStorage.secretPlaceholder')"
-            />
+            <span class="form-label field-label">{{ t("mediaStorage.field.s3SecretKey") }}</span>
+            <span class="secret-field">
+              <input
+                v-model="secrets.s3_secret_key"
+                data-testid="s3-secret-key"
+                :type="revealed.s3_secret_key ? 'text' : 'password'"
+                class="form-input field-input"
+                autocomplete="new-password"
+                :placeholder="t('mediaStorage.secretPlaceholder')"
+              />
+              <button
+                type="button"
+                class="secret-field__toggle"
+                :aria-label="
+                  revealed.s3_secret_key
+                    ? t('mediaStorage.hideSecret')
+                    : t('mediaStorage.showSecret')
+                "
+                :aria-pressed="revealed.s3_secret_key"
+                @click.prevent="revealed.s3_secret_key = !revealed.s3_secret_key"
+              >
+                <AppIcon :name="revealed.s3_secret_key ? 'eye-off' : 'eye'" :size="16" />
+              </button>
+            </span>
             <small class="field-hint">{{ t("mediaStorage.secretHint") }}</small>
           </label>
         </div>
@@ -195,12 +242,12 @@
       </section>
 
       <!-- 3 · CDN -->
-      <section class="panel">
+      <section class="card panel">
         <div class="panel-head">
           <h2>{{ t("mediaStorage.section.cdn") }}</h2>
           <button
             type="button"
-            class="hdr-btn-ghost"
+            class="hdr-btn-outlined"
             :disabled="testing === 'cdn'"
             @click="test('cdn')"
           >
@@ -209,16 +256,16 @@
         </div>
         <div class="field-grid">
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.cdnBaseUrl") }}</span>
-            <input v-model="form.cdn_base_url" type="text" class="field-input" />
+            <span class="form-label field-label">{{ t("mediaStorage.field.cdnBaseUrl") }}</span>
+            <input v-model="form.cdn_base_url" type="text" class="form-input field-input" />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.signedUrlTtl") }}</span>
+            <span class="form-label field-label">{{ t("mediaStorage.field.signedUrlTtl") }}</span>
             <input
               v-model.number="form.signed_url_ttl_seconds"
               type="number"
               min="0"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
         </div>
@@ -226,12 +273,12 @@
       </section>
 
       <!-- 4 · imgproxy -->
-      <section class="panel">
+      <section class="card panel">
         <div class="panel-head">
           <h2>{{ t("mediaStorage.section.imgproxy") }}</h2>
           <button
             type="button"
-            class="hdr-btn-ghost"
+            class="hdr-btn-outlined"
             :disabled="testing === 'imgproxy'"
             @click="test('imgproxy')"
           >
@@ -245,35 +292,67 @@
         <p class="note">{{ t("mediaStorage.imgproxyNote") }}</p>
         <div class="field-grid">
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.imgproxyBaseUrl") }}</span>
-            <input v-model="form.imgproxy_base_url" type="text" class="field-input" />
+            <span class="form-label field-label">{{
+              t("mediaStorage.field.imgproxyBaseUrl")
+            }}</span>
+            <input v-model="form.imgproxy_base_url" type="text" class="form-input field-input" />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.imgproxyKey") }}</span>
-            <input
-              v-model="secrets.imgproxy_key"
-              type="password"
-              class="field-input"
-              autocomplete="new-password"
-              :placeholder="t('mediaStorage.secretPlaceholder')"
-            />
+            <span class="form-label field-label">{{ t("mediaStorage.field.imgproxyKey") }}</span>
+            <span class="secret-field">
+              <input
+                v-model="secrets.imgproxy_key"
+                :type="revealed.imgproxy_key ? 'text' : 'password'"
+                class="form-input field-input"
+                autocomplete="new-password"
+                :placeholder="t('mediaStorage.secretPlaceholder')"
+              />
+              <button
+                type="button"
+                class="secret-field__toggle"
+                :aria-label="
+                  revealed.imgproxy_key
+                    ? t('mediaStorage.hideSecret')
+                    : t('mediaStorage.showSecret')
+                "
+                :aria-pressed="revealed.imgproxy_key"
+                @click.prevent="revealed.imgproxy_key = !revealed.imgproxy_key"
+              >
+                <AppIcon :name="revealed.imgproxy_key ? 'eye-off' : 'eye'" :size="16" />
+              </button>
+            </span>
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.imgproxySalt") }}</span>
-            <input
-              v-model="secrets.imgproxy_salt"
-              type="password"
-              class="field-input"
-              autocomplete="new-password"
-              :placeholder="t('mediaStorage.secretPlaceholder')"
-            />
+            <span class="form-label field-label">{{ t("mediaStorage.field.imgproxySalt") }}</span>
+            <span class="secret-field">
+              <input
+                v-model="secrets.imgproxy_salt"
+                :type="revealed.imgproxy_salt ? 'text' : 'password'"
+                class="form-input field-input"
+                autocomplete="new-password"
+                :placeholder="t('mediaStorage.secretPlaceholder')"
+              />
+              <button
+                type="button"
+                class="secret-field__toggle"
+                :aria-label="
+                  revealed.imgproxy_salt
+                    ? t('mediaStorage.hideSecret')
+                    : t('mediaStorage.showSecret')
+                "
+                :aria-pressed="revealed.imgproxy_salt"
+                @click.prevent="revealed.imgproxy_salt = !revealed.imgproxy_salt"
+              >
+                <AppIcon :name="revealed.imgproxy_salt ? 'eye-off' : 'eye'" :size="16" />
+              </button>
+            </span>
           </label>
         </div>
         <TestResult :result="results.imgproxy" />
       </section>
 
       <!-- 5 · Saklama -->
-      <section class="panel">
+      <section class="card panel">
         <h2>{{ t("mediaStorage.section.retention") }}</h2>
         <div class="field-grid">
           <label class="toggle-row">
@@ -281,32 +360,40 @@
             <span>{{ t("mediaStorage.field.keepOriginals") }}</span>
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.originalLocalDays") }}</span>
+            <span class="form-label field-label">{{
+              t("mediaStorage.field.originalLocalDays")
+            }}</span>
             <input
               v-model.number="form.original_local_days"
               type="number"
               min="0"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.originalThenAction") }}</span>
-            <select v-model="form.original_then_action" class="field-input">
+            <span class="form-label field-label">{{
+              t("mediaStorage.field.originalThenAction")
+            }}</span>
+            <select v-model="form.original_then_action" class="form-input field-input">
               <option v-for="act in ACTIONS" :key="act" :value="act">{{ act }}</option>
             </select>
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.derivativeUnusedDays") }}</span>
+            <span class="form-label field-label">{{
+              t("mediaStorage.field.derivativeUnusedDays")
+            }}</span>
             <input
               v-model.number="form.derivative_unused_days"
               type="number"
               min="0"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.derivativeAction") }}</span>
-            <select v-model="form.derivative_action" class="field-input">
+            <span class="form-label field-label">{{
+              t("mediaStorage.field.derivativeAction")
+            }}</span>
+            <select v-model="form.derivative_action" class="form-input field-input">
               <option v-for="act in ACTIONS" :key="act" :value="act">{{ act }}</option>
             </select>
           </label>
@@ -320,30 +407,34 @@
             <span>{{ t("mediaStorage.field.derivativeRegenerate") }}</span>
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.trashRetentionDays") }}</span>
+            <span class="form-label field-label">{{
+              t("mediaStorage.field.trashRetentionDays")
+            }}</span>
             <input
               v-model.number="form.trash_retention_days"
               type="number"
               min="0"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.archiveRetentionDays") }}</span>
+            <span class="form-label field-label">{{
+              t("mediaStorage.field.archiveRetentionDays")
+            }}</span>
             <input
               v-model.number="form.archive_retention_days"
               type="number"
               min="0"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
           <label class="field">
-            <span class="field-label">{{ t("mediaStorage.field.backupKeepSets") }}</span>
+            <span class="form-label field-label">{{ t("mediaStorage.field.backupKeepSets") }}</span>
             <input
               v-model.number="form.backup_keep_sets"
               type="number"
               min="1"
-              class="field-input"
+              class="form-input field-input"
             />
           </label>
         </div>
@@ -356,6 +447,7 @@
   import { computed, h, onMounted, reactive, ref } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import AppIcon from "@/components/common/AppIcon.vue";
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
 
@@ -424,6 +516,9 @@
   const loadError = ref("");
   const testing = ref("");
   const secrets = reactive({ s3_secret_key: "", imgproxy_key: "", imgproxy_salt: "" });
+  // Yazılan sırrın göster/gizle durumu — yalnız YENİ yazılan değeri açar,
+  // kayıtlı değer zaten hiç gelmiyor.
+  const revealed = reactive({ s3_secret_key: false, imgproxy_key: false, imgproxy_salt: false });
   const results = reactive({ s3: null, cdn: null, imgproxy: null });
 
   const blockers = computed(() => status.value?.blockers || []);
@@ -486,7 +581,10 @@
         if (secrets[key]) payload[key] = secrets[key];
       }
       await api.updateDoc(DOCTYPE, DOCTYPE, payload);
-      for (const key of SECRET_FIELDS) secrets[key] = "";
+      for (const key of SECRET_FIELDS) {
+        secrets[key] = "";
+        revealed[key] = false;
+      }
       toast.success(t("mediaStorage.saved"));
       status.value = (await api.callMethodGET(STATUS_METHOD)).message;
     } catch (error) {
@@ -514,179 +612,293 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "@/assets/scss/media" as media;
 
+  // ── Sayfa iskeleti ──────────────────────────────────────────────────
+  //
+  // Kök neden (telefon): eski kural `padding: 16px 0.25rem; margin: 0 -0.75rem`
+  // ile sayfayı main'in dolgusundan dışarı taşırıyordu; kartlar ekranın
+  // kenarına yapışıyor, gölge kırpılıyordu. Negatif margin yok — dar ekranda
+  // sayfanın kendi yatay dolgusu sıfırlanıyor, main'in 16px'i yetiyor
+  // (MediaBackupView ile aynı karar).
   .storage-settings-page {
     max-width: 1040px;
     margin: 0 auto;
-    padding: 24px;
+    padding: media.$s-5 media.$s-4 media.$s-10;
+
+    @media (max-width: media.$m-bp-sm) {
+      padding-inline: 0;
+    }
+
+    @media (max-width: 1023px) {
+      padding-bottom: calc(#{media.$m-float-bottom} + 56px);
+    }
   }
 
   .page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px;
-    gap: 16px;
+    gap: media.$s-4;
+    margin-bottom: media.$s-5;
+
+    // base.scss'teki global `html.dark header` kuralı zemin basmasın.
+    @include dark {
+      background-color: transparent !important;
+    }
 
     h1 {
-      font-size: 1.375rem;
+      margin: 0;
+      @include media.text("display");
       font-weight: 700;
-      color: $l-text-900;
-      @include dark {
-        color: $d-text-hi;
+      @include media.heading;
+    }
+
+    // Telefonda başlık + kaydet alt alta; kaydet tam satır, 44px.
+    @media (max-width: media.$m-bp-sm) {
+      flex-direction: column;
+      align-items: stretch;
+
+      .hdr-btn-primary {
+        justify-content: center;
+        @include media.tap-target;
       }
     }
   }
 
   .subtitle {
-    margin-top: 4px;
-    font-size: 0.875rem;
+    margin: media.$s-05 0 0;
+    @include media.text("xs");
     color: $l-text-600;
+
     @include dark {
       color: $d-text-muted;
     }
   }
 
   .state {
-    padding: 16px 0;
-    font-size: 0.9375rem;
+    padding: media.$s-4 0;
+    @include media.text("body");
     color: $l-text-600;
+
     @include dark {
       color: $d-text-muted;
     }
 
     &.error {
-      color: $c-error;
-    }
-  }
+      color: $c-error-text;
 
-  .retry-btn {
-    margin-left: 12px;
-  }
-
-  .panel {
-    border: 1px solid $l-border;
-    border-radius: 12px;
-    background: $l-bg;
-    padding: 20px;
-    margin-bottom: 20px;
-
-    @include dark {
-      border-color: $d-border;
-      background: $d-bg-card;
-    }
-
-    h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: $l-text-900;
       @include dark {
-        color: $d-text-hi;
+        color: $c-error;
       }
     }
   }
 
+  .retry-btn {
+    margin-left: media.$s-3;
+  }
+
+  // ── Bölüm kartları ──────────────────────────────────────────────────
+  // Kabuk `card` (scss.md §8); burada yalnız aralık ve iç ritim.
+  .panel {
+    margin-bottom: media.$s-4;
+
+    @media (max-width: media.$m-bp-sm) {
+      padding: media.$s-4;
+    }
+
+    h2 {
+      margin: 0 0 media.$s-4;
+      @include media.text("body");
+      font-weight: 600;
+      @include media.heading;
+    }
+  }
+
+  // Bölüm başlığı + "Bağlantıyı test et".
+  //
+  // Kök neden: düğme `hdr-btn-ghost` sınıfını taşıyordu, o sınıf HİÇBİR
+  // yerde tanımlı değil — düğme stilsiz, dolgusuz, `white-space` serbest;
+  // başlıkla aynı satırda ikisi de ikiye kırılıyordu. Artık `hdr-btn-outlined`
+  // (tanımlı, `nowrap`); telefonda başlık üstte, düğme altta tam satır.
   .panel-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: media.$s-3;
+    margin-bottom: media.$s-4;
 
     h2 {
       margin-bottom: 0;
+      min-width: 0;
     }
 
-    margin-bottom: 16px;
+    .hdr-btn-outlined {
+      flex-shrink: 0;
+    }
+
+    @media (max-width: media.$m-bp-sm) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: media.$s-2;
+
+      .hdr-btn-outlined {
+        width: 100%;
+        justify-content: center;
+        height: auto;
+        @include media.tap-target;
+      }
+    }
   }
 
+  // ── Alanlar ─────────────────────────────────────────────────────────
   .field-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+    gap: media.$s-4;
 
-    @media (max-width: 640px) {
-      grid-template-columns: 1fr;
+    @media (max-width: media.$m-bp-md) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: media.$s-3;
     }
   }
 
   .field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0;
     min-width: 0;
   }
 
+  // `form-label` global ölçü; burada yalnız telefon tipografisi.
   .field-label {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: $l-text-700;
-    @include dark {
-      color: $d-text;
-    }
+    @include media.text("xs");
   }
 
   .field-hint {
-    font-size: 0.75rem;
+    margin-top: media.$s-1;
+    @include media.text("xs");
     color: $l-text-600;
+
     @include dark {
       color: $d-text-muted;
     }
   }
 
+  // `form-input` global görünüm; telefonda 16px (iOS zoom) ve 44px yükseklik.
   .field-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid $l-border;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    background: $l-bg;
-    color: $l-text-900;
-
-    @include dark {
-      border-color: $d-border;
-      background: $d-bg;
-      color: $d-text-hi;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: $brand;
+    @media (max-width: media.$m-bp-md) {
+      font-size: 1rem;
+      @include media.tap-target;
     }
   }
 
+  textarea.field-input {
+    resize: vertical;
+    min-height: 4.5rem;
+  }
+
+  // Gizli anahtar: alan + göster/gizle düğmesi aynı kutuda, düğme sağda
+  // alanın içinde ve tam yükseklikte — dolgu düğmenin altına yazı girmesin
+  // diye 44px.
+  .secret-field {
+    position: relative;
+    display: block;
+
+    .field-input {
+      padding-right: 2.75rem;
+    }
+  }
+
+  .secret-field__toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    border: 0;
+    border-radius: 0 8px 8px 0;
+    background: none;
+    color: $l-text-500;
+    cursor: pointer;
+    @include media.focus-ring;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+
+    @include media.hoverable {
+      &:hover {
+        color: $l-text-900;
+
+        @include dark {
+          color: $d-text-hi;
+        }
+      }
+    }
+  }
+
+  // Onay kutusu satırı.
+  //
+  // Kök neden: `align-items: center` — metin iki satıra inince kutu ortada
+  // asılı kalıyordu. Kutu ilk satırla hizalanıyor; satırın tamamı dokunma
+  // alanı (min 44px), böylece metne dokunmak da kutuyu çevirir.
   .toggle-row {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.875rem;
+    align-items: flex-start;
+    gap: media.$s-2;
+    padding: media.$s-1 0;
+    @include media.text("sm");
+    line-height: 1.4;
     color: $l-text-700;
+    cursor: pointer;
+
     @include dark {
       color: $d-text;
     }
 
+    // Telefonda 40px satır: 44 ile art arda dört kutu seyrek dağılıyordu,
+    // ızgaranın 12px boşluğuyla adım zaten 52px'e çıkıyor.
+    @media (max-width: media.$m-bp-md) {
+      min-height: 2.5rem;
+      padding: media.$s-1 0;
+    }
+
     input {
+      flex-shrink: 0;
+      width: 1.125rem;
+      height: 1.125rem;
+      margin: 0.1em 0 0;
       accent-color: $brand;
+      cursor: pointer;
+    }
+
+    span {
+      min-width: 0;
     }
   }
 
   .note {
-    margin-bottom: 12px;
-    font-size: 0.8125rem;
+    margin: 0 0 media.$s-3;
+    @include media.text("sm");
     color: $l-text-600;
+
     @include dark {
       color: $d-text-muted;
     }
   }
 
   .blockers {
-    margin-top: 16px;
-    padding: 12px 14px;
-    border-radius: 8px;
-    background: rgba($c-warning, 0.08);
+    margin-top: media.$s-4;
+    padding: media.$s-3 media.$s-3;
+    border-radius: media.$r-md;
+    background: media.$tint-warning;
     border: 1px solid rgba($c-warning, 0.25);
-    font-size: 0.8125rem;
+    @include media.text("sm");
     color: $l-text-700;
+    overflow-wrap: anywhere;
 
     @include dark {
       color: $d-text;
@@ -694,84 +906,160 @@
 
     &__head {
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: media.$s-1;
     }
 
     ul {
-      margin: 0 0 10px 16px;
+      margin: 0 0 media.$s-2 media.$s-4;
       list-style: disc;
     }
   }
 
   .warn-line {
-    margin-top: 8px;
-    font-size: 0.8125rem;
-    color: $c-warning;
+    margin: media.$s-2 0 0;
+    @include media.text("sm");
+    color: $c-warning-text;
+    overflow-wrap: anywhere;
+
+    @include dark {
+      color: $c-warning;
+    }
   }
 
+  // ── Durum ızgarası ──────────────────────────────────────────────────
   .status-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
+    gap: media.$s-3;
+    margin: 0;
 
-    @media (max-width: 640px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    > div {
+      min-width: 0;
+      padding: media.$s-2 media.$s-3;
+      border-radius: media.$r-md;
+      @include media.surface("soft");
     }
 
     dt {
-      font-size: 0.75rem;
+      @include media.text("xs");
       color: $l-text-600;
+
       @include dark {
         color: $d-text-muted;
       }
     }
 
     dd {
-      font-size: 0.9375rem;
+      margin: media.$s-05 0 0;
+      @include media.text("body");
       font-weight: 600;
-      color: $l-text-900;
+      overflow-wrap: anywhere;
+      @include media.heading;
+    }
+
+    // Ray + yan panel altında (≤1023) gri karolar 2+2 diziliyor,
+    // "LocalDiskStorage" hece ortasından kırılıyordu (öneri 5, 2026-09-09).
+    // Anahtar/değer satırları: teknik değer monospace ve tek satır.
+    @media (max-width: media.$m-bp-rail) {
+      display: block;
+      border-bottom: 1px solid $l-border-alt;
+
       @include dark {
-        color: $d-text-hi;
+        border-bottom-color: $d-border;
+      }
+
+      > div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: media.$s-3;
+        min-height: 2.75rem;
+        padding: media.$s-1 0;
+        border: 0;
+        border-top: 1px solid $l-border-alt;
+        border-radius: 0;
+        background: none;
+
+        @include dark {
+          background: none;
+          border-top-color: $d-border;
+        }
+      }
+
+      dd {
+        margin: 0;
+        text-align: end;
+        white-space: nowrap;
+        overflow-wrap: normal;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        @include media.text("sm");
       }
     }
   }
 
+  .status-pill {
+    @include media.chip("neutral");
+  }
+
+  .status-pill--ok {
+    @include media.chip("success");
+  }
+
+  .status-pill--off {
+    @include media.chip("warning");
+  }
+
+  .status-ok {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    margin: media.$s-3 0 0;
+    color: $c-success-text;
+    @include media.text("sm");
+
+    @include dark {
+      color: $c-success;
+    }
+  }
+
+  // ── Test sonucu ─────────────────────────────────────────────────────
+  // `overflow-x: auto` kaldırıldı: uzun adım metni kutuyu yatay kaydırıyordu,
+  // telefonda sayfa kayıyor sanılıyordu. Metin kırılır, kutu taşmaz.
   .test-result {
-    margin-top: 14px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 0.8125rem;
-    overflow-x: auto;
+    margin-top: media.$s-3;
+    padding: media.$s-2 media.$s-3;
+    border-radius: media.$r-md;
+    @include media.text("sm");
+    overflow-wrap: anywhere;
 
     &.is-ok {
-      background: rgba($c-success, 0.08);
+      color: $c-success-text;
+      background: media.$tint-success;
       border: 1px solid rgba($c-success, 0.25);
+
+      @include dark {
+        color: $c-success;
+      }
     }
 
     &.is-fail {
-      background: rgba($c-error, 0.08);
+      color: $c-error-text;
+      background: media.$tint-danger;
       border: 1px solid rgba($c-error, 0.25);
+
+      @include dark {
+        color: $c-error;
+      }
     }
 
     &__head {
       font-weight: 600;
-      margin-bottom: 4px;
+      margin: 0 0 media.$s-1;
     }
 
     ul {
-      margin-left: 16px;
+      margin: 0 0 0 media.$s-4;
       list-style: disc;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .storage-settings-page {
-      padding: 16px 0.25rem;
-      margin: 0 -0.75rem;
-    }
-
-    .page-header {
-      flex-wrap: wrap;
     }
   }
 </style>

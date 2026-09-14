@@ -4,6 +4,7 @@
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import { POSTER_PROXY_REGION, POSTER_SPEC, simulatePoster } from "@/lib/media/simulator";
+  import { humanizeId, regionKeyPath } from "@/lib/media/simulator/labels";
   import { formatBytes } from "@/utils/mediaFormat";
 
   /**
@@ -26,7 +27,13 @@
     activeDeviceId: { type: String, default: "" },
   });
 
-  const { t } = useI18n();
+  const { t, te } = useI18n();
+
+  /** Vekil bölgenin insan adı — `product_detail/main_image` ekrana kod olarak basılmaz. */
+  const proxyRegionName = computed(() => {
+    const key = `mediaSimulator.regionName.${regionKeyPath(POSTER_PROXY_REGION)}`;
+    return te(key) ? t(key) : humanizeId(POSTER_PROXY_REGION);
+  });
 
   const sim = computed(() => simulatePoster(props.devices));
   const insufficient = computed(() => sim.value.rows.filter((r) => !r.sufficient));
@@ -213,7 +220,7 @@
 
     <p class="simpost__note simpost__note--unmeasured">
       <AppIcon name="triangle-alert" :size="14" />
-      <span>{{ t("mediaSimulator.poster.proxy", { region: POSTER_PROXY_REGION }) }}</span>
+      <span>{{ t("mediaSimulator.poster.proxy", { region: proxyRegionName }) }}</span>
     </p>
 
     <dl class="simpost__spec">
@@ -229,9 +236,12 @@
         <dt>{{ t("mediaSimulator.poster.maxBytes") }}</dt>
         <dd>{{ POSTER_SPEC.maxBytes ? formatBytes(POSTER_SPEC.maxBytes) : "—" }}</dd>
       </div>
-      <div class="simpost__kpi">
+      <!-- Formül uzun: telefonda etiketin altına, kendi satırına iner (öneri 2). -->
+      <div class="simpost__kpi simpost__kpi--wide">
         <dt>{{ t("mediaSimulator.poster.window") }}</dt>
-        <dd>{{ POSTER_SPEC.windowStartS }}s … {{ POSTER_SPEC.windowEndExpr || "—" }}</dd>
+        <dd class="simpost__mono">
+          {{ POSTER_SPEC.windowStartS }}s … {{ POSTER_SPEC.windowEndExpr || "—" }}
+        </dd>
       </div>
       <div class="simpost__kpi">
         <dt>{{ t("mediaSimulator.poster.gate") }}</dt>
@@ -260,12 +270,24 @@
         class="simpost__switchBtn"
         :class="{ 'is-on': v.id === surfaceId }"
         :aria-pressed="v.id === surfaceId ? 'true' : 'false'"
+        :title="t(`mediaSimulator.poster.surface.${v.slotKey.replace('.', '_')}`, {}, v.slotKey)"
         @click="surfaceId = v.id"
       >
-        {{ t(`mediaSimulator.poster.surface.${v.slotKey.replace(".", "_")}`, {}, v.slotKey) }}
+        <!-- Telefonda kısa etiket: bölmeli seçicide uzun ad iki satıra kırılıyordu (öneri 3). -->
+        <span class="simpost__lblLong">
+          {{ t(`mediaSimulator.poster.surface.${v.slotKey.replace(".", "_")}`, {}, v.slotKey) }}
+        </span>
+        <span class="simpost__lblShort">
+          {{
+            t(`mediaSimulator.poster.surfaceShort.${v.slotKey.replace(".", "_")}`, {}, v.slotKey)
+          }}
+        </span>
       </button>
     </div>
 
+    <h4 class="simpost__sub">
+      {{ t("mediaSimulator.poster.stateTitle", {}, "Önizleme durumu") }}
+    </h4>
     <div
       class="simpost__switch"
       role="group"
@@ -278,9 +300,15 @@
         class="simpost__switchBtn"
         :class="{ 'is-on': st === previewState }"
         :aria-pressed="st === previewState ? 'true' : 'false'"
+        :title="t(`mediaSimulator.poster.state.${st}`, {}, STATE_FALLBACK[st])"
         @click="previewState = st"
       >
-        {{ t(`mediaSimulator.poster.state.${st}`, {}, STATE_FALLBACK[st]) }}
+        <span class="simpost__lblLong">
+          {{ t(`mediaSimulator.poster.state.${st}`, {}, STATE_FALLBACK[st]) }}
+        </span>
+        <span class="simpost__lblShort">
+          {{ t(`mediaSimulator.poster.stateShort.${st}`, {}, STATE_FALLBACK[st]) }}
+        </span>
       </button>
     </div>
 
@@ -288,7 +316,9 @@
          bu yüzden ekran okuyucudan gizlendi. -->
     <div v-if="cover" class="simpost__stage" aria-hidden="true">
       <div class="simpost__cover" :class="{ 'is-playing': playing }">
-        <span class="simpost__coverTag">{{ playing ? "▶" : "poster" }}</span>
+        <span class="simpost__coverTag">{{
+          playing ? "▶" : t("mediaSimulator.poster.attr.poster")
+        }}</span>
         <div
           v-for="z in cover.zones"
           :key="z.id"
@@ -322,47 +352,13 @@
         }}
       </span>
     </p>
-    <!-- Künye çeviriye girmez: dosya:satır referansı dört dilde de aynıdır ve
-         çeviri eksikse KAYBOLMAMALI. -->
-    <p class="simpost__prov">
-      <code>{{ surface.source }}</code>
-    </p>
-
     <p v-if="stateNote" class="simpost__note simpost__note--unmeasured">
       <AppIcon name="triangle-alert" :size="14" />
       <span>{{ t(`mediaSimulator.poster.${stateNote}`, {}, STATE_NOTE_FALLBACK[stateNote]) }}</span>
     </p>
 
-    <dl class="simpost__attrs">
-      <div v-for="key in ['autoplay', 'muted', 'loop', 'playsinline', 'poster']" :key="key">
-        <dt>{{ t(`mediaSimulator.poster.attr.${key}`, {}, key) }}</dt>
-        <dd :class="{ simpost__attrOff: !surface[key] }">
-          {{
-            surface[key]
-              ? t("mediaSimulator.poster.yes", {}, "var")
-              : t("mediaSimulator.poster.no", {}, "YOK")
-          }}
-        </dd>
-      </div>
-      <div>
-        <dt>{{ t("mediaSimulator.poster.attr.preload", {}, "preload") }}</dt>
-        <dd>{{ surface.preload }}</dd>
-      </div>
-      <div>
-        <dt>{{ t("mediaSimulator.poster.attr.controls", {}, "controls") }}</dt>
-        <dd>
-          {{
-            t(
-              `mediaSimulator.poster.controls.${surface.controls}`,
-              {},
-              surface.controls === "native" ? "yerel (tarayıcı çizer)" : "özel (uygulama çizer)"
-            )
-          }}
-        </dd>
-      </div>
-    </dl>
-
-    <!-- Güvenli alan: kapağın üstüne binen ögelerin kapladığı pay. -->
+    <!-- Güvenli alan: kapağın üstüne binen ögelerin kapladığı pay. Öğenin
+         kaynak kodu (dosya:satır) teknik ayrıntıda. -->
     <h4 class="simpost__sub">
       {{ t("mediaSimulator.poster.safeTitle", {}, "Güvenli alan — kapağa binen arayüz") }}
     </h4>
@@ -375,7 +371,6 @@
         <span v-else class="simpost__bad">{{
           t("mediaSimulator.poster.zoneUnmeasured", {}, "ÖLÇÜLMEDİ")
         }}</span>
-        <span class="simpost__zoneSrc">{{ z.source }}</span>
       </li>
     </ul>
     <p
@@ -430,61 +425,113 @@
     </p>
     <p class="simpost__note simpost__note--unmeasured">
       <AppIcon name="triangle-alert" :size="14" />
-      <span>{{
-        t(
-          "mediaSimulator.poster.noBudget",
-          {},
-          "Karşılaştırılacak mobil veri tavanı panel verisinde YOK: sync-simulator.mjs video_decision.json'dan yalnız poster bloğunu türetiyor; HLS merdiveni (360p 800 · 480p 1400 · 720p 2800 · 1080p 5000 kbps) ve 2.500 kbps geçiş tavanı vendor'lanmadı."
-        )
-      }}</span>
+      <span>{{ t("mediaSimulator.poster.noBudget") }}</span>
     </p>
+
+    <!-- Teknik ayrıntı — varsayılan kapalı: vekil bölge künyesi, video
+         etiketi öznitelikleri, kaynak dosya:satır referansları. Künye
+         çeviriye girmez: dosya yolu dört dilde de aynıdır. -->
+    <details class="simpost__tech">
+      <summary>{{ t("mediaSimulator.techDetails") }}</summary>
+      <p>{{ t("mediaSimulator.poster.proxyTech", { region: POSTER_PROXY_REGION }) }}</p>
+      <p>{{ t("mediaSimulator.poster.noBudgetTech") }}</p>
+      <p class="simpost__techTitle">{{ t("mediaSimulator.poster.attrTitle") }}</p>
+      <dl class="simpost__attrs">
+        <div v-for="key in ['autoplay', 'muted', 'loop', 'playsinline', 'poster']" :key="key">
+          <dt>{{ t(`mediaSimulator.poster.attr.${key}`, {}, key) }}</dt>
+          <dd :class="{ simpost__attrOff: !surface[key] }">
+            {{
+              surface[key]
+                ? t("mediaSimulator.poster.yes", {}, "var")
+                : t("mediaSimulator.poster.no", {}, "yok")
+            }}
+          </dd>
+        </div>
+        <div>
+          <dt>{{ t("mediaSimulator.poster.attr.preload", {}, "preload") }}</dt>
+          <dd>{{ surface.preload }}</dd>
+        </div>
+        <div>
+          <dt>{{ t("mediaSimulator.poster.attr.controls", {}, "controls") }}</dt>
+          <dd>
+            {{
+              t(
+                `mediaSimulator.poster.controls.${surface.controls}`,
+                {},
+                surface.controls === "native" ? "tarayıcı çizer" : "uygulama çizer"
+              )
+            }}
+          </dd>
+        </div>
+      </dl>
+      <p class="simpost__techTitle">{{ t("mediaSimulator.poster.sourceLabel") }}</p>
+      <p>
+        <code>{{ surface.source }}</code>
+      </p>
+      <ul v-if="cover" class="simpost__zoneSrcList">
+        <li v-for="z in cover.zones" :key="z.id">
+          {{ t(`mediaSimulator.poster.zone.${z.id}`, {}, ZONE_FALLBACK[z.id] || z.id) }}:
+          <code>{{ z.source }}</code>
+        </li>
+      </ul>
+    </details>
 
     <p v-if="!sim.region" class="simpost__note">
       {{ t("mediaSimulator.poster.noRegion") }}
     </p>
 
-    <table v-else class="simpost__table">
-      <caption class="simpost__caption">
-        {{
-          t("mediaSimulator.poster.caption", {
-            n: sim.rows.length,
-            ladder: sim.ladder.map((r) => r.width).join(" / "),
-            insufficient: insufficient.length,
-          })
-        }}
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t("mediaSimulator.matrix.col.combo") }}</th>
-          <th scope="col" class="simpost__num">{{ t("mediaSimulator.matrix.col.required") }}</th>
-          <th scope="col">{{ t("mediaSimulator.matrix.col.chosen") }}</th>
-          <th scope="col">{{ t("mediaSimulator.poster.verdict") }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="row in sim.rows"
-          :key="row.key"
-          :class="{ 'simpost__row--on': row.device.id === activeDeviceId }"
-          :aria-current="row.device.id === activeDeviceId ? 'true' : undefined"
-        >
-          <th scope="row">{{ row.device.label }}</th>
-          <td class="simpost__num">{{ row.requiredPx }} px</td>
-          <td>
-            <code v-if="row.chosen" class="simpost__profile">{{ row.chosen.name }}</code>
-            {{ row.chosen ? ` · ${row.chosen.width} px` : "—" }}
-          </td>
-          <td>
-            <span v-if="row.sufficient" class="simpost__ok">
-              {{ t("mediaSimulator.poster.enough") }}
-            </span>
-            <span v-else class="simpost__bad">
-              {{ t("mediaSimulator.poster.short", { px: row.deficitPx }) }}
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="simpost__scroll">
+      <table class="simpost__table">
+        <caption class="simpost__caption">
+          {{
+            t("mediaSimulator.poster.caption", {
+              n: sim.rows.length,
+              ladder: sim.ladder.map((r) => r.width).join(" / "),
+              insufficient: insufficient.length,
+            })
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t("mediaSimulator.matrix.col.combo") }}</th>
+            <th scope="col" class="simpost__num">{{ t("mediaSimulator.matrix.col.required") }}</th>
+            <th scope="col">{{ t("mediaSimulator.matrix.col.chosen") }}</th>
+            <th scope="col">{{ t("mediaSimulator.poster.verdict") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in sim.rows"
+            :key="row.key"
+            :class="{ 'simpost__row--on': row.device.id === activeDeviceId }"
+            :aria-current="row.device.id === activeDeviceId ? 'true' : undefined"
+          >
+            <th scope="row">{{ row.device.label }}</th>
+            <!-- `data-label`: telefonda başlık satırı gizlenir, her hücre
+                 kendi etiketini `::before` ile taşır (kart görünümü). -->
+            <td class="simpost__num" :data-label="t('mediaSimulator.matrix.col.required')">
+              {{ row.requiredPx }} px
+            </td>
+            <td :data-label="t('mediaSimulator.matrix.col.chosen')">
+              <template v-if="row.chosen">
+                <code class="simpost__profile">{{ row.chosen.name }}</code>
+                <span class="simpost__sep" aria-hidden="true"> · </span>
+                <span class="simpost__chosenPx">{{ row.chosen.width }} px</span>
+              </template>
+              <template v-else>—</template>
+            </td>
+            <td :data-label="t('mediaSimulator.poster.verdict')">
+              <span v-if="row.sufficient" class="simpost__ok">
+                {{ t("mediaSimulator.poster.enough") }}
+              </span>
+              <span v-else class="simpost__bad">
+                {{ t("mediaSimulator.poster.short", { px: row.deficitPx }) }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </template>
 
@@ -561,9 +608,108 @@
     @include media.text("xs");
   }
 
+  .simpost__lblShort {
+    display: none;
+  }
+
+  .simpost__mono {
+    @include sim.mono;
+  }
+
   .simpost__stage {
     max-width: 22rem;
     margin: media.$s-3 0;
+  }
+
+  // ── Telefon (öneri 2 + 3, 2026-09-09) ─────────────────────────────
+  // Karolar 2+2+1 diziliyor, son karo yalnız kalıyordu → anahtar/değer
+  // satırları. Çipler dağınık sarıyordu → tam genişlik bölmeli seçici,
+  // kısa etiket. Kapak çizimi tam genişlik.
+  @media (max-width: media.$m-bp-md) {
+    .simpost__spec {
+      display: block;
+      border-bottom: 1px solid $l-border-alt;
+
+      @include dark {
+        border-bottom-color: $d-border;
+      }
+    }
+
+    .simpost__kpi {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: media.$s-3;
+      min-height: 2.75rem;
+      padding: media.$s-1 0;
+      border-radius: 0;
+      border-top: 1px solid $l-border-alt;
+      background: none;
+
+      @include dark {
+        background: none;
+        border-top-color: $d-border;
+      }
+
+      dd {
+        text-align: end;
+      }
+    }
+
+    .simpost__kpi--wide {
+      flex-direction: column;
+      align-items: stretch;
+      gap: media.$s-05;
+      padding-block: media.$s-2;
+
+      dd {
+        text-align: start;
+      }
+    }
+
+    .simpost__lblLong {
+      display: none;
+    }
+
+    .simpost__lblShort {
+      display: inline;
+    }
+
+    .simpost__switch {
+      flex-wrap: nowrap;
+      gap: 1px;
+      border: 1px solid $l-border;
+      border-radius: media.$r-md;
+      overflow: hidden;
+      background: $l-border;
+
+      @include dark {
+        border-color: $d-border;
+        background: $d-border;
+      }
+    }
+
+    .simpost__switchBtn {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 2.75rem;
+      justify-content: center;
+      text-align: center;
+      padding: 0 media.$s-2;
+      border: 0;
+      border-radius: 0;
+      @include media.text("sm");
+
+      &.is-on {
+        background: $brand;
+        color: $brand-ink;
+        font-weight: 700;
+      }
+    }
+
+    .simpost__stage {
+      max-width: none;
+    }
   }
 
   .simpost__cover {
@@ -612,15 +758,20 @@
     border-radius: 50%;
   }
 
-  .simpost__prov {
-    margin: 0 0 media.$s-3;
-    @include media.text("xs");
-    @include media.muted(2);
-    word-break: break-word;
+  // Teknik ayrıntı katı — kaynak kod, öznitelikler, vekil künyesi.
+  .simpost__tech {
+    @include sim.tech-fold;
+    margin-bottom: media.$s-3;
+  }
 
-    code {
-      @include sim.mono;
-    }
+  .simpost__techTitle {
+    margin: media.$s-2 0 media.$s-1;
+    font-weight: 700;
+  }
+
+  .simpost__zoneSrcList {
+    margin: 0;
+    padding-inline-start: 1rem;
   }
 
   .simpost__attrs {
@@ -630,15 +781,108 @@
     margin: 0 0 media.$s-2;
 
     dt {
+      margin: 0;
       @include media.text("xs");
       @include media.muted(2);
-      @include sim.mono;
+      text-transform: none;
+      letter-spacing: 0;
     }
 
     dd {
       margin: media.$s-05 0 0;
       @include media.text("sm");
       font-weight: 600;
+      color: $l-text-700;
+
+      @include dark {
+        color: $d-text;
+      }
+    }
+  }
+
+  .simpost__scroll {
+    @include sim.table-scroll;
+  }
+
+  // Telefonda tablo yatay kayıyordu: "İnen boyut" sütunu kesik, profil
+  // adı (`poster_854`) yarım, uzun cihaz adları dört satır. Dört sütunlu
+  // tabloyu 360px'e sığdırmanın yolu yok — satır KARTA dönüşür: cihaz adı
+  // tam satır, altında gereken / inen / sonuç üç küçük hücre, her hücre
+  // kendi etiketini taşır. DOM aynı (13 `scope="row"` başlığı, testler
+  // sayıyor); yalnız görünüm değişiyor. Teknik profil adı telefonda gizli,
+  // patron için anlamı yok; masaüstünde duruyor.
+  @media (max-width: media.$m-bp-md) {
+    .simpost__scroll {
+      overflow: visible;
+    }
+
+    .simpost__table {
+      // Tablo kutusu blok olsun: satırlar ızgaraya dönünce `display: table`
+      // başlık (caption) için içerik genişliği hesaplayamıyor, "13 cihaz ·
+      // üretilen kapak…" 60px'lik sütuna sıkışıyordu.
+      display: block;
+
+      caption,
+      tbody {
+        display: block;
+        width: 100%;
+      }
+
+      thead {
+        @include media.sr-only;
+      }
+
+      tbody tr {
+        display: grid;
+        // Üç hücre içerik kadar geniş, aralık eşit dağılır: eşit sütunlarda
+        // "İNEN BOYUT" etiketi 320px'te iki satıra kırılıyordu.
+        grid-template-columns: auto auto auto;
+        justify-content: space-between;
+        column-gap: media.$s-3;
+        row-gap: media.$s-1;
+        padding: media.$s-2 media.$s-2;
+        @include media.divider(bottom);
+      }
+
+      tbody th,
+      tbody td {
+        display: block;
+        padding: 0;
+        border: 0;
+      }
+
+      tbody th {
+        grid-column: 1 / -1;
+        @include media.text("sm");
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        white-space: nowrap;
+        @include media.text("xs");
+        @include media.muted(1);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+      }
+
+      .simpost__num {
+        text-align: start;
+      }
+    }
+
+    .simpost__profile,
+    .simpost__sep {
+      display: none;
+    }
+
+    .simpost__chosenPx {
+      @include media.numeric;
+    }
+
+    .simpost__row--on {
+      border-radius: media.$r-sm;
     }
   }
 
@@ -673,12 +917,6 @@
   .simpost__zonePct {
     @include media.numeric;
     @include media.chip("warning");
-  }
-
-  .simpost__zoneSrc {
-    @include media.muted(2);
-    flex: 1 1 12rem;
-    min-width: 0;
   }
 
   .simpost__field {
