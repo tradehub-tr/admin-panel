@@ -1,3 +1,436 @@
+## [v1.13.4-rc.1] - 2026-09-14 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(media): akıllı video sıkıştırma — yalnız MB düşürüyorsa çevir (panel) (@TurksabYonetim)
+- feat(media): tarih gösterimi tek kaynakta, kullanıcının saatinde (TUR-124) (@Metin Bektemur)
+- feat(media): video transcode durumu rozeti (işleniyor/başarısız) (@TurksabYonetim)
+  - useSellerMedia: video_status → videoStatus haritalaması
+  - MediaCard: processing (sarı) / failed (kırmızı) rozetleri; ready bilinçli rozetsiz
+  - MediaDetailPanel: video için durum satırı
+  - i18n: media.video.* + media.detail.videoStatus (tr, en)
+  - Kaynak-metin testi: mediaVideoStatus.test.js
+- feat(media): erişim seviyesi paneli — public↔private toggle + imzalı link (TUR-126 §4.2) (@TurksabYonetim)
+- feat(media): Özel dosyalar görünümü — herkese aç + imzalı link + PII rozeti (TUR-126 §4.2) (@TurksabYonetim)
+- feat(media): Medya Gezgini — klasör mantığıyla medya gezinme ekranı (@TurksabYonetim)
+- feat(media): gezginde KYB/KYC altında mağaza alt klasörleri (@TurksabYonetim)
+- feat(media): gezginde belge türü klasörleri (kimlik, vergi levhası, imza sirküleri...) (@TurksabYonetim)
+- feat(media): gezginde Sohbet ekleri kökü — mağaza klasörleri + aksiyonsuz satırlar (@TurksabYonetim)
+- feat(media): video işleme durumu rozeti ve elle yeniden deneme (TUR-296) (@Metin Bektemur)
+  - `useSellerMedia` satırlara `videoStatus` ekliyor ("" | processing | ready | failed); arka taraf `inventory.list_files` üzerinden dönüyor.
+  - Rozet yalnız `processing` ve `failed` için — "hazır" olağan durumdur, rozetlemek gürültü. Satıcı listesi, kart görünümü ve yönetim optimizasyon ekranının üçünde de aynı desen.
+  - "Yeniden İşle" yalnız `failed` satırda görünüyor: her videoda göstermek "her video yeniden işlenebilir" izlenimi verirdi. `mediaActions.js`'e bunun için `visibleWhen` deseni eklendi (koşullu kart işlemi).
+  - Satıcı `retry_video`, yönetim `retry_transcode` ucuna gidiyor. Düğmenin görünürlüğü koruma sayılmıyor — durum kuralını ve sahipliği arka taraf yeniden doğruluyor.
+  - Store'da başarıda durum beklemeden `processing`'e çekiliyor ki rozet anında değişsin; sonraki liste yenilemesi gerçek durumu zaten getiriyor.
+  - `chip` mixin'inde "error" tonu olmadığı için hata rengi iki ekranda da yerinde kuruldu.
+- feat(media): satıcı yedek ekranı — kütüphanenin altında, yönetim ekranıyla aynı görünüm (TUR-131) (@Metin Bektemur)
+  - Başlık şeridi hizasızdı: etiket alanına `field-input` uygulanıyordu (1rem yazı + 44px dokunma hedefi), yanındaki düğme ise 12px/28px. İkisi de 34px/12.5px yapıldı — panelin buton diliyle (`hdr-btn-outlined`) aynı ölçü.
+  - Aksiyon satırlarında `row-actions` kullanılmıştı; o 4px aralıkla panel başlığındaki minik düğmeler için tasarlanmış ve tam boy düğmeleri sıkıştırıyordu. Doğru kap `mbk__foot`.
+  - Uyarı şeridinin yalnız üst boşluğu vardı, altındaki düzene yapışıyordu.
+  - "Sorunsuz" satırı sayı 0 olsa da yeşil boyanıyordu — yeşil bir 0 yanıltıcı.
+  - Saklama kutusundaki metin dar sütunda satır kırıyordu.
+  - `database-backup` ve `alert-triangle` bu projenin ikon kayıtlarında YOK; çözümleyici bilinmeyen adı `null` döndürüyor, yani ikon sessizce görünmez oluyor ve hata da vermiyor. Kayıtta gerçekten olan adlar kullanıldı.
+- feat(media): güvenlik ekranları — karantina, bekletme ve tarama rozetleri (TUR-125) (@Metin Bektemur)
+  - `MediaQuarantineView` + `useMediaSecurity`: karantina listesi, tarama bekleyenler, politika özeti (tarayıcı kurulu mu, fail-open mı), elle süpürme, yeniden tarama ve yanlış pozitif için karantinadan çıkarma.
+  - Medya kartlarında ve satıcı listesinde tarama rozeti; `useSellerMedia` satırlara `scanStatus` taşıyor.
+  - Denetim ekranı yeni olay tiplerini (`media.scan`, `media.quarantine`, `media.quarantine_release`) süzgeçte gösteriyor.
+  - Dört dilde çeviri (tr/en/ar/ru).
+- feat(paketleme): desi, barkod eşleme ve barkod çizim yardımcıları eklendi (@aliiball)
+  - Ücretlendirilebilir ağırlık koli BAŞINA max(kg, desi); toplayıp max almak karışık yükte eksik ücretlendiriyor
+  - Bölen 0/boş gelirse varsayılan 3000'e düşüyor (Python get_desi_divisor ile aynı)
+  - Bilinmeyen kod okutulduğunda hiçbir şey değişmiyor (applyScan değişmez döner)
+- feat(paketleme): backend yerine geçen çalışan mock ve paketleme store'u eklendi (@aliiball)
+  - Kalıcılık localStorage'da; durum geçişleri tek kaynaktan türetiliyor
+  - Sözleşmedeki her hata kodu MockDevPanel'den tetiklenebiliyor (bayrak sessionStorage'da)
+  - packagingContract.test.js alan adlarını ve tiplerini kilitliyor — 13-BE bunu referans alacak
+  - Kaydetme yanıtı okuma yanıtıyla aynı şekli döndürüyor; ekran yerel yama yapmıyor
+- feat(lojistik): satıcı paneline paketleme rayı ve sellerVisible bayrağı eklendi (@aliiball)
+  - G1/G2/G3 yolları lojistik/sevkiyatlar/* altından çıkarıldı
+  - sellerMenuScreens() satıcı menüsünü admin menüsünün alt kümesi olarak türetiyor
+- feat(lojistik): ekran kalite denetimi testi eklendi (@aliiball)
+  - Yükleniyor/hata/boş durumu, yetki bağı, tr+en i18n bütünlüğü,
+  - Ulaşılmaz palet ekranı bu testle yakalandı; mutasyonla kanıtlandı
+  - Durum eşleme ekranına eksik yükleniyor durumu eklendi
+- feat(paketleme): paketleme kuyruğu, çalışma alanı, etiket ve palet ekranları eklendi (@aliiball)
+  - Doğrulama motoru engel/uyarı
+  - Etiket ve irsaliye gerçekten açılıp yazdırılabiliyor, barkod çiziliyor
+  - Okuyucu tuş hızı imzasından (<30ms) document düzeyinde ayırt ediliyor
+  - Sevkiyat detayından paketlemeye giriş noktaları eklendi
+- feat(lojistik): 16-FE-0 iskelet + panel UI hizalama + yetki onarımı (@boraydeger32)
+- feat(paketleme): etiket barkodu gerçek Code 128-B'ye geçirildi (@aliiball)
+  - Start B, modül-103 kontrol basamağı, 10 modül sessiz bölge, dur kodu
+  - Basılan etiket fiziksel okuyucuyla taranabiliyor; sunucu gerekmiyor
+  - Test sembolü SVG geometrisinden geri çözüyor — çizim doğru mu, kodlama doğru mu ayrı ölçülüyor
+  - barcodeSvg/barcodeDataUri imzaları değişmedi, çağıran hiçbir yer etkilenmedi
+- feat(paketleme): mock bayrağı uç bazına çevrildi (@aliiball)
+  - Tek USE_MOCK boolean'ı 11 anahtarlı MOCK haritasına dönüştü
+  - Sözleşme §8 uçların sırayla açılmasını öneriyor; tek bayrakla ara durum yoktu
+  - Anahtar adları sunucu metot adlarıyla birebir; test bunu da denetliyor
+  - URL stub'ı sınıfı nesneyle eziyordu, new URL kırılıyordu — statik metoda çevrildi
+- feat(lojistik): tasarım standardı ve hover denetimleri eklendi (@aliiball)
+  - Arama kutusu form-input-sm + !pl-9 + AppIcon
+  - Hover zemini normal zeminle aynı renge çözülürse kırılıyor (token adı değil değeri)
+  - variables.scss'te bg-elevated / bg-hover / item-hover üçü de #21201d
+- feat(lojistik): G0 rol matrisi — satıcı görünürlüğü ve rol tabanlı kapılar (@boraydeger32)
+  - Manifest bayrakları matrisle birebir: sellerVisible {B1,C1,D1,D2,G0,I1}, sellerRoute {B2,C2,G1-G3,H1,H2,I2}; küme testle kilitli — bayrak değiştirmek matris kararı değiştirmek demek
+  - Route guard: iki bayrağı da taşımayan lojistik ekranı satıcıya URL'den de kapalı (logisticsPlatformOnly → dashboard); "menüde yok ama URL çalışır" boşluğu kapandı
+  - Store artık roles sözlüğünü saklıyor; Ayarlar (M3) yazma kapısı system_manager||marketplace_admin'e bağlandı — can.manage yaklaşıklığı Carrier Integration Manager'a yanlış buton çiziyordu, kalktı
+  - C2 durum ekranı satıcıya yalnız SELLER_ALLOWED_TRANSITIONS'ı sunuyor (tam liste her seçeneği backend 403'üyle bitirirdi); satıcı haritası Python kaynağıyla senkron-testli + alt-küme testi
+- feat(lojistik): Manuel Sevkiyat ekranı açıldı (C1) (@boraydeger32)
+  - Form teslimat türüne göre şekil değişiyor: kargoda taşıyıcı ve takip numarası, satıcı aracında sürücü ve plaka soruluyor
+  - Maliyet alanları yalnız yetkili kullanıcıya görünüyor; satıcı taşıyıcı maliyetini görmüyor (yetki matrisi kararı)
+  - Kanal listesi gerçek katalogdan geliyor; kayıt ucu backend hazır olana kadar sahte veriyle çalışıyor — backend ucu yazılınca tek satırla gerçeğe bağlanacak, ekran değişmeyecek
+  - Ekran panel tasarım diline çevrildi, çift tıklamada mükerrer kayıt koruması eklendi
+  - Testler: 382/382 yeşil
+- feat(lojistik): paketleme ve etiket ekranlarına görünüm modları eklendi (@aliiball)
+  - Kuyruk: tablo, kart, kanban, kompakt liste
+  - Etiket: tablo, kart, liste (kanban yok — tek sevkiyat)
+  - Masaüstü tercihi localStorage'da; mobilde zorlanan mod diske yazılmıyor
+  - Kanban salt-okunur: kova sevkiyatın verisinden hesaplanıyor
+- feat(lojistik): teslim kanıtı mock ve store katmanı eklendi (@aliiball)
+  - Kovalar sevkiyat+POD durumundan türetiliyor, ayrı liste tutulmuyor
+  - source damgasını sunucu koyuyor; istemci beyanı yok sayılıyor
+  - Medya yetkisi yoksa dosya alanları yanıttan tamamen çıkarılıyor
+  - Teslim kodunun değeri hiçbir yanıtta taşınmıyor, yalnız durum ve deneme sayısı
+  - İstasyon indirgemesi ayrı modülde: ardışık aynı konum tek satıra iniyor, son istasyonun süresi şu ana göre hesaplanıyor
+  - 39 test: kayıt sonrası kova geçişi, teslim kapıları, düzeltme izi
+- feat(lojistik): teslim kanıtı ve teslimat akışı ekranları eklendi (@aliiball)
+  - Kanıt kuyruğu menüden açılıyor; POD'a sevkiyat adı bilmeden ulaşılıyor
+  - Ödeme alınmamışsa teslim düğmesi hiç çizilmiyor
+  - Yetki yoksa kanıt görselleri hiç istenmiyor, üst veri görünmeye devam ediyor
+  - Teslim kodunun değeri hiçbir ekranda gösterilmiyor, yalnız durum ve deneme sayısı
+  - Sevkiyat detayına teslim kanıtı ve istasyon sekmeleri eklendi
+  - Kalite denetimi düzeltmeleri: eksik ikon kaydı, ulaşılmaz istasyon ekranı, arama kutusu standardı
+- feat(lojistik): operasyon ekranları tamamlandı — pano, bekleyen işler, istisna kuyruğu (@boraydeger32)
+- feat(lojistik): admin menüsü gruplara ayrıldı (@aliiball)
+  - Sevkiyatlar, Paketleme, Teslimat, Taşıyıcı ve Ayarlar grupları
+  - Düzen satıcı panelindeki veritabanı yapısıyla hizalandı
+  - Sıra haritadan geliyor; manifestte olmayan ekran başlıksız grupta görünür kalıyor
+- feat(lojistik): teslim kanıtı akışı satıcı rolünde tamamlandı (@aliiball)
+  - Mock tenant süzgeci oturumdaki satıcıya bağlandı; sabit ada bağlıyken satıcı boş ekran görüyordu
+  - Yetki yüklemesi tek noktada toplandı; düzeltme düğmesi yetki gelmeden çizilmiyordu
+  - Eski dört teslim kanıtı bileşeni ve hikâyeleri kaldırıldı, yerlerini yeni ekranlar aldı
+  - Çeviri sözlüğünde ikiye bölünmüş teslim kanıtı anahtarları birleştirildi
+- feat(lojistik): menüye Genel Bakış grubu eklendi (@aliiball)
+  - Pano, bekleyen işler ve istisnalar başlıksız grupta kalıyordu
+  - Grup menünün en başına kondu; operasyonun günlük bakış noktası orası
+- feat(medya): silmede ortak sahiplik uyarısı + karantina ekranı stil hizası (TUR-298) (@Metin Bektemur)
+- feat(lojistik): sevkiyat takip ekranı yenilendi — kargom nerede, tek bakışta (@boraydeger32)
+- feat(lojistik): teslim kanıtı kuyruğuna görünüm modları eklendi (@aliiball)
+  - Tablo, kart, pano ve liste; tablo varsayilan kaliyor
+  - Pano dort kovayi sutun olarak gosteriyor, kovalar yanittan turetiliyor
+  - Pano salt-okunur: kova sevkiyatin verisinden hesaplaniyor, surukleme kanit kaydetmez
+  - Panoya gecerken secili kova temizleniyor
+  - Mobilde dugmeler cizilmiyor
+- feat(lojistik): teslimat ve kuyruk ekranlarına görünüm modları eklendi (@aliiball)
+  - Satici teslimati ve alici teslim alma: kart, tablo, liste — tercih iki ekranda AYRI saklaniyor
+  - Tabloda kart duzenindeki detay kaybolmuyor, ikinci satir olarak aciliyor
+  - Istisna kuyrugu: kart, pano, liste — pano uc onem derecesini yan yana gosteriyor
+  - Istisna kuyruguna tablo EKLENMEDI: her satirin cozum notu ve aksiyonu var, tablo bunlari keserdi
+  - Bekleyen isler: tablo, kart, liste — panoya veri yapisi uygun degil, uc tek kova donduruyor
+- feat(medya): satıcı medya konsoluna kırpma, teslim, simülatör ve RUM zin (@TurksabYonetim)
+  - Faz 9-12 kapsamında satıcı/yönetici medya konsoluna sanal klasör gezgini, Crop Studio (önce/sonra + otomatik/manuel odak), CLS'siz görsel/video teslim bileşenleri, önizleme simülatörü ve onay kapısı, yükleme ön kontrolü/kesintiden devam ve RUM toplayıcısı eklendi — hepsi backend'deki karşılığıyla parite vektörleriyle doğrulandı (sessiz sapmayı önlemek için).
+  - `tradehub_core`'daki geometri/politika/simülatör/RUM mantığı TypeScript ikizleri olarak vendor'landı (`sync-*.mjs` script'leri) çünkü panel build zamanında o repoyu göremiyor; elle kopya sessizce ayrışırdı, bu yüzden her senkron kaynağın sha256'sını yazıp `npm test` her koşuda doğruluyor.
+  - Playwright E2E altyapısı ve gecelik drift ölçüm workflow'u eklendi — kataloğun (`placements.json`) hesapladığı kutunun gerçek storefront sayfasıyla drift'ini tarayıcıda ölçmek için; iki hesap birbiriyle tutup ikisi de gerçeğe göre yanlış olabildiğinden bu boşluğu kapatıyor.
+  - ESLint yapılandırması `.mjs` script'leri için Node globallerini açacak şekilde genişletildi, `.prettierignore`'a üretilmiş vendor dosyaları eklendi.
+- feat(lojistik): Rapor Merkezi açıldı — frontend fazı tamamlandı (@boraydeger32)
+- feat(media): useMediaRetroRename composable (@ahmeetseker)
+- feat(media): retro-rename kartı — önizle/onay/ilerleme/geri al (@ahmeetseker)
+- feat(lojistik): fiyat kuralı CRUD ve simülasyon ekranları eklendi (@aliiball)
+  - K1 tarifeler, K2 üç katmanlı kural listesi, K4 kural formu, K3 simülasyon
+  - İki yönlü maliyet maskeleme: platform satıcının alışını, satıcı da platformunkini görmüyor
+  - Şablonla başlama, satır içi fiyat düzenleme, sürükleyerek öncelik, kural formunda kaydetmeden canlı fiyat ve zarar uyarısı
+  - Uç bazında mock haritası (8 uç); 20-BE açtıkça tek satır kapanıyor
+  - Sıralama için ayrı uç: liste yükü alt tablo taşımadığı için tüm belgeyi kaydetmek reddediliyor ve sürükleme sessizce kayboluyordu
+  - DEMO paneli yalnız admin'e açık; satıcı kendi ekranını kilitleyebiliyordu
+  - Başlıklar div, header değil: global koyu tema kuralı gri bant bırakıyordu
+  - Arama ikonu geçersiz sınıfla konumlanıyordu, start-3 ile düzeltildi
+  - 203 çeviri anahtarı (tr ve en), 6 Storybook dosyası, 32 birim testi
+- feat(lojistik): etiket akışına taşıyıcı seçimi eklendi (@aliiball)
+  - Sevkiyat hazır işaretlenirken hangi hesapla gideceği seçiliyor
+  - Sistem en uygun hesabı önceden işaretliyor; kabul edilirse ek tık yok
+  - Seçim Shipment.carrier_account alanına yazılıyor
+  - Koli tablosuna erişilebilir ad verildi: ekranda artık iki tablo var
+- feat(media): add SEO management screen (@Metin Bektemur)
+- feat(media): expand SEO operations panel (@Metin Bektemur)
+- feat(medya): satıcı medya kütüphanesine geçmiş, canlı yenileme ve erişil (@ahmeetseker)
+  - Sürüm/iş/denetim kayıtlarını tek zaman çizgisinde birleştiren `MediaHistoryPanel` + `useMediaHistory` eklendi; detay panelindeki "tam geçmiş yok" kısıtı kalktı
+  - Realtime yoksa polling'e düşen `useMediaLiveRefresh` ile medya listeleri arka planda güncel tutuluyor
+  - Klasörlere native sürükle-bırak taşıma (`folderDrag.js`) ve kütüphane kartları için N+1 yerine tek istekle manifest yükleme (`libraryManifests.js`) eklendi
+  - Toplu "yeniden işleme" gerçek worker sayaçlarıyla ilerleme çubuğu gösteriyor (önceden yalnız "işleniyor" yazıyordu)
+  - Cihaz bütçesine göre istemci sıkıştırmasını güvenli sınırın üstünde sunucuya devreden `deviceBudget.js` eklendi (düşük belleğe/iOS'a çökme riskini önlemek için)
+  - Upload SDK'ya gerçek `Idempotency-Key` header'ı bağlandı; ağ kopmasında ikinci dosya kaydı açılmasın diye
+  - Marka/durum renklerine AA kontrast uyumlu metin tonları (`$c-*-text`, `$brand-text`) eklendi; açık yüzeyde beyaz üstü parlak renk okunurluğu düşüktü
+  - MediaModal'da arka planı gerçekten `inert` yaparak dialog dışını Tab/erişilebilirlik ağacından çıkarma, yükleme/hata durumlarına `role="status"`/`role="alert"` ve ARIA canlı bölgeleri eklendi
+  - Retro-rename akışına sayaç/geçmiş/polling hata durumları, yarış koşulu koruması ve çoklu tıklamada tek istek garantisi eklendi
+  - OpenAPI'den üretilen tipli istemciye (`client.js`) derlenmiş JS çıktısı ve sunucu hata kataloğu (`error-catalog.gen.json`) senkronize edildi
+- feat(media): show tenant quota status (@ahmeetseker)
+- feat(storybook): teslim edilmiş 9 lojistik ekranı için story turu eklendi (@aliiball)
+  - Ekran başına dolu/boş/yükleniyor/hata + rol varyantları (65 story)
+  - Ortak koşum takımı: gerçek store + gerçek mock zinciri, sahtelenen tek şey mock'un başlangıç durumu
+  - Router rotaları logisticsScreens manifestinden türetiliyor
+  - Storybook api sahtesine get_logistics_permissions eklendi: eksikliği dört ekranda düzeltme/etiket/palet düğmelerini hiç çizdirmiyordu
+- feat(medya): kategori sistemi, sunucu taraflı süzgeç ve S3 aynalama test (@ahmeetseker)
+  - Medya kütüphanesine çoklu-atama kategori modeli eklendi (oluştur/düzenle/sil, otomatik öneri uygulama) — klasör konumu, etiket serbest anahtar kelime, kategori ise iş anlamı taşıyacak şekilde ayrıştırıldı.
+  - `useSellerMedia`/`media` store'unda arama, filtre, sıralama ve sayfalama sunucuya taşındı; önceki yerel `filter/slice` yaklaşımı 200 kayıtla sınırlıydı ve toplamı ilk sayfaya kilitleyip eşleşmeleri kaybediyordu (MOGEM-578/579).
+  - Depolama ayarları ekranına S3 etkinleştirme, path-style adresleme ve orijinal/türev aynalama anahtarları eklendi; alanlar `data-testid` ile E2E'den erişilebilir yapıldı.
+  - T-141 S11b senaryosu artık gerçek Administrator oturumu ve MinIO ile uçtan uca koşuyor (önceden rol kapısı dışında atlanıyordu); Playwright artık başarılı koşumlarda da ekran görüntüsü/video kanıtı bırakıyor.
+- feat(media): report partial bulk tag results (MOGEM-575) (@Metin Bektemur)
+- feat(media): SEO çekmecesine video bölümü — transcript, VTT, poster yönetimi (@ahmeetseker)
+- feat(medya): izleme sayfası slug yönetimi, çeviri backfill ve ilan doküm (@ahmeetseker)
+  - MediaSeoDrawer'a video izleme sayfası (`/medya/v/<slug>`) için slug değiştirme alanı eklendi; backend `watch_slug.change_slug` 301 köprüsü ve zincir çökertmeyi yönetiyor, panel yalnız çağırıp satırı tazeliyor
+  - MediaSeoView'a çeviri (en/ar/ru) alt metni backfill aksiyonu eklendi, dil kırılımlı toast ile sonucu gösteriyor
+  - ListingFormView'a "Dokümanlar" bölümü eklendi (katalog/sertifika/kılavuz gibi PDF/Office dosyaları) — doğrudan yükleme ve medya kütüphanesinden seçim, `Listing Document` child DocType'ıyla uyumlu
+  - Satır ekleme/kaldırma mantığı `@vue/test-utils` kullanmayan projede test edilebilsin diye ayrı `listingDocuments.js` yardımcı modülüne çıkarıldı
+- feat(lojistik): panel iade ekranları (I1-I4) açıldı (@aliiball)
+  - kuyruk, karar, depo kontrolü ve kapanış ekranları hazır bileşenlerin üstüne ince View sarmalayıcılarıyla açıldı
+  - dört ekran tek store üzerinden aynı kaydı paylaşıyor: karar verilince kuyruk sayacı düşüyor
+  - iade tutarı kalem kararlarından türetiliyor, elle girilmiyor
+  - kapanış ekranına yetki kapısı eklendi; geri alınamaz eylem yetkisiz kullanıcıya açıktı
+  - ekranlar fetchPermissions çağırmıyordu, kontrol kutuları kilitli kalıyordu
+  - menüye İadeler grubu eklendi, sekme başlıkları tanımlandı
+- feat(media): medya yönetim panellerini yoğunlaştır (@ahmeetseker)
+  - SEO, denetim, gezgin, optimizasyon ve kullanım ekranlarını daha okunur kart, çekmece, mozaik ve özet akışlarıyla yenile
+  - Simülatörde cihaz rafı, sayfa haritası ve ortak roving radio davranışı ekleyerek kalabalık seçenek duvarlarını azalt
+  - Retro adlandırma, türev listesi, audit triyajı ve yerelleştirme metinlerini yeni etkileşimlere göre tamamla
+- feat(lojistik): mock-sözleşme denetimi ve K5 tatbikatı eklendi (@aliiball)
+  - blockedBy etiketleri guest modülünü işaret etmiyor denetimi
+  - Panel mock'larının ürettiği alanlar şemayla karşılaştırılıyor
+  - K5 tatbikatı: mock'un ürettiği yük ile sözleşmedeki şekil örtüşüyor mu — 'backend sözleşmeyi uygularsa ekran beslenir mi' sorusunu gerçek uç yazmadan sınıyor
+  - Tatbikat yazılırken iki kusur buldu: rows[].delivered_package_count sözleşmede yoktu, page/page_size fazlaydı
+- feat(test): gelecek tarihli sabitler için denetim eklendi (@aliiball)
+  - Yazıldığı gün beş bomba buldu (2026-11-19); biri yükte: isExpired dalı o tarih geçince testi sessizce yanlış dala sokacaktı
+- feat(test): lojistik E2E'si yerel gateway üzerinden koşabiliyor (@aliiball)
+  - Oturumlar koşum başında üretiliyor; elle hazırlanmış sid dosyası gerekmiyor
+  - Spec'teki sabit API tabanı PANEL_BASE ile ezilebilir hale geldi
+  - 92 testlik suite bu depoda ilk kez koşabiliyor
+- feat(test): panel lojistik ekranlarına WCAG taraması eklendi (@aliiball)
+  - 16 ekran x 2 tema, critical/serious kapısı
+  - ops.spec.ts'teki opacity-70 iddiası yeni görsel işarete bağlandı
+- feat(medya): ses dosyaları için tür katmanı (MOGEM-620) (@Metin Bektemur)
+- feat(abonelik): iptal akışı + iOS bilgi-only mod + hesap silme ekranı (@boraydeger32)
+  - YENİ utils/platform.js isIosApp() (Capacitor bridge + istocApp/ios UA)
+  - SubscriptionGateView iOS'ta bilgi-only: paket kartları/fiyat/trial CTA/ havale-IBAN render edilmez; satın almaya atıfsız nötr kilit metinleri
+  - YENİ CancelSubscriptionModal: zorunlu 6-seçenekli sebep anketi → gerçek dönem-sonu tarihli onay → iptal-planlı banner + tek tık "İptali Geri Al"; trial'da buton gizli ("otomatik sona erer, ücret alınmaz")
+  - stores/subscription.js: cancel_at_period_end/canceled_at + request/ revokeCancellation aksiyonları (BE sözleşmesiyle birebir)
+  - YENİ AccountDeletionView (/hesap-silme, paywall'dan muaf — kilitli satıcı da silebilmeli) + UserMenuDropdown "Hesabı Sil" girişi (4 locale)
+  - iOS anti-steering metin temizliği: SellerTrialBanner, SubscriptionPlanCard, SidePanel/MobileTabBar tooltip'leri, SellerFeedView gate metni
+  - 33 yeni SSR/sözleşme testi (toplam 1564 yeşil)
+- feat(medya): MOGEM-620 toplu alan düzenleme + arama/erişim uyumu (AI hariç) (@Metin Bektemur)
+  - MediaBulkFieldsModal: seçili varlıklarda başlık/alt/açıklama/etiket toplu düzenleme
+  - MediaBulkBar'a toplu alan düzenleme girişi
+  - useSellerMedia + stores/media: toplu alan yazma akışı ve iyimser güncelleme
+  - MediaLibraryView: modal bağlantısı ve seçim durumu yönetimi
+  - AppHeader: medya arama girişinin genişletilmiş kapsamla hizalanması
+  - 4 dilde (tr/en/ar/ru) yeni metinler
+  - mediaBulkFields testi + mediaAxe erişilebilirlik kapsamı
+
+### Duzeltildi
+- fix(media): video sıkıştırma hatasını console'a yaz (sessiz yutma yok) (@TurksabYonetim)
+- fix(ui): AppSelect dropdown'u body'ye Teleport et — overflow kırpması giderildi (@TurksabYonetim)
+- fix(lojistik): yetenek yanıtı sözlük dönünce tüm ekranlar salt-okunur görünüyordu (@aliiball)
+  - Uç {\"shipment.write\": true}
+  - Sessiz catch TypeError'ı yutuyordu; normalizeCapabilities iki biçimi de kabul ediyor
+  - Etiket üret/bas/iptal yetkileri shipment.write ve carrier_credential.manage üzerinden köprülendi
+- fix(lojistik): master'daki 2 test kırığı kapatıldı (@boraydeger32)
+  - PopMenu ⋯ butonu panel diline çevrildi (th-btn-outline -> hdr-btn-outlined)
+  - logistics.packing.createFirstHint tr+en'e eklendi — Ali'nin kalite denetimi yakalamıştı
+  - Stil kilidi artık yorumları denetlemiyor: gerekçe anlatan yorumda 'slate-800' geçmesi yanlış pozitifti; kilit sınıf attribute'ını kilitler, tarihçeyi değil
+- fix(lojistik): kanal listesi boolean filtre yüzünden yüklenmiyordu (@aliiball)
+  - is_active artık 0/1 olarak gönderiliyor; sunucu sözleşmesi bunu istiyor
+  - Manuel Sevkiyat ekranı bu yüzden INTERNAL_ERROR ile açılmıyordu
+- fix(lojistik): istasyon olayları sevkiyata bağlandı (@aliiball)
+  - Olay setleri sevkiyat numarasıyla eşleşiyor; istasyon sekmesi artık boş kalmıyor
+  - Dört durum da bir sevkiyate bağlı: normal akış, takılan gönderi, tek istasyon, konumsuz
+  - i18n'de çift kalan pod ve station blokları tek bloğa toplandı
+  - Menü grup başlıkları tr ve en'e eklendi
+- fix(medya): karantina ekranı tipografisi panel ölçeğine bağlandı (@Metin Bektemur)
+- fix(medya): dört ekranın görsel dili tek düzene bağlandı (UI okunabilirlik) (@Metin Bektemur)
+  - `chip`e `danger` tonu eklendi. Yoktu; dört ekran kendi kırmızısını yazmıştı (%12 ve %14, iki ayrı yazım). Aynı anlamın ekrandan ekrana farklı görünmesi buradan geliyordu.
+  - `$tint-success/warning/danger/info` — anlam zeminleri tek kaynağa bağlandı, `chip` de artık onları kullanıyor. Aynı yeşil üç, aynı turuncu üç farklı oranda yazılmıştı.
+  - `$o-soft/medium/strong` — yedi ayrı siyah opaklık (%18…%82) üç basamağa indi.
+  - `@mixin selected` — seçili satır. ÜÇ ekran hâlâ ESKİ marka rengini (mor #7c3aed) kullanıyordu; marka sarıya (#f5b800) döneli beri seçili satır panelin geri kalanıyla farklı renkteydi. Üstelik biri açık ve koyu tema için aynı %6'yı kullanıyordu — koyu temada seçim neredeyse görünmüyordu.
+  - `text("display")` (15px) — sayaç rakamı ve sayfa başlığı için ölçekte karşılık yoktu, ekranlar 0.95rem / 1.05rem / 15px diye üç değer uydurmuştu.
+  - `@mixin scrim` + `@mixin dialog` — aşağıda.
+- fix(tema): WCAG eşiğinin altındaki ortak renkler düzeltildi (@aliiball)
+  - Marka butonunun beyaz yazısı okunmuyordu (1.79:1); paletde hazır duran $brand-ink kullanıldı (9.73:1)
+  - Kırmızı butonun zemini koyulaştırıldı (3.76 -> 4.83:1); yazı beyaz kaldı, tehlike sinyali korundu
+  - Tablo başlığı ve sayfa bilgisi bir ton koyulaştı (2.74 -> 5.41:1)
+  - Sevkiyat detayında pasif sekme etiketi okunur oldu (2.60 -> 7.56:1)
+  - Etki panel geneli: bu sınıfları kullanan tüm modüller (CRM, destek, satıcı, sistem)
+- fix(lojistik): ekranlarda okunmayan metin renkleri düzeltildi (@aliiball)
+  - Küçük gri etiketler koyulaştı; koyu temada tersine acildi (zeminler ters)
+  - Marka rengi bağlantılar bir ton koyulaştı, marka ailesinde kaldı
+  - Gecikme uyarısı ve tutar renkleri esik ustune cikarildi
+  - 20 ekran ve 8 sekmede olculen 268 ihlalin tamami kapandi
+- fix(lojistik): kapsamlı yapay zeka denetimi — bulunan tüm sorunlar giderildi (@boraydeger32)
+- fix(lojistik): arama kutusu kapsayıcıyı doldurmuyordu (@aliiball)
+  - Olculdu: input 193px, kapsayici 1086px — alanin %18'i
+  - Ortak form-input-sm sinifinda genislik tanimi yok; sinifa eklemek miktar ve oran gibi dar kalmasi gereken alanlari da bozardi
+  - Yalniz uc lojistik arama kutusuna genislik verildi
+- fix(tema): pano ve etiket önizlemesinde okunmayan renkler düzeltildi (@aliiball)
+  - Pano kartinin ikincil satiri 2.74:1 veriyordu, ayni sinif paketleme panosunda da kullaniliyor
+  - Liste modundaki sevkiyat kodu 3.54:1'den okunur tona alindi
+  - Etiket onizlemesi koyu temada kagit taklidini kaybediyordu: koli kodu 1:1, yani tamamen gorunmezdi
+- fix(media): retro-rename erken not_found ve çalışırken rollback açığını kapat (@ahmeetseker)
+- fix(lojistik): üretilen etiket açılamıyordu (@aliiball)
+  - Etiket belgesi tarayıcıda üretilip blob: adresine bağlanıyor; beyaz listede olmadığı için 'Etiketi aç' bağlantısı hiç çizilmiyordu
+  - safeDocumentUrl eklendi: yalnız kendi kaynağımızın blob adresi kabul ediliyor, başka kaynağınki engelleniyor
+  - safeExternalUrl gevşetilmedi, yedi çağıranı backend URL'i taşıyor
+- fix(panel): filtre hapı hover rengi WCAG AA'nın altındaydı (@aliiball)
+  - Açık temada 3,82:1 ölçüldü (gereken 4,5:1); #8a6500 ile 5,33:1
+  - Koyu tema 4,65:1 ile geçiyordu, olduğu gibi bırakıldı
+  - İhlal geçiş animasyonu yüzünden gizleniyordu: tarama hover'dan hemen sonra ölçtüğü için ara rengi okuyordu
+- fix(media): retro-rename kartı — System Manager kapısı, eksik i18n, referans sayaçları, diskte-yok ayrımı (@ahmeetseker)
+- fix(frontend): erişilebilirlik, güvenilirlik ve lojistik ekranları iyileştirildi (@boraydeger32)
+  - klavye navigasyonu ve ARIA davranışları düzeltildi
+  - form, tablo, modal ve bildirim bileşenleri sağlamlaştırıldı
+  - rota başlığı ve ekran okuyucu duyuruları eklendi
+  - yarış koşulları ve veri formatlama sorunları giderildi
+  - lojistik ekranları, mock veriler ve testler güncellendi
+- fix(paketleme): satıcı tenant süzgeci eklendi, yutulan filtreler bağlandı (@aliiball)
+  - packagingMock: getDoc tek tenant kapısı oldu, tohum oturumdaki satıcıya etiketleniyor (sabit ad satıcıya boş ekran gösteriyordu)
+  - api/packaging: arama, satıcı ve taşıyıcı süzgeçleri mock dalına hiç geçirilmiyordu; ekran filtrelenmiş sanılan bir liste gösteriyordu
+  - Başkasının sevkiyatına erişim CAPABILITY_REQUIRED döndürüyor
+- fix(pod): kanıt görselleri yer tutucu yerine gerçek içerik döndürüyor (@aliiball)
+  - signature_url/photo_url/document_url artık data: URI taşıyor
+  - Ekran doğru davranıyordu ama kanıt medyasının tasarımı hiç görülemiyordu
+- fix(etiket): yakalanmamış promise reddi düzeltildi (@aliiball)
+  - generateSelected/generateOne/printSelected/doReprint/voidOne
+  - Desen PackingWorkspaceView ile aynı; kullanıcıya görünen davranış değişmedi
+- fix(pod): merge'de ikilenen SEED_PODS/SEED_FLOWS tanımları giderildi (@aliiball)
+  - 187a8d8 merge'i çakışmayı iki tarafı da tutarak çözmüş, dosya sözdizimi hatası veriyordu
+  - Bora tarafında veri değişikliği yoktu (git'ten karşılaştırıldı), yalnız biçim
+  - A11 görselleri korundu; podMock/packagingMock/packagingContract testleri yeşile döndü
+- fix(lojistik): üretilmiş fixture'lar formatter'ın dışına alındı (@aliiball)
+  - Üreteç TAB yazıyor, Prettier BOŞLUK istiyordu: iki araç birbirini geri alıyordu
+  - Aynı çözüm media/*/vendor için zaten vardı; lojistik eklenmeyi unutmuştu
+  - Fixture'lar --sync ile tazelendi (veri değişmedi, yalnız girinti)
+- fix(frontend): denetim döngüsü kapatıldı — engelli erişimi, yetki ve rapor doğruluğu (@boraydeger32)
+  - Taşıyıcı maliyeti, görme yetkisi olmayan kullanıcıya iki ekranda daha açılabiliyordu. Kapılar kapatıldı, sunucu tarafı kuralı da sözleşmeye yazıldı.
+  - Salt-okunur katalog formunda bazı alanlar hâlâ değiştirilebiliyordu. Kilit artık gerçekten çalışıyor.
+  - Maliyet raporu Excel'e aktarıldığında zarar eden taşıyıcının satırı toplama girmiyordu; rapor kârı olduğundan yüksek gösteriyordu.
+  - Gizlenmiş maliyet alanları "0,00 TL" olarak görünüyordu; artık boş olduğu anlaşılıyor.
+  - Klavyeyle sevkiyat detayına, katalog kayıtlarına ve pencerelere erişilemiyordu; hepsi açıldı.
+  - Ekran okuyucu kullanıcısı bildirimleri, yükleme durumlarını ve form hatalarını hiç duymuyordu; artık sesli okunuyor.
+  - Okunması zor renkler ve görünmeyen odak çerçeveleri düzeltildi.
+  - Tarayıcı sekmesinde her ekran kendi adıyla görünüyor (hepsi "Lojistik" yazıyordu).
+  - Filtre ve sayfa değiştirmede imleç artık sayfa başına atlamıyor.
+- fix(lojistik): panelde erişilebilirlik ve veri gösterimi düzeltmeleri (@boraydeger32)
+  - Paketleme ekranında klavye kullanan biri ekrandan çıkamıyordu: Tab tuşu kısayol olarak kullanıldığı için odak hiçbir yere geçmiyordu. Kısayol F3'e taşındı, Tab normal işlevine döndü. DEPO EKİBİNE DUYURULMALI.
+  - Etiket yeniden basım penceresi klavyeyle kapatılamıyor ve odak yönetimi yapmıyordu.
+  - Başkasının fiyat kuralı "salt okunur" görünürken klavyeyle düzenlenebiliyordu ve "Pasifleştir" o düzenlemeyi kaydediyordu.
+  - Ürün miktarı bilinmediğinde ekran "0" yazıyordu; artık "—".
+  - Taşıyıcı maliyeti bilinmediğinde ekran "kâr" tutarı gösteriyordu.
+  - Miktarı okunamayan bir kalem hiç paketlenmemişken "Paketlemeyi tamamla" açık kalıyordu.
+  - Ondalık miktarlı üründe (0,1 + 0,2 m) sistem yanlışlıkla "fazla atadın" deyip paketlemeyi kilitliyordu.
+  - Fiyat simülasyonu dışa aktarımı, Excel'de formül çalıştırabilecek şekilde üretiliyordu; ortak güvenli üreticiye bağlandı.
+- fix(media): istemci/sunucu paritesi düzeltmeleri + KD test paketi (@Metin Bektemur)
+  - bytes.js: imza sezgisi motorun (pipeline/core/probe.sniff) aynası — ftyp sırası, MZ/ELF=executable, data: URI, SVG/XML tanıma; motorla 424 vakada 128 sapma → 0 (F-14, F-15)
+  - policy/engine.ts: code() video.validation_codes tablosunu okuyor (F-13b); MESSAGE_KEYS aynası Python'a hizalandı (F-30); vendor yeniden üretildi, 405 parite vektörü yeşil (F-13a)
+  - preflight.js: executable içerik uyarı değil ENGEL — sunucu reddediyor (F-16); normalizeMeasure Infinity'yi süzüyor, oran kuralı sessiz kaybolmaz (F-24)
+  - executable_content sebebi 4 dil + PreflightPanel'e eklendi
+  - mediaRetroRename.test.js: sabit uyku yerine koşula bekleme, 12/12 (F-17)
+  - lib/media/__tests__/: KD-F01/F02/F05 paket (74 test)
+- fix(lojistik): otomatik test denetiminde bulunan altı ekran hatası giderildi (@boraydeger32)
+- fix(lojistik): denetim ve doğrulama turlarının tüm bulguları giderildi (@boraydeger32)
+- fix(panel): CSRF token localStorage regresyonu (M22) ve 5 lojistik UX bulgusu kapatıldı (@boraydeger32)
+  - setCsrfToken artık yalnız bellekte tutuyor — localStorage.setItem kaldırıldı, M22 fiilen geri geldi; api-security.md §1 kural metni fix'le hizalandı
+  - LoginView redirect parametresi doğrulanıyor (path-only, //: engelli)
+  - ShipmentDetailView.doCancel'a yeniden-giriş kilidi (emsal: C2/M2 deseni)
+  - ExceptionQueue + PendingQueue hata anında bayat sayaç/kova sıfırlanıyor
+  - CatalogList retry'ı başarısız fetchCatalogKeys'i de yeniden deniyor
+  - StatusUpdateView isCurrent guard'ı — başka sevkiyat yüklüyken iskelet çizer
+  - g0-security.spec.ts ALLOWED_LIST_FIELDS 4 yeni liste alanıyla güncellendi
+- fix(lojistik): bildirim tercihi ucu doğru modüle bağlandı (@aliiball)
+  - J2 ekranının blockedBy etiketi api.v1.logistics.list_notification_preferences diyordu; storefront'ta düzeltilen ucun ikiziydi
+  - api.v1.notifications.list_notification_preferences oldu
+  - Kalan beş blockedBy etiketinin modülü sözleşmede tanımsız; sahipleriyle denetim muafiyetine yazıldı
+- fix(test): Playwright çıktısı commit'li kanıtları siliyordu (@aliiball)
+  - outputDir test-results/ altına alındı; 41 medya kanıtı artık silinmiyor
+  - .gitignore'da muafiyeti geçersiz kılan tekrar satırı kaldırıldı
+- fix(lojistik): izinli geçiş yokken boş radiogroup çiziliyordu (@aliiball)
+  - aria-required taşıyan boş grup ekran okuyucuya "zorunlu seçim, 0 seçenek" duyuruyordu; gerekçe metni zaten altında yazılı
+  - Aynı dosyada 12px gri metin kontrastı da eşiğin üstüne çıkarıldı
+- fix(test): lojistik E2E iddiaları ortam varsayımından ayrıldı (@aliiball)
+  - "Satıcının kaydı yok" bir ortam gerçeğiydi; list_shipments sözleşmesi alıcıya da kendi siparişinin sevkiyatını gösteriyor
+  - Yabancı kayıt çalışma anında bulunuyor, sipariş adı sabit yazılmıyor
+  - Klavye turu etkin anahtarlara göre; satır sayımı yükleme yarışına dayanıklı
+- fix(lojistik): kuyruklar mobilde gerçekten kullanılabiliyor (@aliiball)
+  - Dört görünümün satır köküne data-testid=kuyruk-satiri kancası; kuyruk dar ekranda liste moduna geçtiği için tabloya bağlı iddialar kurulamıyordu
+  - Teslim noktası mobilde HİÇ görünmüyordu: row-detail yuvası liste görünümüne de eklendi (adres, teslim alan kişi, koli sayısı)
+  - Seçim kutusu mobilde gizliydi ve satıra dokunmak seçim yapmıyordu; "Etiket üret" hiç etkinleşemiyordu. Seçim yapılan listeler için .list-compact-item--secilebilir eklendi, diğer listelerde gizleme duruyor
+  - Aynı dosyalarda seçim kutularına erişilebilir ad ve kontrast düzeltmesi
+- fix(panel): dar ekranda seçilen görünüm yeniden kurulumda kayboluyordu (@aliiball)
+  - immediate izleyicisi her kurulumda modu list'e zorluyordu; kullanıcı kova süzgecine basınca seçtiği görünümü kaybediyordu
+  - Açık seçim oturumluk depoda tutuluyor; masaüstü tercihi localStorage'da el değmeden kalıyor
+  - Regresyon testi eklendi
+- fix(lojistik): panel erişilebilirlik ihlalleri giderildi (@aliiball)
+  - 13 AppSelect ve 3 yerli select erişilebilir ad taşımıyordu; üç yeni i18n anahtarı eklendi
+  - Çözülmüş/kapanmış satırlar opacity-70 ile soldurulunca metin eşik altına düşüyordu; ayırt edici işaret zemin tonuna çevrildi
+  - 53 adet 12px gri metin panel zemininde 4.41-4.48 veriyordu; koyu tema varyantı eksik olanlar tamamlandı
+- fix(tema): outline düğme yazısı varsayılanı erişilebilir oldu (@aliiball)
+  - #db7300 beyaz zeminde 3.24:1; varsayılan #ad5b00 ile 4.95:1
+- fix(medya): frontend ekranlarındaki dokunmatik/responsive kusurlar (MOGEM-625) (@Metin Bektemur)
+  - Detay katmanları (`MediaDetailPanel`, `MediaSeoDrawer`) dokunmatikte de masaüstü drawer'ı gibi sağdan giriyordu; SEO çekmecesinde mobil sorgusu hiç yoktu. İkisi de artık alttan gelen sheet — `touch-sheet` / `touch-sheet-grab` mixin'leri `media.scss`'e eklendi, giriş/çıkış asimetrik (320/240ms), `prefers-reduced-motion` ile birlikte.
+  - Yedek, karantina ve optimizasyon ekranlarındaki tablolar dar ekranda yatay kaydırmaya düşüyordu; dokunmatikte karta dönüşüyor, satırlar sol çapalı tek omurgaya oturuyor.
+  - Kahraman kart 1280'e kadar tam satırda tutuldu; özet satırı dar ekranda iki kata iniyor.
+- fix(media): medya ekranlarının mobil okunurluğunu düzelt (@ahmeetseker)
+  - Önizleme simülatöründe ham kodları teknik ayrıntıya taşıyıp kullanıcıya daha anlaşılır etiketler göster
+  - Sayfalayıcı, tablolar, seçiciler ve medya listelerini dar ekranlarda taşmayacak şekilde düzenle
+  - Depolama, yedekleme, SEO, denetim ve gezgin ekranlarında dokunmatik kullanım ve kontrast sorunlarını gider
+  - API kataloğu bağlantısını ekleyerek yerel API başvuru görünümünü belgeleyin
+
+### Degistirildi
+- refactor(lojistik): sozlesmesiz paketleme ve etiket ekranlari kaldirildi. (@aliiball)
+  - Uc ekran (paketleme calisma alani, etiket yazdirma, palet plani) yalniz Storybook'ta yasiyordu; manifestte ready:false oldugu icin panelde rotasi yoktu
+  - Bekledikleri 12 alandan 11'i DocType'ta yok: package_code, sequence_label, kalem-koli bagi, label_url, label_printed_at, barcode_url, shipped_qty, uom
+  - package_type.json hicbir yerden import edilmiyordu; gercek katalog canli uctan besleniyor, sahte kopya yaniltiyordu
+  - Yerlerine 13-FE kapsaminda views/logistics/{packages,labels} geliyor
+- refactor(paketleme): UI/UX turu ve WCAG AA kontrast düzeltmeleri (@aliiball)
+  - 13 madde: koli ekleme tekleştirildi, kaydetme durum metnine indi, miktar kutusu gizlendi, tarama kutusu hafifledi, kısayollar ikiye bölündü, koli eylemleri menüye girdi, kırılma 1024 -> 1440
+  - Etiket: seçimle beliren eylem çubuğu, rozetlere ikon + basım sayısı, takip no satırı gizlenmiyor
+  - Palet toplamları başlığa taşındı, kuyruk filtreleri açılıra alındı
+  - 108 WCAG ihlali giderildi (slate-400 2.38:1 ve slate-500 4.41:1 dahil)
+  - Arama kutusu DataTableToolbar sınıf sözlüğüne hizalandı
+  - Filtre açılırı end-0 ile açılıyor; start-0 sayfaya yatay kaydırma ekliyordu
+  - Koyu temada global header kuralı yüzünden oluşan bant için header -> div
+- refactor(plans): kullanılmayan özellik ekleme fonksiyonları kaldırıldı (@aliiball)
+- refactor(lint): derlenmiş Storybook çıktısı denetim dışına alındı (@aliiball)
+  - storybook-static 13 MB'lik build ciktisi, kaynak degil; tek basina 1522 hata uretip gercek hatalari gorunmez kiliyordu
+  - vite.config.js icin Node ortami tanimlandi
+  - Sonuc: 4169 problem (1525 hata) -> 0
+- refactor(storybook): ekran story kuralı ve prototip ömrü yazıldı (@aliiball)
+  - Storybook onizlemesi Pinia, router ve api sahtesini zaten kuruyor; ekrani View + Screen diye bolmeye gerek yok
+  - Bu bilinmedigi icin iki desen aylarca paralel yurudu: bolunmus 12 ekran gorunuyordu, tek dosya yazilan 9 ekran gorunmuyordu
+  - Yeni ekran teslim edilirken eski prototip silinir, yerine gercek ekranin story'si yazilir; kapanis olcutune dahil
+  - Tasarim onayi yolu degismiyor, mockup ile alinmaya devam eder
+  - Kullanilmayan prototipler bakim turlarinin disinda: tek kontrast turunda henuz var olmayan 9 ekranin rengi duzeltilmisti
+- refactor(storybook): ekran yazma deseni ve story kuralı yazıldı (@aliiball)
+  - Yeni lojistik ekranlari View (store kabugu) + Screen (saf bilesen) + story olarak bolunerek yaziliyor
+  - Gerekce kirilganlik: store mock'lu story, store degisince sessizce yalan soylemeye baslar; saf bilesende props tipli oldugu icin sapma
+  - Var olan tek dosya dokuz ekran BOLUNMEZ; calisiyorlar ve E2E ile korunuyorlar, story'leri ayri turda store mock'uyla yazilacak
+  - Eski prototip silinmez, tasarimi yeterliyse gelistirilip Screen olarak kullanilir
+  - Story kapanis olcutune dahil; olmadan ekran bitti sayilmaz
+- refactor(lojistik): silinen takip kaydına yapılan atıflar kaldırıldı (@aliiball)
+- refactor(storybook): silinen madde numaralarına yapılan atıflar düzeltildi (@aliiball)
+  - §A11/§A12 maddeleri KALAN-ISLER'de Çözülmüş bölümüne taşındı, atıflar oraya bakıyor
+- refactor(storybook): story altyapısı belgelendi, bayat kapsam yorumu güncellendi (@aliiball)
+  - CLAUDE.md §1.1: story/harness.js + story/router.js ve 'store sahtelenmez' deseni
+  - main.js: 'glob Faz D'de genişletilir' yorumu bayattı, glob çoktan genişlemişti
+- refactor(lojistik): notification_log fixture ve şablon senkronu (@aliiball)
+  - gen_logistics_types.py --sync çıktısı; elle düzenlenmez
+  - notification_template.json: iki alıcı şablonu (12-FE)
+- refactor(test): panel iade mock testleri ve yetki denetimi genişletildi (@aliiball)
+  - iade mock birim testleri: karar, kontrol, kapanış ve hata senaryoları
+  - yazma eylemi denetimine close, decide, apply, submit, trigger eklendi; liste eksik olduğu için kapanış ekranı denetimden geçmişti
+  - eslint ecmaVersion latest: import niteliği ES2022'de tanınmıyordu
+  - playwright kanıt çıktısı yok sayılıyor
+- refactor(panel): vitrin adresi ortak yardımcıya bağlandı (@aliiball)
+  - İki bileşen utils/storefrontUrl'ü atlayıp kendi VITE_STOREFRONT_URL okumasını ve farklı bir yedeğini (localhost:5500) taşıyordu
+
+---
 ## [v1.13.4-alpha.66] - 2026-09-14 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
