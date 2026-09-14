@@ -1,3 +1,15 @@
+## [v1.13.4-alpha.66] - 2026-09-14 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(media): medya ekranlarının mobil okunurluğunu düzelt (@ahmeetseker)
+  - Önizleme simülatöründe ham kodları teknik ayrıntıya taşıyıp kullanıcıya daha anlaşılır etiketler göster
+  - Sayfalayıcı, tablolar, seçiciler ve medya listelerini dar ekranlarda taşmayacak şekilde düzenle
+  - Depolama, yedekleme, SEO, denetim ve gezgin ekranlarında dokunmatik kullanım ve kontrast sorunlarını gider
+  - API kataloğu bağlantısını ekleyerek yerel API başvuru görünümünü belgeleyin
+
+---
 ## [v1.13.4-alpha.65] - 2026-09-12 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
