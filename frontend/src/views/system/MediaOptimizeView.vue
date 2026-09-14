@@ -3272,12 +3272,27 @@
     // daralır ama metne oranı korunur. Sabit px yazsaydık sıkı kademede
     // fotoğraf metni ezerdi.
     .mo__thumb-wrap {
-      display: block;
+      // `flex` + dikey ortalama: fotoğraf 100% ile kabı doldurur (uzatılmış
+      // ızgara öğesinin yüksekliği yüzde için kesin sayılır), yer tutucu
+      // kare kalıp ortada durur — aşağıdaki `--ph` kuralına bak.
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       grid-column: 1;
       grid-row: 1 / span 2;
       align-self: stretch;
       width: calc(var(--m-thumb, 2.5rem) * 1.4);
       min-height: calc(var(--m-thumb, 2.5rem) * 1.4);
+    }
+
+    // Yer tutucu ("TIF", "PDF") fotoğraf değil, uzatılınca 56×144'lük boş
+    // kesikli kutuya dönüşüyordu. Kare kalsın; kabın ortasında dursun.
+    // Çift sınıf: aşağıdaki `.mo__thumb { height: 100% }` bundan sonra
+    // geliyor ve aynı özgüllükle onu ezerdi.
+    .mo__thumb.mo__thumb--ph {
+      height: auto;
+      aspect-ratio: 1;
+      flex: none;
     }
 
     // Kabı doldur. `object-fit: cover` taban kuralda zaten var — uzayan
@@ -3384,6 +3399,30 @@
   //    başına ikinci satırda öksüz kalıyordu. Dar ekranda arama TAM SATIR
   //    alıyor, huni ve yoğunluk altta tek grup oluyor.
   @media (max-width: 639px) {
+    // 4) Telefonda satır dört katmanlı yatay boşluğun içinde eziliyordu:
+    //    main 16 + sayfa 16 + kart 20 + satır 12 = her yanda 64px. 390px
+    //    ekranda metne 154px kalıyor, "2 kez yüklenmiş (aynı dosya)" üç
+    //    satıra, rozet şeridi iki satıra düşüyordu. Sayfa ve kart yatay
+    //    dolgusunu bırakıyor (main'in 16'sı ve satırın 12'si yeter);
+    //    metin sütunu 154 → 226px. Ayırıcı çizgiler de kart kenarına dayanır,
+    //    liste telefonda tam genişlikte okunur.
+    .mpage {
+      padding-inline: 0;
+    }
+
+    .mo__list {
+      padding-inline: 0;
+    }
+
+    // iPhone SE sınıfı (≤359px): metin sütunu 170px'e iniyor, boyut + çip +
+    // rozet 168px — kıl payı. Fotoğrafı bir kademe daraltınca şerit tek
+    // satırda kalıyor.
+    @media (max-width: media.$m-bp-xs) {
+      .mo__thumb-wrap {
+        width: calc(var(--m-thumb, 2.5rem) * 1.1);
+      }
+    }
+
     .mo__search {
       flex: 1 1 100%;
     }

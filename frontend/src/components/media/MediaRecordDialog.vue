@@ -383,6 +383,32 @@
     color: $c-error;
   }
 
+  @media (max-width: media.$m-bp-md) {
+    .mrd__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mrd__row {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .mrd__right {
+      grid-column: 1 / -1;
+      min-width: 0;
+      align-items: flex-start;
+    }
+
+    .mrd__verdict,
+    .mrd__chip {
+      min-width: 0;
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
   .mrd__empty {
     padding: 3rem;
     text-align: center;

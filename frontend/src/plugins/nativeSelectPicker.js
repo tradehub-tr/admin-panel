@@ -85,8 +85,12 @@ function applySelection(sel, index) {
 function position(sel) {
   const r = sel.getBoundingClientRect();
   const p = ensurePanel();
-  p.style.minWidth = `${Math.max(r.width, 120)}px`;
-  p.style.left = `${Math.min(r.left, window.innerWidth - p.offsetWidth - 8)}px`;
+  // Panel ekrandan geniş olamaz: 320px telefonda uzun seçenek metinleri
+  // paneli viewport'un dışına taşırıyor, sol kenar eksiye düşüyordu.
+  const maxW = window.innerWidth - 16;
+  p.style.maxWidth = `${Math.min(320, maxW)}px`;
+  p.style.minWidth = `${Math.min(Math.max(r.width, 120), maxW)}px`;
+  p.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - p.offsetWidth - 8))}px`;
   // Altta yer yoksa üstte aç
   const spaceBelow = window.innerHeight - r.bottom;
   if (spaceBelow < Math.min(p.offsetHeight + 12, 292) && r.top > spaceBelow) {

@@ -1,6 +1,6 @@
 <template>
   <div class="list-pagination">
-    <div class="flex items-center gap-2">
+    <div class="list-pagination-group">
       <span class="list-pagination-info"> {{ rangeStart }}–{{ rangeEnd }} / {{ total }} </span>
       <AppSelect
         v-if="pageSizeOptions.length"
@@ -51,8 +51,14 @@
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import AppSelect from "@/components/common/AppSelect.vue";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
+  import { pageWindow } from "@/utils/pageWindow";
 
   const { t } = useI18n();
+  // Telefonda (<768) 3 sayfa numarası, üstünde 5. Sabit 5 iken 320px'te
+  // "‹ 1 2 3 4 5 ›" 44px'lik dokunma düğmeleriyle satıra sığmıyor, ileri oku
+  // tek başına alt satıra düşüyordu.
+  const { isLg } = useBreakpoint();
 
   const props = defineProps({
     modelValue: { type: Number, required: true },
@@ -79,12 +85,7 @@
     return Math.min(props.modelValue * props.pageSize, props.total);
   });
 
-  const visiblePages = computed(() => {
-    const tp = totalPages.value;
-    const cur = props.modelValue;
-    if (tp <= 5) return Array.from({ length: tp }, (_, i) => i + 1);
-    if (cur <= 3) return [1, 2, 3, 4, 5];
-    if (cur >= tp - 2) return [tp - 4, tp - 3, tp - 2, tp - 1, tp];
-    return [cur - 2, cur - 1, cur, cur + 1, cur + 2];
-  });
+  const visiblePages = computed(() =>
+    pageWindow(props.modelValue, totalPages.value, isLg.value ? 5 : 3)
+  );
 </script>

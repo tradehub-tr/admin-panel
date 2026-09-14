@@ -294,7 +294,8 @@ test("fayda kapısının REDDİ ekranda anlatılıyor — 'çıktı atılır, ka
   const ilk = firstThresholdMeasured();
   const html = await render({ initialKind: "measured", initialName: ilk.name });
   assert.equal(ilk.decision.action, "TRANSCODE", "önkoşul: kapı işlemeli");
-  assert.match(html, /çıktı ATILIR/i);
+  // Metin dili 2026-09-08: bağıran büyük harf kalktı, hüküm aynı.
+  assert.match(html, /çıktı atılır/);
   assert.match(html, /kaynak korunur/i);
 });
 
@@ -302,9 +303,11 @@ test("vendor'lanmayan alanlar gizlenmiyor: adı, varsayılanı ve etkilediği ku
   const html = await render();
   const eksik = vectorsOf("measured")[0].defaulted;
   assert.ok(eksik.length > 0, "önkoşul: bu künyede vendor'lanmamış alan olmalı");
-  assert.match(html, /VENDOR'LANMADI/);
+  // "VENDOR'LANMADI" → "ölçülmedi" (2026-09-08): alan yine adıyla, varsayılan
+  // değeriyle ve etkilediği kuralla listeleniyor.
+  assert.match(html, /ölçülmedi/);
   for (const ad of eksik) assert.ok(html.includes(ad), `${ad} ekranda listelenmemiş`);
-  assert.match(html, /VideoFacts varsayılanı/);
+  assert.match(html, /varsayılan değerle verildi/);
   // moov_at_end ölçülmediği için REMUX kuralı varsayılanla değerlendirildi.
   assert.match(html, /moov_at_end/);
 });
@@ -319,7 +322,7 @@ test("karar vendor'lanmamış alana dayanmıyorsa 'KESİN DEĞİL' uyarısı BAS
     .filter((r) => card.conditionVars(r.when).some((v) => ilk.defaulted.includes(v)));
   assert.deepEqual(supheli, [], "önkoşul: bu künyede varsayılana dayanan kural olmamalı");
   const html = await render({ initialKind: "measured", initialName: ilk.name });
-  assert.doesNotMatch(html, /Karar KESİN DEĞİL/);
+  assert.doesNotMatch(html, /Karar kesin değil/);
 });
 
 test("varsayılana dayanan karar 'KESİN DEĞİL' diye işaretleniyor", async () => {
@@ -328,8 +331,8 @@ test("varsayılana dayanan karar 'KESİN DEĞİL' diye işaretleniyor", async ()
   const gecen = vectorsOf("measured").find((v) => v.decision.rule_id === "default");
   assert.ok(gecen, "önkoşul: varsayılana düşen ölçülmüş bir künye olmalı");
   const html = await render({ initialKind: "measured", initialName: gecen.name });
-  assert.match(html, /Karar KESİN DEĞİL/);
-  assert.match(html, /VARSAYILAN/);
+  assert.match(html, /Karar kesin değil/);
+  assert.match(html, /varsayılan/);
   assert.match(html, /moov_at_end/);
 });
 
@@ -337,7 +340,7 @@ test("çıktı üretmeyen kararda fayda kapısının İŞLEMEDİĞİ yazıyor", 
   const gecen = vectorsOf("measured").find((v) => v.decision.action === "PASSTHROUGH");
   const html = await render({ initialKind: "measured", initialName: gecen.name });
   assert.match(html, /yeni dosya üretmez/);
-  assert.match(html, /fayda kapısı işlemez/);
+  assert.match(html, /kontrol uygulanmaz/);
 });
 
 test("hiçbir kural eşleşmeyince varsayılan satırı EŞLEŞTİ olarak basılıyor", async () => {
@@ -349,7 +352,8 @@ test("hiçbir kural eşleşmeyince varsayılan satırı EŞLEŞTİ olarak basıl
 
 test("sentetik kural örneği seçilince ekran ÖLÇÜM DEĞİL diye uyarıyor", async () => {
   const html = await render({ initialKind: "synthetic", initialName: "moov_at_end" });
-  assert.match(html, /SENTETİK künye — ölçüm DEĞİL/);
+  assert.match(html, /Yapay örnek, gerçek ölçüm değil/);
+  // Karar kodu rozette değil, `title` ve teknik ayrıntıda — HTML'de hâlâ var.
   assert.match(html, /REMUX/);
   assert.ok(html.includes("moov atomu"), "kuralın gerekçesi basılmamış");
 });
@@ -358,7 +362,7 @@ test("kural izi 15 kuralı da sırayla basıyor ve eşleşmeden sonrasını 'bak
   const ilk = firstThresholdMeasured();
   const html = await render({ initialKind: "measured", initialName: ilk.name });
   for (const r of VIDEO_DECISION.rules) assert.ok(html.includes(r.id), `${r.id} izde yok`);
-  assert.match(html, /EŞLEŞTİ/);
+  assert.match(html, /eşleşti/);
   assert.match(html, /bakılmadı/);
 });
 
@@ -369,8 +373,8 @@ test("panel referans motorla aynı karardayken SAPMA uyarısı BASILMIYOR", asyn
 
 test("künyenin kökeni ekranda: ölçüm mü, türetme mi, vendor'lanmamış mı", async () => {
   const html = await render();
-  assert.match(html, /ÖLÇÜM/);
-  assert.match(html, /TÜRETİLDİ/);
+  assert.match(html, /ölçüldü/);
+  assert.match(html, /türetildi/);
   assert.ok(html.includes(VIDEO_DECISION.source.kunyeOrtami), "ölçüm ortamı yazılmamış");
   assert.ok(html.includes(VIDEO_DECISION.source.kunyeKorpusu), "künye dosyası yazılmamış");
 });

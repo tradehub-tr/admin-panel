@@ -17,6 +17,7 @@
     PROBE_FOUND,
     PROBE_LOADING,
   } from "@/composables/useSrcsetSimulator";
+  import { regionKeyPath } from "@/lib/media/simulator/labels";
 
   /**
    * "Bu cihaz, bu bölgede hangi türevi indirir" sorusunun cevabı.
@@ -39,11 +40,26 @@
     probeRow: { type: Object, default: null },
   });
 
-  const { t } = useI18n();
+  const { t, te } = useI18n();
 
   const region = computed(() => props.selection.region);
   const device = computed(() => props.selection.device);
   const chosen = computed(() => props.selection.chosen);
+
+  /**
+   * Bölge ve cihazın tek cümlelik insan dili özeti (2026-09-08). Veriden
+   * gelen `render_point` / `derived_from` / `why` metinleri yazılımcı diliyle;
+   * onlar "Teknik ayrıntı" altında kapalı durur, burada i18n'deki özet okunur.
+   * Özet tanımlı değilse satır hiç basılmaz — anahtar yolu sızmaz.
+   */
+  const regionSummary = computed(() => {
+    const key = `mediaSimulator.regionSummary.${regionKeyPath(region.value.key)}`;
+    return te(key) ? t(key) : "";
+  });
+  const deviceSummary = computed(() => {
+    const key = `mediaSimulator.deviceSummary.${device.value.id}`;
+    return te(key) ? t(key) : "";
+  });
 
   /** Ekran okuyucuya tek cümlede sonuç. */
   const announcement = computed(() => {
@@ -198,6 +214,30 @@
    * ikisi de `select.js`'ten gelir ve parite testinde `srcset.py` ile
    * karşılaştırılır.
    */
+  // Telefonda okların yerini tutan tek cümle: kutu × yoğunluk = gereken,
+  // üst basamak iner, fazlalık. Sayılar akış karolarıyla aynı kaynaktan.
+  const flowSummary = computed(() => {
+    const box = Math.round(props.selection.cssBoxPx * 100) / 100;
+    const base = { box, dpr: device.value.dpr, required: props.selection.requiredPx };
+    if (!chosen.value) {
+      return t(
+        "mediaSimulator.result.flowSumNone",
+        base,
+        "Kutu {box} px × {dpr} yoğunluk = {required} px gerekir; uygun boyut yok."
+      );
+    }
+    return t(
+      "mediaSimulator.result.flowSum",
+      {
+        ...base,
+        chosen: chosen.value.name,
+        width: chosen.value.width,
+        overshoot: props.selection.overshoot ? props.selection.overshoot.toFixed(2) : "—",
+      },
+      "Kutu {box} px × {dpr} yoğunluk = {required} px gerekir; bir üst basamak {chosen} ({width} px) iner, {overshoot}× fazlalık."
+    );
+  });
+
   const overshootTone = computed(() => {
     if (!props.selection.sufficient) return "bad";
     if (props.selection.warnings.includes(WARN_OVERSHOOT)) return "mid";
@@ -239,6 +279,19 @@
         {{ t("mediaSimulator.result.lcpBadge", {}, "LCP adayı") }}
       </span>
     </header>
+
+    <!-- "Bu bölge neresi, bu cihaz neden var" — insan dilinde, teknik
+         künyenin yerine. Künye aşağıda kapalı katta duruyor. -->
+    <dl v-if="regionSummary || deviceSummary" class="simres__about">
+      <template v-if="regionSummary">
+        <dt>{{ t("mediaSimulator.result.regionAbout") }}</dt>
+        <dd>{{ regionSummary }}</dd>
+      </template>
+      <template v-if="deviceSummary">
+        <dt>{{ t("mediaSimulator.result.deviceAbout") }}</dt>
+        <dd>{{ deviceSummary }}</dd>
+      </template>
+    </dl>
 
     <!-- T-112 — yeterlilik hükmü: uyarı listesinden ÖNCE, tek cümlede.
          Öneri 01: hükmün altındaki "uyarı yok" ve türev durumu ayrı bantlar
@@ -342,6 +395,8 @@
         </dd>
       </div>
     </dl>
+    <!-- Telefonda oklar gizli; işlem tek cümlede (öneri 4B, 2026-09-09). -->
+    <p class="simres__flowSum">{{ flowSummary }}</p>
     <p class="simres__attrNote">
       {{
         t(
@@ -359,9 +414,11 @@
       </li>
     </ul>
 
+    <!-- Teknik katlar: tarayıcıya giden kod ve sayının kaynağı. İkisi de
+         varsayılan KAPALI — patron hükmü ve akışı okur, künyeyi isteyen açar. -->
     <details class="simres__fold">
       <summary>
-        {{ t("mediaSimulator.result.sizesTitle") }} · {{ t("mediaSimulator.result.srcsetTitle") }}
+        {{ t("mediaSimulator.techDetails") }} · {{ t("mediaSimulator.result.codeFold") }}
       </summary>
       <div class="simres__foldBody">
         <p class="simres__attrTitle">{{ t("mediaSimulator.result.sizesTitle") }}</p>
@@ -374,9 +431,13 @@
 
     <details class="simres__fold simres__prov">
       <summary>
-        {{ t("mediaSimulator.result.provenance") }}
+        {{ t("mediaSimulator.techDetails") }} · {{ t("mediaSimulator.result.provenance") }}
       </summary>
       <dl class="simres__provList">
+        <dt>{{ t("mediaSimulator.measurement.code") }}</dt>
+        <dd>
+          <code>{{ region.key }}</code> · <code>{{ device.id }}</code>
+        </dd>
         <dt>{{ t("mediaSimulator.result.renderPoint") }}</dt>
         <dd>{{ region.renderPoint || "—" }}</dd>
         <dt>{{ t("mediaSimulator.result.derivedFrom") }}</dt>
@@ -450,6 +511,38 @@
   .simres__lcp {
     @include media.chip("success");
     flex-shrink: 0;
+  }
+
+  // Bölge / cihaz özeti — iki kısa cümle, etiketi soluk.
+  .simres__about {
+    margin: 0 0 media.$s-3;
+    @include media.text("xs");
+    line-height: 1.5;
+
+    dt {
+      display: inline;
+      font-weight: 700;
+      @include media.muted(1);
+
+      &::after {
+        content: ": ";
+      }
+    }
+
+    dd {
+      display: inline;
+      margin: 0;
+      color: $l-text-700;
+
+      @include dark {
+        color: $d-text;
+      }
+
+      &::after {
+        content: "";
+        display: block;
+      }
+    }
   }
 
   // ── Hüküm şeridi ─────────────────────────────────────────────
@@ -642,6 +735,53 @@
     @include media.muted(2);
   }
 
+  .simres__flowSum {
+    display: none;
+    margin: 0 0 media.$s-2;
+    line-height: 1.45;
+    color: $l-text-700;
+    @include media.text("sm");
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  // Telefon (öneri 4B, 2026-09-09): oklu kutular basamaklı kayıyordu.
+  // İki sütun eşit karo, seçilen basamak tam satır, işlem altta tek cümle.
+  @media (max-width: media.$m-bp-md) {
+    .simres__flow {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: media.$s-2;
+    }
+
+    .simres__farrow {
+      display: none;
+    }
+
+    .simres__fcell {
+      min-height: 4rem;
+      padding: media.$s-2 media.$s-3;
+
+      dt {
+        @include media.text("xs");
+      }
+
+      dd {
+        font-size: 1rem;
+      }
+    }
+
+    .simres__fcell--strong {
+      grid-column: 1 / -1;
+    }
+
+    .simres__flowSum {
+      display: block;
+    }
+  }
+
   .simres__warns {
     list-style: none;
     margin: 0 0 media.$s-2;
@@ -696,6 +836,12 @@
   .simres__provList {
     margin: 0 0 media.$s-2;
     @include media.text("xs");
+    overflow-wrap: anywhere;
+
+    code {
+      @include sim.mono;
+      font-size: 0.6875rem;
+    }
 
     dt {
       @include media.muted(1);

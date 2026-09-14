@@ -712,6 +712,13 @@
     padding: media.$s-2;
     position: sticky;
     top: media.$m-sticky-top;
+
+    // Telefonda ray ayrı sütun değil, içeriğin ÜSTÜNDE tek sütunda duruyor.
+    // Sticky kalınca klasör ağacı ekranın yarısını kaplayıp satıcı kartlarının
+    // üstüne biniyordu; kullanıcı "sabit yerinde kalsın" dedi.
+    @media (max-width: 1023px) {
+      position: static;
+    }
   }
 
   .mx__main {
@@ -870,8 +877,17 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
     display: block;
+    // Görsel kırpılmaz, karoya sığar (öneri 6, 2026-09-09): `cover` ürünün
+    // kenarını kesiyordu. İç pay + alttaki ad şeridi kadar boşluk.
+    object-fit: contain;
+    box-sizing: border-box;
+    padding: media.$s-2 media.$s-2 calc(1.75rem + #{media.$s-1});
+    background: $l-bg;
+
+    @include dark {
+      background: $d-bg-card;
+    }
   }
 
   .mx__tile-ph {
@@ -934,13 +950,19 @@
 
   // Ad şeridi — Medya/SEO mozaikleriyle aynı davranış: imleçte hover,
   // dokunmatikte kalıcı.
+  // Ad şeridi görselin ÜSTÜNE değil ALTINA: gradyan üstündeki beyaz yazı
+  // açık ürün fotoğrafında kontrastı kaybediyordu; düz bant 4.5:1 garanti
+  // (öneri 6). Hover'a bağlı gizlenme kalktı — ad her zaman okunur.
   .mx__tile-strip {
     position: absolute;
     inset: auto 0 0 0;
     z-index: 1;
-    padding: 1.1rem media.$s-2 media.$s-05;
-    background: linear-gradient(transparent, rgb(20 18 14 / 74%));
-    color: #fff;
+    min-height: 1.75rem;
+    padding: media.$s-1 media.$s-2;
+    box-sizing: border-box;
+    background: $l-bg;
+    border-top: 1px solid $l-border-alt;
+    color: $l-text-700;
     @include media.text("xs");
     font-weight: 600;
     text-align: start;
@@ -948,13 +970,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
 
-    @include media.hoverable {
-      opacity: 0;
-      transition: opacity $t-fast;
-
-      .mx__tile:hover & {
-        opacity: 1;
-      }
+    @include dark {
+      background: $d-bg-card;
+      border-top-color: $d-border;
+      color: $d-text;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -981,6 +1000,11 @@
     overflow: hidden;
     position: sticky;
     top: media.$m-sticky-top;
+
+    // Aynı gerekçe: tek sütunda denetçi de akışta kalsın.
+    @media (max-width: 1023px) {
+      position: static;
+    }
   }
 
   .mx__insp-prev {

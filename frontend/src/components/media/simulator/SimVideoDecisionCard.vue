@@ -190,7 +190,7 @@
     initialName: { type: String, default: "" },
   });
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const data = VIDEO_DECISION;
   const measured = computed(() => data.vectors.filter((v) => v.kind === "measured"));
@@ -342,6 +342,39 @@
 
   const ruleLabel = (id) => t(`mediaSimulator.videoDecision.rule.${id}`, {}, RULE_LABEL[id] || id);
 
+  /**
+   * Ölçülmüş dosyanın seçicideki adı (2026-09-08): `real_satici_720x720_28s.mp4`
+   * gibi ham dosya adı patron için anlamsız. i18n'de tanımlı insan etiketi
+   * varsa o; yoksa künyeden türetilir ("720×720 · 28 sn · H.264"). Ham ad
+   * teknik ayrıntıda ve seçeneğin `title`'ında durur.
+   */
+  function vectorLabel(v) {
+    // Anahtar uzantısız: vue-i18n noktayı yol ayracı sayar, ".mp4" bozar.
+    const key = `mediaSimulator.videoDecision.file.${v.name.replace(/\.[a-z0-9]+$/i, "")}`;
+    const named = t(key, {}, "");
+    if (named && named !== key) return named;
+    const x = v.variables || {};
+    const parts = [];
+    if (x.width && x.height) parts.push(`${x.width}×${x.height}`);
+    if (x.duration_s) parts.push(`${Math.round(x.duration_s)} sn`);
+    if (x.video_codec) parts.push(x.video_codec === "h264" ? "H.264" : x.video_codec.toUpperCase());
+    return parts.length ? parts.join(" · ") : v.name;
+  }
+
+  /**
+   * Karar kodunun insan karşılığı (2026-09-08): `PASSTHROUGH` rozet olarak
+   * ekrana basılmaz, "Dosyaya dokunulmaz" yazar. Kod politika dosyasıyla
+   * sözleşmedir; teknik ayrıntıda ve `title`'da durur.
+   */
+  const ACTION_LABEL = Object.freeze({
+    PASSTHROUGH: "Dosyaya dokunulmaz",
+    REMUX: "Yalnız kap düzeltilir",
+    TRANSCODE: "Yeniden kodlanır",
+    REJECT: "Reddedilir",
+  });
+  const actionLabel = (a) =>
+    t(`mediaSimulator.videoDecision.action.${a}`, {}, ACTION_LABEL[a] || a);
+
   /** Ölçülmeyen alan kimliklerinin insan dilindeki karşılığı. */
   const FIELD_LABEL = Object.freeze({
     audio_bitrate_bps: "Ses bit hızı",
@@ -380,6 +413,39 @@
     vectorKind.value = kind;
     vectorName.value = name;
   }
+  // ── Kat başlıkları (öneri 1, 2026-09-09) ────────────────────────
+  // "Başlık — açıklama" biçimindeki başlık iki satıra bölünür: kalın ana
+  // satır + soluk alt satır. Uzun başlık artık okun altına kırılmıyor.
+  function foldTitle(text) {
+    const i = String(text).indexOf(" — ");
+    if (i === -1) return { main: text, sub: "" };
+    const sub = text.slice(i + 3);
+    return {
+      main: text.slice(0, i),
+      sub: sub.charAt(0).toLocaleUpperCase(locale.value) + sub.slice(1),
+    };
+  }
+  const foldTitles = computed(() => ({
+    because: foldTitle(t("mediaSimulator.videoDecision.becauseTitle", {}, "Çünkü — eşik eşik")),
+    trace: foldTitle(
+      t("mediaSimulator.videoDecision.traceTitle", {}, "Kural izi — sıra anlamlıdır")
+    ),
+    gate: foldTitle(
+      t("mediaSimulator.videoDecision.gateTitle", {}, "Fayda kapısı — reddetmek de bir karardır")
+    ),
+    quality: foldTitle(t("mediaSimulator.videoDecision.qualityTitle", {}, "Kalite kapısı")),
+    gaps: foldTitle(t("mediaSimulator.videoDecision.gapsTitle", {}, "Vendor'lanmayan alanlar")),
+    vars: foldTitle(
+      t(
+        "mediaSimulator.videoDecision.varsTitle",
+        { n: variableRows.value.length },
+        "Künyenin {n} değişkeni"
+      )
+    ),
+    target: foldTitle(
+      t("mediaSimulator.videoDecision.targetTitle", {}, "TRANSCODE hedefi ve gerekçesi")
+    ),
+  }));
 </script>
 
 <template>
@@ -403,13 +469,22 @@
             <optgroup
               :label="t('mediaSimulator.videoDecision.measuredGroup', {}, 'Ölçülmüş künyeler')"
             >
-              <option v-for="v in measured" :key="v.name" :value="`measured:${v.name}`">
-                {{ v.name }}
+              <option
+                v-for="v in measured"
+                :key="v.name"
+                :value="`measured:${v.name}`"
+                :title="v.name"
+              >
+                {{ vectorLabel(v) }}
               </option>
             </optgroup>
             <optgroup
               :label="
-                t('mediaSimulator.videoDecision.syntheticGroup', {}, 'Kural örneği (SENTETİK künye)')
+                t(
+                  'mediaSimulator.videoDecision.syntheticGroup',
+                  {},
+                  'Kural örneği (SENTETİK künye)'
+                )
               "
             >
               <option v-for="v in synthetic" :key="v.name" :value="`synthetic:${v.name}`">
@@ -421,16 +496,19 @@
       </div>
 
       <div class="simvd__verdict" :class="`simvd__verdict--${ACTION_TONE[panel.action]}`">
-        <span class="simvd__action" :class="`simvd__action--${ACTION_TONE[panel.action]}`">
-          {{ panel.action }}
+        <span
+          class="simvd__action"
+          :class="`simvd__action--${ACTION_TONE[panel.action]}`"
+          :title="panel.action"
+        >
+          {{ actionLabel(panel.action) }}
         </span>
         <div class="simvd__verdictText">
           <p class="simvd__reason">{{ panel.reason }}</p>
           <p class="simvd__meaning">{{ (data.actions[panel.action] || {}).meaning }}</p>
+          <!-- Kural kimliği ve karar kodu teknik ayrıntıda (kartın altı). -->
           <p class="simvd__ruleRef">
             <span class="simvd__ruleRefName">{{ ruleLabel(panel.ruleId) }}</span>
-            <code class="simvd__ruleId">{{ panel.ruleId }}</code>
-            <code v-if="panel.code" class="simvd__code">{{ panel.code }}</code>
           </p>
         </div>
       </div>
@@ -500,14 +578,16 @@
           vector.today_needs_transcode === (panel.action === "TRANSCODE")
             ? t(
                 "mediaSimulator.videoDecision.todayAgrees",
-                { today: vector.today_needs_transcode ? "transcode" : "dokunma" },
+                {
+                  today: actionLabel(vector.today_needs_transcode ? "TRANSCODE" : "PASSTHROUGH"),
+                },
                 "Bugünkü hat ({today}) bu künyede karar tablosuyla AYNI sonucu veriyor."
               )
             : t(
                 "mediaSimulator.videoDecision.todayDiffers",
                 {
-                  today: vector.today_needs_transcode ? "transcode" : "dokunma",
-                  table: panel.action,
+                  today: actionLabel(vector.today_needs_transcode ? "TRANSCODE" : "PASSTHROUGH"),
+                  table: actionLabel(panel.action),
                 },
                 "Bugünkü hat {today} diyor, karar tablosu {table} diyor — SAPMA."
               )
@@ -515,366 +595,405 @@
       </span>
     </p>
 
-    <details class="simvd__details" open>
-      <summary>{{ t("mediaSimulator.videoDecision.becauseTitle", {}, "Çünkü — eşik eşik") }}</summary>
-    <p v-if="panel.ruleId === 'default'" class="simvd__reason">
-      {{
-        t(
-          "mediaSimulator.videoDecision.defaultWhy",
-          { n: data.rules.length },
-          "{n} kuralın hiçbiri eşleşmedi; tablo varsayılana düştü."
-        )
-      }}
-    </p>
-    <ul v-else class="simvd__explain">
-      <li
-        v-for="(line, i) in explain"
-        :key="i"
-        :class="[`simvd__explain--d${line.depth}`, line.ok ? 'is-ok' : 'is-off']"
-      >
-        <template v-if="line.kind === 'leaf'">
-          <code>{{ line.name }}</code>
-          <span class="simvd__actual">{{ show(line.actual) }}</span>
-          <span class="simvd__op">{{ OP_SYMBOL[line.op] }}</span>
-          <span class="simvd__expected">{{ show(line.expected) }}</span>
-          <span class="simvd__flag">{{ line.ok ? "✓" : "✗" }}</span>
-        </template>
-        <template v-else>
-          {{
-            line.kind === "all"
-              ? t("mediaSimulator.videoDecision.opAll", {}, "TÜMÜ (VE)")
-              : line.kind === "any"
-                ? t("mediaSimulator.videoDecision.opAny", {}, "EN AZ BİRİ (VEYA)")
-                : t("mediaSimulator.videoDecision.opNot", {}, "DEĞİL")
-          }}
-        </template>
-      </li>
-    </ul>
-
-    <dl v-if="matchedRule && Object.keys(matchedRule.notes).length" class="simvd__notes">
-      <template v-for="(text, key) in matchedRule.notes" :key="key">
-        <dt>{{ t(`mediaSimulator.videoDecision.note.${key}`, {}, NOTE_FALLBACK[key] || key) }}</dt>
-        <dd>{{ text }}</dd>
-      </template>
-    </dl>
-
-    <p v-if="assumedRules.length" class="simvd__note simvd__note--unmeasured">
-      <AppIcon name="triangle-alert" :size="14" />
-      <span>
+    <!-- Eşik karşılaştırması varsayılan KAPALI (2026-09-08): hüküm bandı
+         gerekçeyi zaten insan dilinde yazıyor; değişken adları isteyene. -->
+    <details class="simvd__details">
+      <summary>
+        <span class="simvd__foldT">
+          <span class="simvd__foldMain">{{ foldTitles.because.main }}</span>
+          <span v-if="foldTitles.because.sub" class="simvd__foldSub">{{
+            foldTitles.because.sub
+          }}</span>
+        </span>
+      </summary>
+      <p v-if="panel.ruleId === 'default'" class="simvd__reason">
         {{
           t(
-            "mediaSimulator.videoDecision.notCertain",
-            { rules: assumedRules.map((r) => r.rule.id).join(", ") },
-            "Karar KESİN DEĞİL: şu kurallar vendor'lanmamış alanların VARSAYILAN değeriyle değerlendirildi — {rules}. Gerçek değer kararı değiştirebilirdi."
+            "mediaSimulator.videoDecision.defaultWhy",
+            { n: data.rules.length },
+            "{n} kuralın hiçbiri eşleşmedi; tablo varsayılana düştü."
           )
         }}
-      </span>
-    </p>
+      </p>
+      <ul v-else class="simvd__explain">
+        <li
+          v-for="(line, i) in explain"
+          :key="i"
+          :class="[`simvd__explain--d${line.depth}`, line.ok ? 'is-ok' : 'is-off']"
+        >
+          <template v-if="line.kind === 'leaf'">
+            <code>{{ line.name }}</code>
+            <span class="simvd__actual">{{ show(line.actual) }}</span>
+            <span class="simvd__op">{{ OP_SYMBOL[line.op] }}</span>
+            <span class="simvd__expected">{{ show(line.expected) }}</span>
+            <span class="simvd__flag">{{ line.ok ? "✓" : "✗" }}</span>
+          </template>
+          <template v-else>
+            {{
+              line.kind === "all"
+                ? t("mediaSimulator.videoDecision.opAll", {}, "TÜMÜ (VE)")
+                : line.kind === "any"
+                  ? t("mediaSimulator.videoDecision.opAny", {}, "EN AZ BİRİ (VEYA)")
+                  : t("mediaSimulator.videoDecision.opNot", {}, "DEĞİL")
+            }}
+          </template>
+        </li>
+      </ul>
 
+      <dl v-if="matchedRule && Object.keys(matchedRule.notes).length" class="simvd__notes">
+        <template v-for="(text, key) in matchedRule.notes" :key="key">
+          <dt>
+            {{ t(`mediaSimulator.videoDecision.note.${key}`, {}, NOTE_FALLBACK[key] || key) }}
+          </dt>
+          <dd>{{ text }}</dd>
+        </template>
+      </dl>
+
+      <p v-if="assumedRules.length" class="simvd__note simvd__note--unmeasured">
+        <AppIcon name="triangle-alert" :size="14" />
+        <span>
+          {{
+            t(
+              "mediaSimulator.videoDecision.notCertain",
+              { rules: assumedRules.map((r) => r.rule.id).join(", ") },
+              "Karar KESİN DEĞİL: şu kurallar vendor'lanmamış alanların VARSAYILAN değeriyle değerlendirildi — {rules}. Gerçek değer kararı değiştirebilirdi."
+            )
+          }}
+        </span>
+      </p>
     </details>
 
     <!-- ── Kural izi ─────────────────────────────────────────────── -->
 
     <details class="simvd__details">
-      <summary>{{ t("mediaSimulator.videoDecision.traceTitle", {}, "Kural izi — sıra anlamlıdır") }}
-        <span class="simvd__foldN">{{ data.rules.length }}</span></summary>
-    <table class="simvd__table">
-      <caption class="simvd__caption">
-        {{
-          t(
-            "mediaSimulator.videoDecision.traceCaption",
-            {
-              looked: panel.trace.length,
-              total: data.rules.length,
-            },
-            "{total} kuralın {looked} tanesine bakıldı; eşleşmeden sonrasına BAKILMAZ."
-          )
-        }}
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t("mediaSimulator.videoDecision.col.rule", {}, "Kural") }}</th>
-          <th scope="col">{{ t("mediaSimulator.videoDecision.col.action", {}, "Aksiyon") }}</th>
-          <th scope="col">{{ t("mediaSimulator.videoDecision.col.threshold", {}, "Eşik") }}</th>
-          <th scope="col">{{ t("mediaSimulator.videoDecision.col.state", {}, "Durum") }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in traceRows" :key="row.rule.id" :class="`is-${row.state}`">
-          <th scope="row">
-            <span class="simvd__ruleName">
-              {{ ruleLabel(row.rule.id) }}
-              <span v-if="row.assumed.length" class="simvd__assumed">{{
-                t("mediaSimulator.videoDecision.assumed", {}, "VARSAYILAN")
-              }}</span>
-            </span>
-            <code class="simvd__ruleCode">{{ row.rule.id }}</code>
-          </th>
-          <td>
-            <span class="simvd__action" :class="`simvd__action--${ACTION_TONE[row.rule.action]}`">
-              {{ row.rule.action }}
-            </span>
-          </td>
-          <td class="simvd__thresholds">
-            <span v-for="(l, i) in row.thresholds" :key="i">
-              <code>{{ l.name }}</code> {{ OP_SYMBOL[l.op] }} {{ show(l.expected) }}
-            </span>
-          </td>
-          <td>
-            <span v-if="row.state === 'hit'" class="simvd__ok">{{
-              t("mediaSimulator.videoDecision.state.hit", {}, "EŞLEŞTİ")
-            }}</span>
-            <span v-else-if="row.state === 'miss'" class="simvd__muted">{{
-              t("mediaSimulator.videoDecision.state.miss", {}, "eşleşmedi")
-            }}</span>
-            <span v-else class="simvd__muted">{{
-              t("mediaSimulator.videoDecision.state.skipped", {}, "bakılmadı")
-            }}</span>
-          </td>
-        </tr>
-        <tr :class="panel.ruleId === 'default' ? 'is-hit' : 'is-skipped'">
-          <th scope="row">
-            <span class="simvd__ruleName">{{ ruleLabel("default") }}</span>
-            <code class="simvd__ruleCode">default</code>
-          </th>
-          <td>
-            <span
-              class="simvd__action"
-              :class="`simvd__action--${ACTION_TONE[data.fallbackRule.action]}`"
-            >
-              {{ data.fallbackRule.action }}
-            </span>
-          </td>
-          <td class="simvd__thresholds">
-            {{ t("mediaSimulator.videoDecision.noCondition", {}, "koşul yok") }}
-          </td>
-          <td>
-            <span v-if="panel.ruleId === 'default'" class="simvd__ok">{{
-              t("mediaSimulator.videoDecision.state.hit", {}, "EŞLEŞTİ")
-            }}</span>
-            <span v-else class="simvd__muted">{{
-              t("mediaSimulator.videoDecision.state.skipped", {}, "bakılmadı")
-            }}</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
+      <summary>
+        <span class="simvd__foldT">
+          <span class="simvd__foldMain">{{ foldTitles.trace.main }}</span>
+          <span v-if="foldTitles.trace.sub" class="simvd__foldSub">{{ foldTitles.trace.sub }}</span>
+        </span>
+        <span class="simvd__foldN">{{ data.rules.length }}</span>
+      </summary>
+      <div class="simvd__scroll">
+        <table class="simvd__table">
+          <caption class="simvd__caption">
+            {{
+              t(
+                "mediaSimulator.videoDecision.traceCaption",
+                {
+                  looked: panel.trace.length,
+                  total: data.rules.length,
+                },
+                "{total} kuralın {looked} tanesine bakıldı; eşleşmeden sonrasına BAKILMAZ."
+              )
+            }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.rule", {}, "Kural") }}</th>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.action", {}, "Aksiyon") }}</th>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.threshold", {}, "Eşik") }}</th>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.state", {}, "Durum") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in traceRows" :key="row.rule.id" :class="`is-${row.state}`">
+              <th scope="row">
+                <span class="simvd__ruleName">
+                  {{ ruleLabel(row.rule.id) }}
+                  <span v-if="row.assumed.length" class="simvd__assumed">{{
+                    t("mediaSimulator.videoDecision.assumed", {}, "VARSAYILAN")
+                  }}</span>
+                </span>
+                <code class="simvd__ruleCode">{{ row.rule.id }}</code>
+              </th>
+              <td>
+                <span
+                  class="simvd__action"
+                  :class="`simvd__action--${ACTION_TONE[row.rule.action]}`"
+                  :title="row.rule.action"
+                >
+                  {{ actionLabel(row.rule.action) }}
+                </span>
+              </td>
+              <td class="simvd__thresholds">
+                <span v-for="(l, i) in row.thresholds" :key="i">
+                  <code>{{ l.name }}</code> {{ OP_SYMBOL[l.op] }} {{ show(l.expected) }}
+                </span>
+              </td>
+              <td>
+                <span v-if="row.state === 'hit'" class="simvd__ok">{{
+                  t("mediaSimulator.videoDecision.state.hit", {}, "EŞLEŞTİ")
+                }}</span>
+                <span v-else-if="row.state === 'miss'" class="simvd__muted">{{
+                  t("mediaSimulator.videoDecision.state.miss", {}, "eşleşmedi")
+                }}</span>
+                <span v-else class="simvd__muted">{{
+                  t("mediaSimulator.videoDecision.state.skipped", {}, "bakılmadı")
+                }}</span>
+              </td>
+            </tr>
+            <tr :class="panel.ruleId === 'default' ? 'is-hit' : 'is-skipped'">
+              <th scope="row">
+                <span class="simvd__ruleName">{{ ruleLabel("default") }}</span>
+                <code class="simvd__ruleCode">default</code>
+              </th>
+              <td>
+                <span
+                  class="simvd__action"
+                  :class="`simvd__action--${ACTION_TONE[data.fallbackRule.action]}`"
+                  :title="data.fallbackRule.action"
+                >
+                  {{ actionLabel(data.fallbackRule.action) }}
+                </span>
+              </td>
+              <td class="simvd__thresholds">
+                {{ t("mediaSimulator.videoDecision.noCondition", {}, "koşul yok") }}
+              </td>
+              <td>
+                <span v-if="panel.ruleId === 'default'" class="simvd__ok">{{
+                  t("mediaSimulator.videoDecision.state.hit", {}, "EŞLEŞTİ")
+                }}</span>
+                <span v-else class="simvd__muted">{{
+                  t("mediaSimulator.videoDecision.state.skipped", {}, "bakılmadı")
+                }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </details>
 
     <!-- ── Fayda kapısı ──────────────────────────────────────────── -->
 
     <details class="simvd__details">
-      <summary>{{ t("mediaSimulator.videoDecision.gateTitle", {}, "Fayda kapısı — reddetmek de bir karardır") }}</summary>
-    <dl class="simvd__spec">
-      <div>
-        <dt>{{ t("mediaSimulator.videoDecision.gate.id", {}, "Kapı") }}</dt>
-        <dd>{{ data.benefitGate.id }}</dd>
-      </div>
-      <div>
-        <dt>{{ t("mediaSimulator.videoDecision.gate.ratio", {}, "En az kazanç") }}</dt>
-        <dd>%{{ Math.round((gate.min_saving_ratio || 0) * 100) }}</dd>
-      </div>
-      <div>
-        <dt>{{ t("mediaSimulator.videoDecision.gate.src", {}, "Kaynak") }}</dt>
-        <dd>{{ formatBytes(gate.src_bytes) }}</dd>
-      </div>
-      <div>
-        <dt>{{ t("mediaSimulator.videoDecision.gate.max", {}, "Çıktı en fazla") }}</dt>
-        <dd>{{ formatBytes(gate.max_output_bytes) }}</dd>
-      </div>
-      <div>
-        <dt>{{ t("mediaSimulator.videoDecision.gate.ceiling", {}, "Hız tavanı") }}</dt>
-        <dd>{{ num(gate.rate_ceiling_kbps) }} kbps</dd>
-      </div>
-    </dl>
+      <summary>
+        <span class="simvd__foldT">
+          <span class="simvd__foldMain">{{ foldTitles.gate.main }}</span>
+          <span v-if="foldTitles.gate.sub" class="simvd__foldSub">{{ foldTitles.gate.sub }}</span>
+        </span>
+      </summary>
+      <dl class="simvd__spec">
+        <div>
+          <dt>{{ t("mediaSimulator.videoDecision.gate.id", {}, "Kapı") }}</dt>
+          <dd>{{ data.benefitGate.id }}</dd>
+        </div>
+        <div>
+          <dt>{{ t("mediaSimulator.videoDecision.gate.ratio", {}, "En az kazanç") }}</dt>
+          <dd>%{{ Math.round((gate.min_saving_ratio || 0) * 100) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t("mediaSimulator.videoDecision.gate.src", {}, "Kaynak") }}</dt>
+          <dd>{{ formatBytes(gate.src_bytes) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t("mediaSimulator.videoDecision.gate.max", {}, "Çıktı en fazla") }}</dt>
+          <dd>{{ formatBytes(gate.max_output_bytes) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t("mediaSimulator.videoDecision.gate.ceiling", {}, "Hız tavanı") }}</dt>
+          <dd>{{ num(gate.rate_ceiling_kbps) }} kbps</dd>
+        </div>
+      </dl>
 
-    <p class="simvd__note" :class="{ 'simvd__note--unmeasured': gateState !== 'applies' }">
-      <AppIcon name="info" :size="14" />
-      <span>
-        {{
-          gateState === "applies"
-            ? t(
-                "mediaSimulator.videoDecision.gateApplies",
-                {
-                  max: formatBytes(gate.max_output_bytes),
-                  ceiling: num(gate.rate_ceiling_kbps),
-                },
-                "Karar TRANSCODE: çıktı {max} baytı AŞARSA çıktı ATILIR ve kaynak korunur. Hız tavanı ({ceiling} kbps) kapıdan TÜRETİLİR — sabit bir çarpan değildir."
-              )
-            : gateState === "exempt"
+      <p class="simvd__note" :class="{ 'simvd__note--unmeasured': gateState !== 'applies' }">
+        <AppIcon name="info" :size="14" />
+        <span>
+          {{
+            gateState === "applies"
               ? t(
-                  "mediaSimulator.videoDecision.gateExempt",
-                  { action: panel.action },
-                  "{action} kapıdan MUAF."
+                  "mediaSimulator.videoDecision.gateApplies",
+                  {
+                    max: formatBytes(gate.max_output_bytes),
+                    ceiling: num(gate.rate_ceiling_kbps),
+                  },
+                  "Karar TRANSCODE: çıktı {max} baytı AŞARSA çıktı ATILIR ve kaynak korunur. Hız tavanı ({ceiling} kbps) kapıdan TÜRETİLİR — sabit bir çarpan değildir."
+                )
+              : gateState === "exempt"
+                ? t(
+                    "mediaSimulator.videoDecision.gateExempt",
+                    { action: actionLabel(panel.action) },
+                    "{action} kapıdan MUAF."
+                  )
+                : t(
+                    "mediaSimulator.videoDecision.gateNoOutput",
+                    { action: actionLabel(panel.action) },
+                    "{action} yeni dosya üretmez — fayda kapısı işlemez."
+                  )
+          }}
+        </span>
+      </p>
+      <p v-if="gateState === 'exempt'" class="simvd__meaning">
+        {{ data.benefitGate.exempt_reason }}
+      </p>
+      <p class="simvd__meaning">{{ data.benefitGate.meaning }}</p>
+      <p class="simvd__note simvd__note--unmeasured">
+        <AppIcon name="triangle-alert" :size="14" />
+        <span>{{ data.benefitGate.why }}</span>
+      </p>
+
+      <h5 class="simvd__sub2">
+        {{
+          t(
+            "mediaSimulator.videoDecision.fallbackTitle",
+            {},
+            "Kapıdan düşerse — REMUX'a geri çekilme"
+          )
+        }}
+      </h5>
+      <p class="simvd__note" :class="{ 'simvd__note--unmeasured': !gate.remux_fallback_applies }">
+        <AppIcon :name="gate.remux_fallback_applies ? 'info' : 'triangle-alert'" :size="14" />
+        <span>
+          {{
+            gate.remux_fallback_applies
+              ? t(
+                  "mediaSimulator.videoDecision.fallbackYes",
+                  { why: gate.remux_fallback_reason },
+                  "Geri çekilme UYGULANIR — {why}. REMUX kapıdan muaf olduğu için bu ikinci koşum her zaman teslim edilebilir bir dosya bırakır."
                 )
               : t(
-                  "mediaSimulator.videoDecision.gateNoOutput",
-                  { action: panel.action },
-                  "{action} yeni dosya üretmez — fayda kapısı işlemez."
+                  "mediaSimulator.videoDecision.fallbackNo",
+                  { why: gate.remux_fallback_reason },
+                  "Geri çekilme UYGULANMAZ — {why}."
                 )
-        }}
-      </span>
-    </p>
-    <p v-if="gateState === 'exempt'" class="simvd__meaning">
-      {{ data.benefitGate.exempt_reason }}
-    </p>
-    <p class="simvd__meaning">{{ data.benefitGate.meaning }}</p>
-    <p class="simvd__note simvd__note--unmeasured">
-      <AppIcon name="triangle-alert" :size="14" />
-      <span>{{ data.benefitGate.why }}</span>
-    </p>
-
-    <h5 class="simvd__sub2">
-      {{
-        t(
-          "mediaSimulator.videoDecision.fallbackTitle",
-          {},
-          "Kapıdan düşerse — REMUX'a geri çekilme"
-        )
-      }}
-    </h5>
-    <p class="simvd__note" :class="{ 'simvd__note--unmeasured': !gate.remux_fallback_applies }">
-      <AppIcon :name="gate.remux_fallback_applies ? 'info' : 'triangle-alert'" :size="14" />
-      <span>
-        {{
-          gate.remux_fallback_applies
-            ? t(
-                "mediaSimulator.videoDecision.fallbackYes",
-                { why: gate.remux_fallback_reason },
-                "Geri çekilme UYGULANIR — {why}. REMUX kapıdan muaf olduğu için bu ikinci koşum her zaman teslim edilebilir bir dosya bırakır."
-              )
-            : t(
-                "mediaSimulator.videoDecision.fallbackNo",
-                { why: gate.remux_fallback_reason },
-                "Geri çekilme UYGULANMAZ — {why}."
-              )
-        }}
-      </span>
-    </p>
-
+          }}
+        </span>
+      </p>
     </details>
 
     <!-- ── Kalite kapısı ─────────────────────────────────────────── -->
 
     <details class="simvd__details">
-      <summary>{{ t("mediaSimulator.videoDecision.qualityTitle", {}, "Kalite kapısı") }}</summary>
-    <dl class="simvd__spec">
-      <div>
-        <dt>{{ t("mediaSimulator.videoDecision.quality.vmaf", {}, "VMAF en az") }}</dt>
-        <dd>{{ num(data.qualityGate.vmaf_min) }}</dd>
-      </div>
-      <div>
-        <dt>
-          {{ t("mediaSimulator.videoDecision.quality.duration", {}, "Süre sapması en fazla") }}
-        </dt>
-        <dd>{{ num(data.qualityGate.max_duration_delta_s) }} s</dd>
-      </div>
-    </dl>
-    <p class="simvd__note simvd__note--unmeasured">
-      <AppIcon name="triangle-alert" :size="14" />
-      <span>{{ data.qualityGate.vmaf_note }}</span>
-    </p>
-    <p class="simvd__meaning">{{ data.qualityGate.duration_note }}</p>
-
+      <summary>
+        <span class="simvd__foldT">
+          <span class="simvd__foldMain">{{ foldTitles.quality.main }}</span>
+          <span v-if="foldTitles.quality.sub" class="simvd__foldSub">{{
+            foldTitles.quality.sub
+          }}</span>
+        </span>
+      </summary>
+      <dl class="simvd__spec">
+        <div>
+          <dt>{{ t("mediaSimulator.videoDecision.quality.vmaf", {}, "VMAF en az") }}</dt>
+          <dd>{{ num(data.qualityGate.vmaf_min) }}</dd>
+        </div>
+        <div>
+          <dt>
+            {{ t("mediaSimulator.videoDecision.quality.duration", {}, "Süre sapması en fazla") }}
+          </dt>
+          <dd>{{ num(data.qualityGate.max_duration_delta_s) }} s</dd>
+        </div>
+      </dl>
+      <p class="simvd__note simvd__note--unmeasured">
+        <AppIcon name="triangle-alert" :size="14" />
+        <span>{{ data.qualityGate.vmaf_note }}</span>
+      </p>
+      <p class="simvd__meaning">{{ data.qualityGate.duration_note }}</p>
     </details>
 
     <!-- ── Vendor'lanmayan alanlar ───────────────────────────────── -->
 
     <details class="simvd__details">
-      <summary>{{ t("mediaSimulator.videoDecision.gapsTitle", {}, "Vendor'lanmayan alanlar") }}
-        <span v-if="unvendored.length" class="simvd__foldN">{{ unvendored.length }}</span></summary>
-    <p v-if="!unvendored.length" class="simvd__meaning">
-      {{
-        t(
-          "mediaSimulator.videoDecision.noGaps",
-          {},
-          "Bu künyede kararın okuduğu her alan vendor'lanmış."
-        )
-      }}
-    </p>
-    <ul v-else class="simvd__gaps">
-      <li v-for="g in unvendored" :key="g.name">
-        <span class="simvd__gapHead">
-          <span class="simvd__gapName">{{ fieldLabel(g.name) }}</span>
-          <code class="simvd__gapCode">{{ g.name }}</code>
-          <span class="simvd__bad">{{
-            t("mediaSimulator.videoDecision.notVendored", {}, "ÖLÇÜLMEDİ")
-          }}</span>
+      <summary>
+        <span class="simvd__foldT">
+          <span class="simvd__foldMain">{{ foldTitles.gaps.main }}</span>
+          <span v-if="foldTitles.gaps.sub" class="simvd__foldSub">{{ foldTitles.gaps.sub }}</span>
         </span>
-        <span class="simvd__gapValue">
-          {{
-            t(
-              "mediaSimulator.videoDecision.gapValue",
-              { value: show(g.value) },
-              "Karar, VideoFacts varsayılanıyla verildi: {value}."
-            )
-          }}
-        </span>
-        <span v-if="g.rules.length" class="simvd__gapRules">
-          {{
-            t(
-              "mediaSimulator.videoDecision.gapRules",
-              { rules: ruleList(g.rules) },
-              "Etkilediği kural: {rules}"
-            )
-          }}
-        </span>
-        <span v-else class="simvd__gapRules">
-          {{ t("mediaSimulator.videoDecision.gapNoRule", {}, "Hiçbir kural bu alana bakmıyor.") }}
-        </span>
-      </li>
-    </ul>
-
+        <span v-if="unvendored.length" class="simvd__foldN">{{ unvendored.length }}</span>
+      </summary>
+      <p v-if="!unvendored.length" class="simvd__meaning">
+        {{
+          t(
+            "mediaSimulator.videoDecision.noGaps",
+            {},
+            "Bu künyede kararın okuduğu her alan vendor'lanmış."
+          )
+        }}
+      </p>
+      <ul v-else class="simvd__gaps">
+        <li v-for="g in unvendored" :key="g.name">
+          <span class="simvd__gapHead">
+            <span class="simvd__gapName">{{ fieldLabel(g.name) }}</span>
+            <code class="simvd__gapCode">{{ g.name }}</code>
+            <span class="simvd__bad">{{
+              t("mediaSimulator.videoDecision.notVendored", {}, "ÖLÇÜLMEDİ")
+            }}</span>
+          </span>
+          <span class="simvd__gapValue">
+            {{
+              t(
+                "mediaSimulator.videoDecision.gapValue",
+                { value: show(g.value) },
+                "Karar, VideoFacts varsayılanıyla verildi: {value}."
+              )
+            }}
+          </span>
+          <span v-if="g.rules.length" class="simvd__gapRules">
+            {{
+              t(
+                "mediaSimulator.videoDecision.gapRules",
+                { rules: ruleList(g.rules) },
+                "Etkilediği kural: {rules}"
+              )
+            }}
+          </span>
+          <span v-else class="simvd__gapRules">
+            {{ t("mediaSimulator.videoDecision.gapNoRule", {}, "Hiçbir kural bu alana bakmıyor.") }}
+          </span>
+        </li>
+      </ul>
     </details>
 
     <!-- ── Künye ve hedef ────────────────────────────────────────── -->
 
     <details class="simvd__details">
       <summary>
-        {{
-          t(
-            "mediaSimulator.videoDecision.varsTitle",
-            { n: variableRows.length },
-            "Künyenin {n} değişkeni"
-          )
-        }}
+        <span class="simvd__foldT">
+          <span class="simvd__foldMain">{{ foldTitles.vars.main }}</span>
+          <span v-if="foldTitles.vars.sub" class="simvd__foldSub">{{ foldTitles.vars.sub }}</span>
+        </span>
       </summary>
-      <table class="simvd__table">
-        <thead>
-          <tr>
-            <th scope="col">{{ t("mediaSimulator.videoDecision.col.var", {}, "Değişken") }}</th>
-            <th scope="col">{{ t("mediaSimulator.videoDecision.col.value", {}, "Değer") }}</th>
-            <th scope="col">{{ t("mediaSimulator.videoDecision.col.origin", {}, "Köken") }}</th>
-            <th scope="col">{{ t("mediaSimulator.videoDecision.col.source", {}, "Nereden") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in variableRows" :key="row.name">
-            <th scope="row">
-              <code>{{ row.name }}</code>
-            </th>
-            <td class="simvd__num">{{ show(row.value) }}</td>
-            <td>
-              <span class="simvd__origin" :class="`simvd__origin--${row.origin}`">
-                {{
-                  t(
-                    `mediaSimulator.videoDecision.origin.${row.origin}`,
-                    {},
-                    ORIGIN_FALLBACK[row.origin]
-                  )
-                }}
-              </span>
-            </td>
-            <td class="simvd__muted">{{ row.spec ? row.spec.source : "—" }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="simvd__scroll">
+        <table class="simvd__table">
+          <thead>
+            <tr>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.var", {}, "Değişken") }}</th>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.value", {}, "Değer") }}</th>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.origin", {}, "Köken") }}</th>
+              <th scope="col">{{ t("mediaSimulator.videoDecision.col.source", {}, "Nereden") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in variableRows" :key="row.name">
+              <th scope="row">
+                <code>{{ row.name }}</code>
+              </th>
+              <td class="simvd__num">{{ show(row.value) }}</td>
+              <td>
+                <span class="simvd__origin" :class="`simvd__origin--${row.origin}`">
+                  {{
+                    t(
+                      `mediaSimulator.videoDecision.origin.${row.origin}`,
+                      {},
+                      ORIGIN_FALLBACK[row.origin]
+                    )
+                  }}
+                </span>
+              </td>
+              <td class="simvd__muted">{{ row.spec ? row.spec.source : "—" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </details>
 
     <details class="simvd__details">
       <summary>
-        {{ t("mediaSimulator.videoDecision.targetTitle", {}, "TRANSCODE hedefi ve gerekçesi") }}
+        <span class="simvd__foldT">
+          <span class="simvd__foldMain">{{ foldTitles.target.main }}</span>
+          <span v-if="foldTitles.target.sub" class="simvd__foldSub">{{
+            foldTitles.target.sub
+          }}</span>
+        </span>
       </summary>
       <dl class="simvd__spec">
         <div>
@@ -910,23 +1029,44 @@
       </p>
     </details>
 
-    <!-- Künye çeviriye girmez: dosya yolu dört dilde de aynıdır. -->
-    <p class="simvd__prov">
-      <code>{{ data.source.tablo }}</code> · <code>{{ data.source.motor }}</code> ·
-      {{ data.source.tabloDurumu }} v{{ data.source.tabloSurumu }} · {{ data.source.olcum }}
-    </p>
-    <p class="simvd__prov">
-      {{
-        t(
-          "mediaSimulator.videoDecision.todayLine",
-          {
-            width: num(data.source.bugunkuHat.NEEDS_TRANSCODE_MAX_WIDTH),
-            bitrate: num(data.source.bugunkuHat.NEEDS_TRANSCODE_MAX_BITRATE),
-          },
-          "Bugünkü hat iki eşikle karar veriyor: genişlik > {width} VEYA bitrate > {bitrate}."
-        )
-      }}
-    </p>
+    <!-- Teknik ayrıntı — varsayılan kapalı: kural kimliği, karar kodu,
+         kaynak dosya yolları. Künye çeviriye girmez: dosya yolu dört dilde
+         de aynıdır. -->
+    <details class="simvd__tech">
+      <summary>{{ t("mediaSimulator.techDetails") }}</summary>
+      <dl>
+        <dt>{{ t("mediaSimulator.videoDecision.ruleCode") }}</dt>
+        <dd>
+          <code>{{ panel.ruleId }}</code> · <code>{{ panel.action }}</code>
+        </dd>
+        <template v-if="panel.code">
+          <dt>{{ t("mediaSimulator.videoDecision.decisionCode") }}</dt>
+          <dd>
+            <code>{{ panel.code }}</code>
+          </dd>
+        </template>
+        <dt>{{ t("mediaSimulator.videoDecision.sourceFiles") }}</dt>
+        <dd>
+          <code>{{ data.source.tablo }}</code> · <code>{{ data.source.motor }}</code> ·
+          <code>{{ data.source.kunyeKorpusu }}</code> · {{ data.source.tabloDurumu }} v{{
+            data.source.tabloSurumu
+          }}
+          · {{ data.source.olcum }}
+        </dd>
+      </dl>
+      <p>
+        {{
+          t(
+            "mediaSimulator.videoDecision.todayLine",
+            {
+              width: num(data.source.bugunkuHat.NEEDS_TRANSCODE_MAX_WIDTH),
+              bitrate: num(data.source.bugunkuHat.NEEDS_TRANSCODE_MAX_BITRATE),
+            },
+            "Bugünkü hat iki eşikle karar veriyor: genişlik > {width} VEYA bitrate > {bitrate}."
+          )
+        }}
+      </p>
+    </details>
   </section>
 </template>
 
@@ -994,8 +1134,6 @@
 
   // ── Künye seçimi ─────────────────────────────────────────────
 
-
-
   .simvd__select {
     @include media.field-input;
     max-width: 22rem;
@@ -1025,6 +1163,13 @@
     display: flex;
     align-items: flex-start;
     gap: media.$s-3;
+
+    // Telefon: rozet metnin yanında değil üstünde — 320px'te metin sütunu
+    // sözcük sözcük kırılıyordu.
+    @media (max-width: media.$m-bp-sm) {
+      flex-direction: column;
+      gap: media.$s-2;
+    }
     margin: 0 0 media.$s-2;
     padding: media.$s-3;
     border-radius: media.$r-md;
@@ -1075,13 +1220,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: media.$s-2;
-  }
-
-  .simvd__ruleId,
-  .simvd__code {
-    @include sim.mono;
-    @include media.text("xs");
-    @include media.muted(1);
   }
 
   // Aksiyon rozeti — PASSTHROUGH/REMUX/TRANSCODE/REJECT.
@@ -1203,9 +1341,15 @@
   }
 
   // ── Kural izi tablosu ────────────────────────────────────────
+  // Telefonda tablo kendi kabında kayar, sayfa değil.
+  .simvd__scroll {
+    @include sim.table-scroll;
+  }
+
   .simvd__table {
     @include sim.data-table;
     margin-bottom: media.$s-2;
+    min-width: 34rem;
   }
 
   .simvd__caption {
@@ -1407,16 +1551,9 @@
     }
   }
 
-  .simvd__prov {
-    margin: media.$s-3 0 0;
-    @include media.text("xs");
-    @include media.muted(2);
-    word-break: break-word;
-    line-height: 1.55;
-
-    code {
-      @include sim.mono;
-    }
+  .simvd__tech {
+    @include sim.tech-fold;
+    margin-top: media.$s-3;
   }
 
   // ── Koyu hüküm bandı (öneri 05) ─────────────────────────────────
@@ -1426,6 +1563,10 @@
     padding: media.$s-4 media.$s-5;
     margin-bottom: media.$s-3;
     color: #f0eeea;
+
+    @media (max-width: media.$m-bp-sm) {
+      padding: media.$s-3;
+    }
 
     .simvd__title {
       color: #f0eeea;
@@ -1459,10 +1600,13 @@
   }
 
   .simvd__pick {
+    display: block;
+    flex: 1 1 16rem;
     min-width: 0;
   }
 
   .simvd__select--hero {
+    width: 100%;
     max-width: 24rem;
     background: #2a2924;
     border-color: #3d3b35;
@@ -1473,9 +1617,27 @@
     @include media.sr-only;
   }
 
+  .simvd__foldT {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .simvd__foldSub {
+    font-weight: 400;
+    @include media.text("xs");
+    @include media.muted(1);
+  }
+
   .simvd__foldN {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.375rem;
     margin-inline-start: media.$s-2;
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     font-weight: 700;
     padding: 0 media.$s-2;
     border-radius: 999px;
@@ -1486,5 +1648,4 @@
       background: $d-bg-elevated;
     }
   }
-
 </style>

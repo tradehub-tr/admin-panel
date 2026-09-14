@@ -142,4 +142,19 @@
     padding: media.$s-05 media.$s-3;
     @include media.text("xs");
   }
+
+  // Telefon: ana mod anahtarı satırı kaplar, düğmeler eşit bölüşür — başlığın
+  // yanına sığmaya çalışıp taşmaz (320px kontrolü, 2026-09-08).
+  @media (max-width: media.$m-bp-sm) {
+    .simseg:not(.simseg--small) {
+      display: flex;
+      width: 100%;
+
+      .simseg__btn {
+        flex: 1 1 0;
+        min-width: 0;
+        padding-inline: media.$s-2;
+      }
+    }
+  }
 </style>

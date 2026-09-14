@@ -363,6 +363,13 @@ select::picker(select) {
   appearance: base-select;
   margin-top: 6px;
   padding: 4px;
+  // Panel içerik kadar genişliyor; uzun seçenek metinleri (simülatör dosya
+  // adları, kural açıklamaları) 320px telefonda paneli ekranın dışına
+  // taşırıyordu. Ekrana sığmayan panel yok: genişlik sınırlı, satırlar sarar.
+  box-sizing: border-box;
+  max-width: min(22rem, calc(100vw - 16px));
+  max-height: min(60vh, 22rem);
+  overflow-y: auto;
   background: $l-bg;
   border: 1px solid $l-border;
   border-radius: 12px;
@@ -400,6 +407,10 @@ select option {
   color: $l-text-700;
   background: transparent;
   cursor: pointer;
+  // Dar panelde metin sarar, paneli genişletmez.
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 
   &:hover,
   &:focus {

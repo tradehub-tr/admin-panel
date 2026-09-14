@@ -88,12 +88,15 @@
   @use "@/assets/scss/media" as media;
   @use "@/assets/scss/simulator" as sim;
 
+  // Telefonda tablo SAYFAYI değil bu kabı kaydırır; altı sütun 38rem'in
+  // altına sıkışınca okunmaz olduğu için tabloya taban genişlik verildi.
   .simtab {
-    overflow-x: auto;
+    @include sim.table-scroll;
   }
 
   .simtab__table {
     @include sim.data-table;
+    min-width: 38rem;
   }
 
   .simtab__table tbody tr {

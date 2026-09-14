@@ -157,22 +157,10 @@
       {{ t("mediaSimulator.gate.title", {}, "Onay kapısı") }}
     </h3>
     <p class="simgate__lead">
-      {{
-        t(
-          "mediaSimulator.gate.lead",
-          {},
-          "Yayımlamadan önce zorunlu yerleşimler (LCP adayı bölgeler) her cihaz sınıfında en az bir kez görülmelidir."
-        )
-      }}
+      {{ t("mediaSimulator.gate.lead") }}
     </p>
     <p class="simgate__lead">
-      {{
-        t(
-          "mediaSimulator.gate.threshold",
-          { pct: VISIBILITY_RATIO * 100, ms: DWELL_MS },
-          "Bir yerleşim, kutusunun %{pct} kadarı ekranda ve {ms} ms boyunca kaldığında 'görüldü' sayılır."
-        )
-      }}
+      {{ t("mediaSimulator.gate.threshold", { pct: VISIBILITY_RATIO * 100, ms: DWELL_MS }) }}
     </p>
 
     <div
@@ -290,19 +278,16 @@
       {{ t("mediaSimulator.gate.publish", {}, "Onayla ve yayınla") }}
     </button>
 
+    <!-- Sınır tek cümleyle; uç adı ve hata kodu teknik ayrıntıda (kapalı). -->
     <p class="simgate__gap">
       <AppIcon name="triangle-alert" :size="14" />
-      <span>{{
-        t(
-          "mediaSimulator.gate.serverGap",
-          {},
-          "Onay kanıtı artık sunucuda da zorlanıyor: kanıtsız gelen onayı `save_intent` 417 `MEDIA_PREVIEW_REQUIRED` ile reddeder. Sunucunun DOĞRULAYAMADIĞI şu: görünürlük süresi istemci beyanıdır — bu kapı yerleşimleri gerçekten göstererek o beyanı dürüst kılar."
-        )
-      }}</span>
+      <span>{{ t("mediaSimulator.gate.serverGap") }}</span>
     </p>
 
-    <details class="simgate__payload">
-      <summary>{{ t("mediaSimulator.gate.payloadTitle", {}, "Sunucuya gidecek kayıt") }}</summary>
+    <details class="simgate__tech">
+      <summary>{{ t("mediaSimulator.techDetails") }}</summary>
+      <p>{{ t("mediaSimulator.gate.serverGapTech") }}</p>
+      <p class="simgate__techTitle">{{ t("mediaSimulator.gate.payloadTitle") }}</p>
       <pre class="simgate__code">{{ JSON.stringify(auditRecord, null, 2) }}</pre>
     </details>
   </section>
@@ -311,6 +296,7 @@
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
   @use "@/assets/scss/media" as media;
+  @use "@/assets/scss/simulator" as sim;
 
   .simgate {
     @include media.surface("raised");
@@ -490,14 +476,12 @@
     }
   }
 
-  .simgate__payload {
-    @include media.text("xs");
+  .simgate__tech {
+    @include sim.tech-fold;
+  }
 
-    summary {
-      cursor: pointer;
-      font-weight: 700;
-      @include media.focus-ring;
-    }
+  .simgate__techTitle {
+    font-weight: 700;
   }
 
   .simgate__code {

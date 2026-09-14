@@ -21,6 +21,12 @@
     PAGES,
     PLACEMENT_MEASUREMENT,
   } from "@/lib/media/simulator";
+  import {
+    extractRegionIds,
+    humanizeId,
+    measurementStatus,
+    regionKeyPath,
+  } from "@/lib/media/simulator/labels";
 
   /**
    * T-111 … T-115 — Önizleme simülatörü ekranı (UI/UX yeniden düzenlemesi,
@@ -57,13 +63,43 @@
    *     hesaplanan hedef genişlik şu" birinci sınıf durum, arıza değil.
    *   · Cihaz ve kutu değerleri ÖLÇÜLMEDİ (emülasyon + CSS aritmetiği);
    *     ekran bunu saklamaz, başlığın hemen altındaki durum çiplerinde
-   *     yazar (DEVICE_MEASUREMENT / PLACEMENT_MEASUREMENT).
+   *     yazar (DEVICE_MEASUREMENT / PLACEMENT_MEASUREMENT). Durum KODU
+   *     (`EMULE_DEGERLER_OLCULMEDI` gibi) ekrana basılmaz: `labels.js`
+   *     koda insan etiketi eşler, ham kod ve not "Teknik ayrıntı" altında
+   *     kapalı durur (2026-09-08 — ekranı yazılımcı değil patron okur).
    *   · Kutusu statik CSS'ten çıkarılamayan bölgeler (EXCLUDED_REGIONS)
    *     gizlenmez, gerekçesiyle listelenir.
    *   · Çerçevenin tarayıcıda kaç ms'de boyandığı **ÖLÇÜLMEDİ** — tembel
    *     montaj var ama tarayıcı ölçümü bu görevde yapılmadı.
    */
-  const { t } = useI18n();
+  const { t, te } = useI18n();
+
+  // ── Ölçüm durumu: kod → insan etiketi ───────────────────────────
+  const deviceMeas = computed(() => measurementStatus(DEVICE_MEASUREMENT.status));
+  const placementMeas = computed(() => measurementStatus(PLACEMENT_MEASUREMENT.status));
+  const measLabel = (m) => t(`mediaSimulator.measurement.${m.kind}.label`);
+  const measDesc = (m) =>
+    t(`mediaSimulator.measurement.${m.kind}.desc`, { done: m.done ?? "", total: m.total ?? "" });
+
+  /** Bölge kimliğinin insan adı; i18n'de yoksa kimlik biçimlendirilir. */
+  function regionName(id) {
+    const key = `mediaSimulator.regionName.${regionKeyPath(id)}`;
+    return te(key) ? t(key) : humanizeId(id);
+  }
+
+  /** Dışarıda bırakılan bölgenin tek cümlelik insan dili sebebi. */
+  function excludedSummary(id) {
+    const key = `mediaSimulator.excluded.summary.${regionKeyPath(id)}`;
+    return te(key) ? t(key) : t("mediaSimulator.excluded.unknownReason");
+  }
+
+  /** Ölçüm notunun saydığı, henüz tarayıcıda doğrulanmamış bölgeler — insan adıyla. */
+  const unverifiedRegions = computed(() =>
+    extractRegionIds(
+      PLACEMENT_MEASUREMENT.note,
+      PAGES.map((p) => p.page)
+    ).map(regionName)
+  );
   const sim = useSrcsetSimulator();
   const {
     deviceId,
@@ -220,30 +256,62 @@
     </div>
 
     <!-- Ölçüm durumu başlığın hemen altında: bu sayfadaki her sayı
-         türetilmiştir, hiçbiri gerçek cihazda ölçülmemiştir. Durum kodları
-         (EMULE_DEGERLER_OLCULMEDI / KISMEN_DOGRULANDI…) kasten ekranda —
-         gizlenmiş bir dipnot değil, veri künyesinin kendisi. -->
+         türetilmiştir, hiçbiri gerçek cihazda ölçülmemiştir. Çipte insan
+         etiketi ("Tahmini değerler", "Kısmen doğrulandı 8/15"); durum kodu
+         ve ham ölçüm notu "Teknik ayrıntı" altında — gizlenmiyor, ama
+         patronun gözüne kod basılmıyor. -->
     <div class="msim-meas">
-      <span class="msim-meas__chip">
+      <span class="msim-meas__chip" :title="measDesc(deviceMeas)">
         <span class="msim-meas__dot" aria-hidden="true"></span>
         <strong>{{ t("mediaSimulator.unmeasured.devices") }}</strong>
-        <code>{{ DEVICE_MEASUREMENT.status }}</code>
+        <span>{{ measLabel(deviceMeas) }}</span>
       </span>
-      <span class="msim-meas__chip">
+      <span class="msim-meas__chip" :title="measDesc(placementMeas)">
         <span class="msim-meas__dot msim-meas__dot--part" aria-hidden="true"></span>
         <strong>{{ t("mediaSimulator.unmeasured.placements") }}</strong>
-        <code>{{ PLACEMENT_MEASUREMENT.status }}</code>
+        <span>
+          {{ measLabel(placementMeas)
+          }}<template v-if="placementMeas.done !== null">
+            ({{ placementMeas.done }}/{{ placementMeas.total }})</template
+          >
+        </span>
       </span>
       <details class="msim-meas__more">
         <summary>
-          {{ t("mediaSimulator.unmeasured.detail", {}, "Ayrıntı") }}
+          {{ t("mediaSimulator.unmeasured.detail") }}
           <AppIcon name="chevron-down" :size="12" />
         </summary>
         <div class="msim-meas__body">
           <p class="msim-meas__title">{{ t("mediaSimulator.unmeasured.title") }}</p>
-          <p>{{ DEVICE_MEASUREMENT.note }}</p>
-          <p>{{ PLACEMENT_MEASUREMENT.note }}</p>
+          <p>
+            <strong>{{ t("mediaSimulator.unmeasured.devices") }}:</strong>
+            {{ measDesc(deviceMeas) }}
+          </p>
+          <p>
+            <strong>{{ t("mediaSimulator.unmeasured.placements") }}:</strong>
+            {{ measDesc(placementMeas) }}
+          </p>
+          <p v-if="unverifiedRegions.length">
+            {{
+              t("mediaSimulator.measurement.unverifiedRegions", {
+                list: unverifiedRegions.join(", "),
+              })
+            }}
+          </p>
           <p>{{ t("mediaSimulator.unmeasured.browser") }}</p>
+          <!-- Ham künye: durum kodu + veri dosyasındaki not. SSR duman testi
+               kodların HTML'de olduğunu sayar; kapalı katta dururlar. -->
+          <details class="msim-tech">
+            <summary>{{ t("mediaSimulator.measurement.code") }}</summary>
+            <p>
+              <code>{{ DEVICE_MEASUREMENT.status }}</code>
+            </p>
+            <p>{{ DEVICE_MEASUREMENT.note }}</p>
+            <p>
+              <code>{{ PLACEMENT_MEASUREMENT.status }}</code>
+            </p>
+            <p>{{ PLACEMENT_MEASUREMENT.note }}</p>
+          </details>
         </div>
       </details>
     </div>
@@ -319,9 +387,7 @@
               @click="matrixOpen = !matrixOpen"
             >
               <AppIcon :name="matrixOpen ? 'chevron-up' : 'chevron-down'" :size="13" />
-              {{
-                matrixOpen ? t("mediaSimulator.matrix.hide") : t("mediaSimulator.matrix.show")
-              }}
+              {{ matrixOpen ? t("mediaSimulator.matrix.hide") : t("mediaSimulator.matrix.show") }}
             </button>
           </div>
         </div>
@@ -354,17 +420,30 @@
         </div>
       </section>
 
+      <!-- Dışarıda bırakılan bölgeler: insan adı + tek cümle sebep önde;
+           kimlik, render noktası ve ham gerekçe teknik ayrıntıda. -->
       <section v-if="EXCLUDED_REGIONS.length" class="msim-card msim-excluded">
         <h2>{{ t("mediaSimulator.excluded.title") }}</h2>
         <p class="msim-excluded__lead">{{ t("mediaSimulator.excluded.lead") }}</p>
-        <dl class="msim-excluded__list">
-          <template v-for="x in EXCLUDED_REGIONS" :key="x.region">
-            <dt>
-              <code>{{ x.region }}</code>
-            </dt>
-            <dd>{{ x.reason }}</dd>
-          </template>
-        </dl>
+        <ul class="msim-excluded__list">
+          <li v-for="x in EXCLUDED_REGIONS" :key="x.region">
+            <p class="msim-excluded__name">{{ regionName(x.region) }}</p>
+            <p class="msim-excluded__why">{{ excludedSummary(x.region) }}</p>
+            <details class="msim-tech">
+              <summary>{{ t("mediaSimulator.techDetails") }}</summary>
+              <dl>
+                <dt>{{ t("mediaSimulator.measurement.code") }}</dt>
+                <dd>
+                  <code>{{ x.region }}</code>
+                </dd>
+                <dt>{{ t("mediaSimulator.result.renderPoint") }}</dt>
+                <dd>{{ x.render_point || "—" }}</dd>
+                <dt>{{ t("mediaSimulator.result.derivedFrom") }}</dt>
+                <dd>{{ x.reason }}</dd>
+              </dl>
+            </details>
+          </li>
+        </ul>
       </section>
     </div>
 
@@ -402,6 +481,13 @@
       @include media.heading;
       font-weight: 700;
     }
+
+    // Telefon: başlık ve mod anahtarı yan yana sıkışmaz, alt alta gelir.
+    @media (max-width: media.$m-bp-md) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: media.$s-3;
+    }
   }
 
   .msim-head__sub {
@@ -423,8 +509,10 @@
 
   .msim-meas__chip {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: media.$s-2;
+    gap: media.$s-1 media.$s-2;
+    max-width: 100%;
     padding: media.$s-1 media.$s-3;
     border-radius: media.$r-pill;
     border: 1px dashed $l-border;
@@ -435,11 +523,6 @@
     strong {
       font-weight: 620;
       color: $l-text-700;
-    }
-
-    code {
-      @include sim.mono;
-      font-size: 0.6875rem;
     }
 
     @include dark {
@@ -524,6 +607,14 @@
         margin-top: 0;
       }
     }
+
+    // Telefon: yüzen kutu yerine akışta durur — uzun not sayfayı örtmez.
+    @media (max-width: media.$m-bp-md) {
+      position: static;
+      width: 100%;
+      margin-top: media.$s-2;
+      box-shadow: none;
+    }
   }
 
   .msim-meas__title {
@@ -533,6 +624,11 @@
     @include dark {
       color: $d-text-hi;
     }
+  }
+
+  // Ortak "Teknik ayrıntı" katı — sayfa düzeyinde kullanılan örnekler.
+  .msim-tech {
+    @include sim.tech-fold;
   }
 
   // ── Kartlar ve yığın ─────────────────────────────────────────
@@ -635,25 +731,33 @@
   }
 
   .msim-excluded__list {
+    list-style: none;
     margin: 0;
+    padding: 0;
 
-    dt {
-      @include media.text("sm");
-      font-weight: 620;
-      margin-top: media.$s-2;
+    > li {
+      padding: media.$s-2 0;
+      @include media.divider(bottom);
 
-      code {
-        @include sim.mono;
-        font-size: 0.8125rem;
+      &:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
       }
     }
+  }
 
-    dd {
-      margin: media.$s-05 0 0;
-      @include media.text("xs");
-      @include media.muted(1);
-      line-height: 1.5;
-    }
+  .msim-excluded__name {
+    margin: 0;
+    @include media.text("sm");
+    font-weight: 620;
+    @include media.heading;
+  }
+
+  .msim-excluded__why {
+    margin: media.$s-05 0 0;
+    @include media.text("xs");
+    @include media.muted(1);
+    line-height: 1.5;
   }
 
   // ── Video modu ───────────────────────────────────────────────
