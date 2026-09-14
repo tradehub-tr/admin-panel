@@ -23,6 +23,13 @@ const STUB = "/src/stores/__tests__/fixtures/subscriptionApiStub.js";
 
 const REQUEST_METHOD = "tradehub_core.api.v1.subscription_cancellation.request_cancellation";
 const REVOKE_METHOD = "tradehub_core.api.v1.subscription_cancellation.revoke_cancellation";
+
+// Zaman-bombası denetimi gereği gelecek tarih SABİT yazılamaz; dönem sonu
+// koşuma göre ~90 gün ileride hesaplanır (assertion'lar tarihe bağlı değil).
+const PERIOD_END = (() => {
+  const d = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  return `${d.toISOString().slice(0, 10)} 00:00:00`;
+})();
 const ACCESS_METHOD = "tradehub_core.api.v1.subscription.get_seller_access_state";
 
 let server;
@@ -75,7 +82,7 @@ test("requestCancellation doğru uca reason+note gönderir, başarıda access st
     subscription: "STSUB-2026-00001",
     status: "active",
     cancel_at_period_end: 1,
-    effective_end: "2026-10-01 00:00:00",
+    effective_end: PERIOD_END,
     plan: "PRO",
     already_scheduled: false,
   };
@@ -84,7 +91,7 @@ test("requestCancellation doğru uca reason+note gönderir, başarıda access st
       access: "ok",
       status: "active",
       plan: "PRO",
-      current_period_end: "2026-10-01 00:00:00",
+      current_period_end: PERIOD_END,
       cancel_at_period_end: 1,
       billing_cycle: "yearly",
     },
@@ -113,7 +120,7 @@ test("revokeCancellation argümansız doğru uca gider ve bayrağı düşürür"
       access: "ok",
       status: "active",
       plan: "PRO",
-      current_period_end: "2026-10-01 00:00:00",
+      current_period_end: PERIOD_END,
       cancel_at_period_end: 0,
     },
   });
@@ -125,7 +132,7 @@ test("revokeCancellation argümansız doğru uca gider ve bayrağı düşürür"
         subscription: "STSUB-2026-00001",
         status: "active",
         cancel_at_period_end: 0,
-        current_period_end: "2026-10-01 00:00:00",
+        current_period_end: PERIOD_END,
         plan: "PRO",
       },
     };
