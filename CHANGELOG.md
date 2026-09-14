@@ -1,3 +1,11 @@
+## [v1.14.1-alpha.2] - 2026-09-14 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(media): yükleme hatasını boş klasörden ayır (#216) (@ahmeetseker)
+
+---
 ## [v1.14.1-alpha.1] - 2026-09-14 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
