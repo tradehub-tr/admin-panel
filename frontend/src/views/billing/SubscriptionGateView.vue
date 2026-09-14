@@ -56,6 +56,8 @@
     cancelAtPeriodEnd,
     canceledAt,
     cancelActing,
+    dunningExpireAt,
+    expiredCause,
   } = storeToRefs(sub);
 
   const plans = ref([]);
@@ -83,6 +85,18 @@
       title: "Ödemeniz beklemede",
       desc: "Erişiminizi sürdürmek için aboneliğinizi yenileyin.",
     },
+    // Dunning T+14 (AC-5/AC-10): bugüne dek 'suspended' anahtarı yoktu,
+    // no_subscription'a düşüyordu. {tarih} → dunning_expire_at (T+30 fesih).
+    suspended: {
+      title: "Mağazanız askıya alındı",
+      desc: "Vitrininiz geçici pasif. Ödemenizi tamamlayın, {tarih} tarihine kadar fesih olmadan geri dönebilirsiniz.",
+    },
+    // Dunning T+30 feshi (AC-8): reason 'trial_expired' geriye uyumlu KALIR,
+    // ayrım additive expired_cause==='dunning' ile yapılır.
+    dunning_expired: {
+      title: "Aboneliğiniz sona erdi",
+      desc: "Aboneliğiniz ödeme alınamadığı için sona erdi — verileriniz korunuyor. Panele dönmek için bir paket seçin; kaldığınız yerden devam edersiniz.",
+    },
   };
 
   // iOS kilit metinleri: "paket seçin" tarzı satın-almaya yönlendiren ifade
@@ -104,11 +118,28 @@
       title: "Ödemeniz beklemede",
       desc: "Aboneliğiniz şu anda beklemede.",
     },
+    // Nötr: ödeme çağrısı ve fesih tarihi pazarlığı yok (anti-steering).
+    suspended: {
+      title: "Mağazanız askıya alındı",
+      desc: "Vitrininiz geçici olarak pasif. Mağazanız ve ürünleriniz korunuyor.",
+    },
+    dunning_expired: {
+      title: "Aboneliğiniz sona erdi",
+      desc: "Aboneliğiniz ödeme alınamadığı için sona erdi. Verileriniz korunuyor.",
+    },
   };
 
   const headline = computed(() => {
     const copy = iosApp ? IOS_LOCK_COPY : LOCK_COPY;
-    return copy[lockReason.value] || copy.no_subscription;
+    // AC-8: dunning feshi 'trial_expired' reason'ı ile gelir (geriye uyumlu);
+    // additive expired_cause alanı copy varyantını seçer.
+    const key =
+      lockReason.value === "trial_expired" && expiredCause.value === "dunning"
+        ? "dunning_expired"
+        : lockReason.value;
+    const c = copy[key] || copy.no_subscription;
+    // {tarih} yalnız web/suspended copy'sinde var — diğerlerinde no-op.
+    return { title: c.title, desc: c.desc.replace("{tarih}", fmtDate(dunningExpireAt.value)) };
   });
 
   function priceLabel(p) {
@@ -132,7 +163,13 @@
     () => plans.value.find((p) => p.plan_code === planCode.value) || null
   );
   const currentPlanName = computed(() => currentPlan.value?.plan_name || planCode.value || "—");
-  const statusLabel = computed(() => (subStatus.value === "trial" ? "Deneme" : "Aktif"));
+  // D3: dunning'deki mağaza "Aktif" görmemeli — past_due kendi etiketini alır.
+  // Etiket nötr bilgi metnidir, iOS'ta da aynen kalır (satış yüzeyi değil).
+  const statusLabel = computed(() => {
+    if (subStatus.value === "trial") return "Deneme";
+    if (subStatus.value === "past_due") return "Ödeme bekleniyor";
+    return "Aktif";
+  });
 
   function fmtDate(d) {
     if (!d) return "—";

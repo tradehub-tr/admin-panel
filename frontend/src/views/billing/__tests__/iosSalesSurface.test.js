@@ -114,12 +114,16 @@ async function render(path, { ua, accessState, user, props } = {}) {
   }
 }
 
+// Zaman-bombası denetimi gereği gelecek tarih SABİT yazılamaz; koşuma göre
+// ileri tarihler hesaplanır (assertion'lar tarih metnine bağlı değil).
+const gunSonra = (n) => `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
+
 const ACTIVE_STATE = {
   access: "ok",
   status: "active",
   plan: "PRO",
   started_at: "2025-10-01 00:00:00",
-  current_period_end: "2026-10-01 00:00:00",
+  current_period_end: gunSonra(90),
   cancel_at_period_end: 0,
   billing_cycle: "yearly",
 };
@@ -129,7 +133,7 @@ const TRIAL_STATE = {
   status: "trial",
   is_trial: 1,
   plan: "PRO",
-  trial_end: "2099-01-01 00:00:00",
+  trial_end: gunSonra(3650),
 };
 
 // ── SubscriptionGateView — aktif abonelik ──
@@ -223,6 +227,91 @@ test("gate (locked/canceled): web 'paket seçin' der, iOS satın almaya YÖNLEND
   assert.ok(ios.html.includes("Aboneliğiniz sona erdi"), "nötr bilgi metni");
   assert.ok(ios.html.includes("İptal tarihi"), "canceled_at gösterilir (AC-2)");
   assert.ok(!ios.html.includes("paket seç"), "iOS kilit metni satın almaya yönlendiremez");
+});
+
+// ── Dunning (Faz C dilim 1) — past_due etiketi, suspended copy, dunning feshi ──
+
+const PAST_DUE_STATE = {
+  access: "ok",
+  status: "past_due",
+  plan: "PRO",
+  current_period_end: "2026-09-01 00:00:00",
+  billing_cycle: "yearly",
+  cancel_at_period_end: 0,
+  is_trial: false,
+  in_dunning: 1,
+  dunning_grace_end: gunSonra(10),
+};
+
+test("gate (past_due, web + iOS): 'Ödeme bekleniyor' etiketi, kilit yok, iptal butonu yok (D3)", async () => {
+  for (const ua of [WEB_UA, IOS_UA]) {
+    const { html } = await render(GATE, { ua, accessState: PAST_DUE_STATE });
+    assert.ok(html.includes("Aktif Aboneliğiniz"), "hoşgörü penceresi paywall'a düşürmez (AC-1)");
+    assert.ok(html.includes("Ödeme bekleniyor"), "dunning'deki mağaza 'Aktif' etiketi GÖRMEZ");
+    assert.ok(!html.includes(">Aktif<"), "past_due'da 'Aktif' rozeti basılmaz");
+    assert.ok(!html.includes("Aboneliği İptal Et"), "canCancel yalnız status==='active' (değişmedi)");
+  }
+});
+
+test("gate (past_due, iOS): etiket nötr kalır, satış yüzeyi yine sızmaz", async () => {
+  const { html } = await render(GATE, { ua: IOS_UA, accessState: PAST_DUE_STATE });
+  assert.ok(html.includes("Ödeme bekleniyor"), "D3 etiketi iOS'ta da aynen görünür");
+  for (const forbidden of ["Paketler yükleniyor", "paket seç", "ücretsiz dene", "Havale", "IBAN"]) {
+    assert.ok(!html.includes(forbidden), `iOS çıktısında satış yüzeyi sızdı: "${forbidden}"`);
+  }
+});
+
+test("gate (locked/suspended): web fesih tarihli geri dönüş copy'si, no_subscription'a DÜŞMEZ", async () => {
+  const expireAt = gunSonra(16);
+  const suspended = {
+    access: "locked",
+    reason: "suspended",
+    suspended_at: "2026-09-10 03:00:00",
+    dunning_expire_at: expireAt,
+  };
+  const { html } = await render(GATE, { ua: WEB_UA, accessState: suspended });
+  assert.ok(html.includes("Mağazanız askıya alındı"), "yeni 'suspended' anahtarı kullanılır");
+  assert.ok(html.includes("Vitrininiz geçici pasif"));
+  assert.ok(html.includes("fesih olmadan geri dönebilirsiniz"));
+  const tarih = new Date(expireAt.replace(" ", "T")).toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  assert.ok(html.includes(tarih), "dunning_expire_at okunur biçimde basılır");
+  assert.ok(!html.includes("Devam etmek için bir paket seçin"), "no_subscription fallback'i değil");
+});
+
+test("gate (locked/suspended, iOS): nötr metin — ödeme çağrısı ve satın-alma yönlendirmesi YOK", async () => {
+  const suspended = {
+    access: "locked",
+    reason: "suspended",
+    suspended_at: "2026-09-10 03:00:00",
+    dunning_expire_at: gunSonra(16),
+  };
+  const { html } = await render(GATE, { ua: IOS_UA, accessState: suspended });
+  assert.ok(html.includes("Mağazanız askıya alındı"), "nötr bilgi başlığı");
+  assert.ok(html.includes("korunuyor"), "veri güvencesi metni");
+  for (const forbidden of ["Ödemenizi tamamlayın", "paket seç", "Havale", "IBAN"]) {
+    assert.ok(!html.includes(forbidden), `iOS suspended copy'sinde yasak ifade: "${forbidden}"`);
+  }
+});
+
+test("gate (locked/trial_expired + expired_cause='dunning'): fesih varyantı; cause'suz eski copy (AC-8)", async () => {
+  const dunningExpired = { access: "locked", reason: "trial_expired", expired_cause: "dunning" };
+  const web = await render(GATE, { ua: WEB_UA, accessState: dunningExpired });
+  assert.ok(web.html.includes("ödeme alınamadığı için sona erdi"), "dunning feshi varyantı");
+  assert.ok(web.html.includes("verileriniz korunuyor"));
+  assert.ok(!web.html.includes("Deneme süreniz doldu"), "trial copy'si basılmaz");
+
+  const ios = await render(GATE, { ua: IOS_UA, accessState: dunningExpired });
+  assert.ok(ios.html.includes("ödeme alınamadığı için sona erdi"), "iOS nötr fesih varyantı");
+  assert.ok(!ios.html.includes("paket seç"), "iOS fesih copy'si satın almaya yönlendiremez");
+
+  // Regresyon: expired_cause yok/trial → bugünkü trial_expired copy'si kalır.
+  const legacy = { access: "locked", reason: "trial_expired" };
+  const { html } = await render(GATE, { ua: WEB_UA, accessState: legacy });
+  assert.ok(html.includes("Deneme süreniz doldu"), "cause'suz expired eski copy'yi korur");
 });
 
 // ── SellerTrialBanner — CTA linki iOS'ta gizli, kalan gün kalır ──

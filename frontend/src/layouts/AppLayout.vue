@@ -16,6 +16,7 @@
              tabindex yalnız programatik odağı açar. -->
         <main :id="PAGE_MAIN_ID" tabindex="-1" class="flex-1 p-4 xl:p-6 page-content">
           <SellerTrialBanner class="mb-2" />
+          <DunningBanner class="mb-2" />
           <router-view />
         </main>
 
@@ -68,6 +69,7 @@
   import { useTourStore } from "@/stores/tour";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
+  import DunningBanner from "@/components/DunningBanner.vue";
   import { storefrontBase } from "@/utils/storefrontUrl";
 
   const { t } = useI18n();
