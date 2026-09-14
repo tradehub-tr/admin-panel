@@ -8001,6 +8001,7 @@ export default {
       "The package contains all media, including private documents such as seller verification papers. Keep it somewhere safe.",
   },
   mediaExplorer: {
+    retry: "Try again",
     insp: { size: "Size", date: "Date", access: "Access" },
     folderGridAria: "Folders",
     status: {

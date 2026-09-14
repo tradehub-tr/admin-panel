@@ -8027,6 +8027,7 @@ export default {
       "Paket tüm medyayı içerir, satıcı doğrulama evrakı gibi özel belgeler dahil. Güvenli bir yerde saklayın.",
   },
   mediaExplorer: {
+    retry: "Tekrar dene",
     insp: { size: "Boyut", date: "Tarih", access: "Erişim" },
     folderGridAria: "Klasörler",
     status: {
