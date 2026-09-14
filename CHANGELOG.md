@@ -1,3 +1,20 @@
+## [v1.14.1-alpha.1] - 2026-09-14 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(panel): oturum düşüşünde gerçek logout + prod nginx /files proxy'leri + kırık link (@boraydeger32)
+  - Ölü /panel/reset yönlendirmesi kaldırıldı: oturum düşünce önce best-effort /api/method/logout (httpOnly sid sunucuda temizlenir), sonra gerçek login rotası
+  - Prod nginx template'ine eksik /files + /private/files proxy'leri (^~ ile — statik-uzantı regex'ine ezilmesin) + ölü cdn.tailwindcss.com CSP izni kaldırıldı
+  - "Aboneliğim" menü linki /subscription → /abonelik (rota yoktu)
+  - 8 yeni sözleşme testi
+  - Store'a additive alanlar: inDunning, dunningGraceEnd, suspendedAt, dunningExpireAt, expiredCause (mevcut computed'lar değişmedi)
+  - Gate: statusLabel'a past_due → "Ödeme bekleniyor"; suspended ve dunning-feshi copy'leri (iOS varyantları satın-almaya atıfsız, anti-steering korundu)
+  - YENİ DunningBanner: hoşgörü penceresinde bitiş tarihi + ödeme CTA'sı (iOS'ta nötr metin)
+  - Test fixture'larındaki gelecek-tarih sabitleri zaman-bombası denetimine uygun koşuma-göre-hesaplamaya çevrildi
+  - 13 yeni test (panel toplam 1615, 0 hata)
+
+---
 ## [v1.14.0] - 2026-09-14 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
