@@ -37,6 +37,8 @@
   const pageSize = ref(50);
   const search = ref("");
   const loading = ref(false);
+  const loadFailed = ref(false);
+  const rootStatsReady = ref(false);
 
   // Sol ağaç için kök sayıları — konumdan bağımsız sabit kalır.
   const rootStats = ref({ public: 0, private: 0, chat: 0 });
@@ -52,6 +54,7 @@
 
   async function load() {
     loading.value = true;
+    loadFailed.value = false;
     try {
       const p = path.value;
       const res = await api.callMethodGET(`${M}.browse_media`, {
@@ -65,12 +68,16 @@
         page_size: pageSize.value,
         search: search.value,
       });
-      const data = res.message || {};
+      const data = res.message;
+      if (!data || (!Array.isArray(data.folders) && !Array.isArray(data.items))) {
+        throw new Error(t("mediaExplorer.loadFailed"));
+      }
       atFileLevel.value = Array.isArray(data.items);
       folders.value = data.folders || [];
       files.value = data.items || [];
       total.value = data.total || 0;
       if (!path.value.scope) {
+        rootStatsReady.value = true;
         const byId = Object.fromEntries((data.folders || []).map((f) => [f.id, f.count || 0]));
         rootStats.value = {
           public: byId.public || 0,
@@ -78,8 +85,8 @@
           chat: byId.chat || 0,
         };
       }
-    } catch (e) {
-      toast.error(e.message || t("mediaExplorer.loadFailed"));
+    } catch {
+      loadFailed.value = true;
       folders.value = [];
       files.value = [];
     } finally {
@@ -351,6 +358,7 @@
    */
   const statusText = computed(() => {
     if (loading.value) return t("mediaExplorer.loading");
+    if (loadFailed.value) return t("mediaExplorer.loadFailed");
     if (atFileLevel.value) return t("mediaExplorer.status.files", { n: files.value.length });
     return t("mediaExplorer.status.folders", { n: folders.value.length });
   });
@@ -374,7 +382,7 @@
           <AppIcon name="folder" :size="16" class="mpage__title-icon" />
           {{ t("mediaExplorer.title") }}
         </h1>
-        <p class="mpage__subtitle">
+        <p v-if="rootStatsReady && !loadFailed" class="mpage__subtitle">
           {{
             t("mediaExplorer.pageSubtitle", {
               total: rootStats.public + rootStats.private,
@@ -409,7 +417,9 @@
         >
           <AppIcon name="folder" :size="13" />
           <span class="mx__tr-label">{{ t("mediaExplorer.root") }}</span>
-          <span class="mx__tr-n">{{ rootStats.public + rootStats.private + rootStats.chat }}</span>
+          <span v-if="rootStatsReady && !loadFailed" class="mx__tr-n">{{
+            rootStats.public + rootStats.private + rootStats.chat
+          }}</span>
         </button>
         <div class="mx__tr-kids">
           <template v-for="s in treeScopes" :key="s.id">
@@ -421,7 +431,7 @@
             >
               <AppIcon :name="s.icon" :size="13" />
               <span class="mx__tr-label">{{ s.label }}</span>
-              <span class="mx__tr-n">{{ s.count }}</span>
+              <span v-if="rootStatsReady && !loadFailed" class="mx__tr-n">{{ s.count }}</span>
             </button>
             <div v-if="path.scope === s.id && treeSpine.length" class="mx__tr-kids">
               <button
@@ -434,7 +444,11 @@
                 @click="jump(c.key)"
               >
                 <span class="mx__tr-label">{{ c.label }}</span>
-                <span v-if="i === treeSpine.length - 1" class="mx__tr-n">{{ currentCount }}</span>
+                <span
+                  v-if="i === treeSpine.length - 1 && !loading && !loadFailed"
+                  class="mx__tr-n"
+                  >{{ currentCount }}</span
+                >
               </button>
             </div>
           </template>
@@ -462,6 +476,14 @@
         <p class="mx__sr" role="status" aria-live="polite">{{ statusText }}</p>
 
         <div v-if="loading" class="card mx__empty-card">{{ t("mediaExplorer.loading") }}</div>
+
+        <div v-else-if="loadFailed" class="card mx__empty-card" role="alert">
+          <p>{{ t("mediaExplorer.loadFailed") }}</p>
+          <button type="button" class="hdr-btn-outlined mt-3" @click="load">
+            <AppIcon name="refresh-cw" :size="13" />
+            {{ t("mediaExplorer.retry") }}
+          </button>
+        </div>
 
         <!-- ── Klasör ızgarası ── -->
         <MediaFolderGrid
