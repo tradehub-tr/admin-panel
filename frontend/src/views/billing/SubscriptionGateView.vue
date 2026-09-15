@@ -9,6 +9,7 @@
   import { usePageTour } from "@/composables/usePageTour";
   import { isIosApp } from "@/utils/platform";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import PaymentHistorySection from "@/components/billing/PaymentHistorySection.vue";
 
   const CancelSubscriptionModal = defineAsyncComponent(
     () => import("@/components/billing/CancelSubscriptionModal.vue")
@@ -60,11 +61,24 @@
     expiredCause,
   } = storeToRefs(sub);
 
-  const plans = ref([]);
-  const loading = ref(true);
+  // SSR/test tohumu (billingCycleSelector.test.js): onMounted SSR'de koşmadığı
+  // için plan listesi ve bekleyen talep test tarafından props ile beslenir.
+  // Router bu props'ları hiç geçirmez → runtime davranışı birebir aynı kalır.
+  const props = defineProps({
+    initialPlans: { type: Array, default: null },
+    initialPending: { type: Object, default: null },
+    initialCycle: { type: String, default: "yearly" },
+    // AD-2: ödeme geçmişi bölümüne aynen aktarılır (SSR/test tohumu).
+    initialPayments: { type: Array, default: null },
+  });
+
+  const plans = ref(props.initialPlans || []);
+  const loading = ref(!props.initialPlans);
   const acting = ref(""); // işlem yapılan plan_code (buton spinner)
-  const pending = ref(null); // bekleyen havale talebi (varsa banka talimatı gösterilir)
+  const pending = ref(props.initialPending); // bekleyen havale talebi (varsa banka talimatı gösterilir)
   const selectedPlanCode = ref(""); // mobil liste seçimi (V4 — radio satırlar + sabit ödeme çubuğu)
+  // AD-1/AC-11: fatura dönemi seçimi — 'yearly' default (eski sabit davranışla uyumlu).
+  const selectedCycle = ref(props.initialCycle === "monthly" ? "monthly" : "yearly");
 
   const CURRENCY_SYMBOL = { EUR: "€", USD: "$", TRY: "₺" };
 
@@ -142,13 +156,36 @@
     return { title: c.title, desc: c.desc.replace("{tarih}", fmtDate(dunningExpireAt.value)) };
   });
 
+  // AC-11: planın seçili döngüde geçerli fiyatı yoksa diğer döngüye düşer —
+  // monthly_price<=0 → yalnız yıllık sunulur (tersi de geçerli).
+  function cycleFor(p) {
+    const hasMonthly = (p.monthly_price || 0) > 0;
+    const hasYearly = (p.yearly_price || 0) > 0;
+    if (selectedCycle.value === "monthly")
+      return hasMonthly ? "monthly" : hasYearly ? "yearly" : null;
+    return hasYearly ? "yearly" : hasMonthly ? "monthly" : null;
+  }
+
+  function cycleLabel(cycle) {
+    return cycle === "monthly" ? "Aylık" : "Yıllık";
+  }
+
   function priceLabel(p) {
     if (p.price_override_label) return p.price_override_label;
     const sym = CURRENCY_SYMBOL[p.currency] || p.currency || "";
-    if ((p.yearly_price || 0) > 0) return `${sym}${p.yearly_price} / yıl`;
-    if ((p.monthly_price || 0) > 0) return `${sym}${p.monthly_price} / ay`;
+    const cycle = cycleFor(p);
+    if (cycle === "yearly") return `${sym}${p.yearly_price} / yıl`;
+    if (cycle === "monthly") return `${sym}${p.monthly_price} / ay`;
     return "Özel teklif";
   }
+
+  // Toggle yalnız gerçek bir seçim varken çizilir: en az bir planda her iki
+  // döngü fiyatı da tanımlıysa. Tek döngülü kataloglarda seçici görünmez.
+  const hasCycleChoice = computed(() =>
+    plans.value.some(
+      (p) => !p.price_override_label && (p.monthly_price || 0) > 0 && (p.yearly_price || 0) > 0
+    )
+  );
 
   function isContactSales(p) {
     return p.cta_action === "contact_sales";
@@ -178,19 +215,24 @@
     return dt.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
   }
 
+  // Mobil varsayılan seçim: öne çıkan plan; o mevcut plansa ödenebilir ilk plan.
+  function pickDefaultPlan() {
+    const list = plans.value;
+    const preferred = list.find((p) => p.highlighted && !isCurrentPlan(p));
+    selectedPlanCode.value = (
+      preferred ||
+      list.find((p) => !isCurrentPlan(p)) ||
+      list[0]
+    )?.plan_code;
+  }
+  if (props.initialPlans) pickDefaultPlan(); // SSR/test tohumu — onMounted koşmaz
+
   async function loadPlans() {
     loading.value = true;
     try {
       const res = await api.callMethodGET("tradehub_core.api.v1.public_pricing.get_pricing_plans");
       plans.value = res?.message?.plans || [];
-      // Mobil varsayılan seçim: öne çıkan plan; o mevcut plansa ödenebilir ilk plan.
-      const list = plans.value;
-      const preferred = list.find((p) => p.highlighted && !isCurrentPlan(p));
-      selectedPlanCode.value = (
-        preferred ||
-        list.find((p) => !isCurrentPlan(p)) ||
-        list[0]
-      )?.plan_code;
+      pickDefaultPlan();
     } catch (e) {
       toast.error(e.message || "Paketler yüklenemedi");
     } finally {
@@ -226,13 +268,16 @@
   }
 
   // Havale/EFT: paket seç → pending ödeme talebi + banka talimatı.
-  async function requestBankTransfer(planCode) {
+  // AC-11: sabit 'yearly' kalktı — planın seçili döngüdeki geçerli fiyatı gider
+  // (plan o döngüyü sunmuyorsa cycleFor diğer döngüye düşmüş olur).
+  async function requestBankTransfer(p) {
     if (acting.value) return;
-    acting.value = planCode;
+    const cycle = cycleFor(p) || "yearly";
+    acting.value = p.plan_code;
     try {
       const res = await api.callMethod(
         "tradehub_core.api.v1.subscription_payment.create_bank_transfer_request",
-        { plan: planCode, billing_cycle: "yearly" }
+        { plan: p.plan_code, billing_cycle: cycle }
       );
       pending.value = res?.message || null;
     } catch (e) {
@@ -363,12 +408,25 @@
       </button>
     </template>
 
+    <!-- AD-2: ödeme geçmişi — bilgi kartının altında; hem abonelikli hem kilitli
+         durumda görünür (403/hata durumunda bölüm kendini sessizce gizler). -->
+    <PaymentHistorySection v-if="hasSubscription || isLocked" :initial-payments="initialPayments" />
+
     <!-- ── SATIŞ YÜZEYLERİ — iOS uygulamada HİÇBİRİ render edilmez (AC-1):
          paket kartları, fiyatlar, trial CTA, havale/IBAN, "Başka paket seç". ── -->
     <template v-if="!iosApp">
       <!-- Havale/EFT talimatı (bekleyen ödeme varsa) -->
       <div v-if="pending" class="bank">
         <h2 class="bank__title">Havale / EFT ile ödeme</h2>
+        <!-- AC-11: bekleyen talep özeti — seçilen döngü + tutar -->
+        <p class="bank__cycle">
+          {{ pending.plan }} · <strong>{{ cycleLabel(pending.billing_cycle) }}</strong> ·
+          <strong>{{ pending.amount }} {{ pending.currency }}</strong>
+        </p>
+        <!-- E4: create yanıtında amount_updated=true → tutar tazeleme bilgi notu -->
+        <p v-if="pending.amount_updated" class="bank__updated" role="status">
+          Bekleyen talebinizin tutarı güncel fiyata göre güncellendi.
+        </p>
         <p class="bank__lead">
           Aşağıdaki hesaba <strong>{{ pending.amount }} {{ pending.currency }}</strong> tutarını
           gönderin. <strong>Açıklama kısmına referans kodunuzu yazın.</strong> Ödemeniz
@@ -439,6 +497,36 @@
           </button>
         </div>
 
+        <!-- AC-11: fatura dönemi seçici (masaüstü kartlar + mobil liste ortak) —
+             yalnız en az bir plan her iki döngüyü sunuyorsa çizilir. -->
+        <div
+          v-if="!loading && hasCycleChoice"
+          class="cycle-toggle"
+          role="radiogroup"
+          aria-label="Fatura dönemi"
+        >
+          <button
+            type="button"
+            class="cycle-toggle__btn"
+            :class="{ 'cycle-toggle__btn--on': selectedCycle === 'monthly' }"
+            role="radio"
+            :aria-checked="selectedCycle === 'monthly'"
+            @click="selectedCycle = 'monthly'"
+          >
+            Aylık
+          </button>
+          <button
+            type="button"
+            class="cycle-toggle__btn"
+            :class="{ 'cycle-toggle__btn--on': selectedCycle === 'yearly' }"
+            role="radio"
+            :aria-checked="selectedCycle === 'yearly'"
+            @click="selectedCycle = 'yearly'"
+          >
+            Yıllık
+          </button>
+        </div>
+
         <!-- Paketler -->
         <h2 v-if="hasSubscription && !loading" class="plans-heading">Paketinizi değiştirin</h2>
         <div v-if="loading" class="state-msg">Paketler yükleniyor…</div>
@@ -470,7 +558,7 @@
               class="btn plan__btn"
               :class="p.highlighted ? 'btn--primary' : 'btn--outline'"
               :disabled="!!acting"
-              @click="requestBankTransfer(p.plan_code)"
+              @click="requestBankTransfer(p)"
             >
               <span v-if="acting === p.plan_code">İşleniyor…</span>
               <span v-else>Havale / EFT ile öde</span>
@@ -551,7 +639,7 @@
             type="button"
             class="btn btn--primary"
             :disabled="!!acting"
-            @click="requestBankTransfer(selectedPlan.plan_code)"
+            @click="requestBankTransfer(selectedPlan)"
           >
             <span v-if="acting === selectedPlan.plan_code">İşleniyor…</span>
             <span v-else>Havale / EFT ile öde</span>
@@ -791,6 +879,54 @@
     }
   }
 
+  /* ── Fatura dönemi seçici (AC-11) ── */
+  .cycle-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 1rem;
+    border: 1px solid $l-border-alt;
+    border-radius: 10px;
+    background: $l-bg-soft;
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+  }
+  .cycle-toggle__btn {
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.42rem 1.1rem;
+    border-radius: 7px;
+    cursor: pointer;
+    color: $l-text-500;
+    transition:
+      background $t-base,
+      color $t-base;
+    @include dark {
+      color: $d-text-muted;
+    }
+    &:hover {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+  }
+  .cycle-toggle__btn--on {
+    background: $l-bg;
+    color: $brand;
+    box-shadow: 0 0 0 1px rgba($brand, 0.35);
+    @include dark {
+      background: $d-bg-card;
+      color: $brand-light;
+      box-shadow: 0 0 0 1px rgba($brand-light, 0.4);
+    }
+  }
+
   .plans-heading {
     margin: 0 0 0.85rem;
     font-size: 0.95rem;
@@ -1002,6 +1138,36 @@
     color: $l-text-900;
     @include dark {
       color: $d-text-max;
+    }
+  }
+  /* Bekleyen talep özeti — döngü + tutar (AC-11) */
+  .bank__cycle {
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
+    }
+    strong {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+  }
+  /* E4 — tutar tazeleme bilgi notu */
+  .bank__updated {
+    margin: 0.6rem 0 0;
+    padding: 0.55rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    background: rgba($c-info, 0.1);
+    border: 1px solid rgba($c-info, 0.3);
+    color: $l-text-700;
+    @include dark {
+      color: $d-text;
+      background: rgba($c-info, 0.14);
+      border-color: rgba($c-info, 0.35);
     }
   }
   .bank__lead {
