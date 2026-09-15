@@ -9,6 +9,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
+  import { useCardGridWindow } from "@/components/media/useCardGridWindow";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useListViewMode } from "@/composables/useListViewMode";
@@ -95,6 +96,23 @@
   const { isXl: isDesktop } = useBreakpoint();
   const { viewMode } = useListViewMode("media-audit-view", "list");
   const effectiveMode = computed(() => (isDesktop.value ? viewMode.value : "list"));
+
+  // Liste modu pencereleme (MOGEM-638 §3.1 / §7-12): 1.791 DOM düğümü, CLS 0,111.
+  // Yalnız görünür satırlar DOM'da; `listOffset + i` mutlak dizin (imleç, data-row).
+  // Tablo modu pencerelenmedi (tbody padding taşımaz).
+  const listEl = ref(null);
+  const LIST_VIRTUAL_THRESHOLD = 24;
+  const {
+    windowed: listWindowed,
+    visible: listVisible,
+    offset: listOffset,
+    padStyle: listPadStyle,
+    reveal: revealRow,
+  } = useCardGridWindow(listEl, {
+    items: () => a.items.value,
+    enabled: () => effectiveMode.value === "list",
+    threshold: LIST_VIRTUAL_THRESHOLD,
+  });
 
   const DAY_OPTIONS = [0, 1, 7, 30, 90];
 
@@ -554,12 +572,12 @@
     if (e.key === "e") a.exportCsv();
   }
 
-  function scrollToCursor() {
-    nextTick(() => {
-      document
-        .querySelector(`[data-row="${cursor.value}"]`)
-        ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    });
+  async function scrollToCursor() {
+    // Pencereli listede imleçteki satır DOM'da olmayabilir: önce `reveal`
+    // (pin + nextTick) satırı getirir; tablo modunda `[data-cell]` yok, `data-row`a düşer.
+    const cell =
+      (await revealRow(cursor.value)) || document.querySelector(`[data-row="${cursor.value}"]`);
+    cell?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   // ── Göreli zaman ───────────────────────────────────────────────────
@@ -1096,13 +1114,22 @@
     <MediaFilterChips :chips="chips" @clear="clearChip" />
 
     <!-- ── Liste (varsayılan, mobilde tek mod) ── -->
-    <div v-if="effectiveMode === 'list'" class="card ma__list" :class="`ma__list--${density}`">
+    <div
+      v-if="effectiveMode === 'list'"
+      class="card ma__list"
+      :class="[`ma__list--${density}`, { 'ma__list--windowed': listWindowed }]"
+    >
+      <!-- Pencereleme padding'i iç gövdeye: `.card`'ın kendi 20px'i bozulmasın -->
+      <div ref="listEl" class="ma__list-body" :style="listPadStyle">
       <div
-        v-for="(r, i) in a.items.value"
+        v-for="(r, i) in listVisible"
         :key="r.name"
         class="ma__row"
-        :class="[`ma__row--${tone(r)}`, { 'ma__row--cursor': cursor === i }]"
-        :data-row="i"
+        :class="[`ma__row--${tone(r)}`, { 'ma__row--cursor': cursor === listOffset + i }]"
+        :data-row="listOffset + i"
+        :data-cell="listOffset + i"
+        :aria-setsize="a.items.value.length"
+        :aria-posinset="listOffset + i + 1"
       >
         <!-- Görsel kabı: masaüstünde `display: contents` (yerleşim aynı);
              dokunmatikte satırın sol çapası olur ve tam yüksekliğe uzar
@@ -1182,6 +1209,7 @@
             <AppIcon name="eye" :size="15" />
           </button>
         </div>
+      </div>
       </div>
       <p v-if="!a.items.value.length" class="ma__empty">
         {{ a.loading.value ? t("mediaAudit.loading") : t("mediaAudit.empty") }}
@@ -2788,6 +2816,22 @@
     &:last-child {
       border-bottom: none;
     }
+  }
+
+  // Pencereli liste: sabit satır yüksekliği (ölçüm ilk satırdan alınıp hepsine
+  // yayılır); rozet satırı sarmaz, taşan kısım kırpılır.
+  .ma__list--windowed .ma__row {
+    height: 4rem;
+    overflow: hidden;
+  }
+
+  .ma__list--windowed .ma__row-head {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .ma__list--compact.ma__list--windowed .ma__row {
+    height: 2.5rem;
   }
 
   .ma__row--danger,

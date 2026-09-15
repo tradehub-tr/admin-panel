@@ -93,32 +93,55 @@ export const useNavigationStore = defineStore("navigation", () => {
   const hiddenDoctypes = ref({ admin: new Set(), seller: new Set() });
   const hiddenRoutes = ref({ admin: new Set(), seller: new Set() });
 
+  // Başarısız yüklemeden sonra bu süre boyunca tekrar denenmez. Eskiden hata
+  // `dbLoaded`'ı false bırakıyor, router guard her rota geçişinde yeniden
+  // istek atıyordu (MOGEM-638 §3.1: 15 rotanın 15'inde get_navigation).
+  const DB_RETRY_AFTER_MS = 30_000;
+  let dbInflight = null;
+  let dbFailedAt = 0;
+
   async function loadDbSections({ force = false } = {}) {
-    if (dbLoading.value) return;
+    // Aynı anda gelen çağrılar (router guard + AppLayout onMounted) tek isteği
+    // paylaşır; eski `if (dbLoading) return` erken dönüp bekleyeni boş veriyle
+    // bırakıyordu.
+    if (dbInflight && !force) return dbInflight;
     if (dbLoaded.value && !force) return;
+    if (!force && dbFailedAt && Date.now() - dbFailedAt < DB_RETRY_AFTER_MS) return;
     dbLoading.value = true;
-    try {
-      const [adminRes, sellerRes] = await Promise.all([
-        api.callMethodGET(NAV_ENDPOINT, { panel: "admin" }),
-        api.callMethodGET(NAV_ENDPOINT, { panel: "seller" }),
-      ]);
-      dbAdminSections.value = transformBackendNav(adminRes?.message);
-      dbSellerSections.value = transformBackendNav(sellerRes?.message);
-      hiddenDoctypes.value = {
-        admin: new Set(adminRes?.message?.hidden_doctypes || []),
-        seller: new Set(sellerRes?.message?.hidden_doctypes || []),
-      };
-      hiddenRoutes.value = {
-        admin: new Set(adminRes?.message?.hidden_routes || []),
-        seller: new Set(sellerRes?.message?.hidden_routes || []),
-      };
-      dbLoaded.value = true;
-    } catch (e) {
-      // Fail-safe: backend ulaşılamazsa hard-coded fallback kullanılır.
-      console.warn("DB navigation yüklenemedi, fallback kullanılacak:", e?.message);
-    } finally {
-      dbLoading.value = false;
-    }
+    dbInflight = (async () => {
+      try {
+        // Yalnız bu kullanıcının paneli. İki paneli birden çekmek (admin +
+        // seller) her rota yüklemesinde ikinci bir isteğe mal oluyordu;
+        // satıcıda backend `panel=admin`'i zaten seller'a düşürüp aynı
+        // yükü iki kez gönderiyordu. Tüketiciler (panelSections, module
+        // eşlemeleri) aynı `isSeller && !isAdmin` seçimini yapıyor.
+        const auth = useAuthStore();
+        const panel = auth.isSeller && !auth.isAdmin ? "seller" : "admin";
+        const res = await api.callMethodGET(NAV_ENDPOINT, { panel });
+        const sections = transformBackendNav(res?.message);
+        const doctypes = new Set(res?.message?.hidden_doctypes || []);
+        const routes = new Set(res?.message?.hidden_routes || []);
+        if (panel === "seller") {
+          dbSellerSections.value = sections;
+          hiddenDoctypes.value = { ...hiddenDoctypes.value, seller: doctypes };
+          hiddenRoutes.value = { ...hiddenRoutes.value, seller: routes };
+        } else {
+          dbAdminSections.value = sections;
+          hiddenDoctypes.value = { ...hiddenDoctypes.value, admin: doctypes };
+          hiddenRoutes.value = { ...hiddenRoutes.value, admin: routes };
+        }
+        dbLoaded.value = true;
+        dbFailedAt = 0;
+      } catch (e) {
+        // Fail-safe: backend ulaşılamazsa hard-coded fallback kullanılır.
+        dbFailedAt = Date.now();
+        console.warn("DB navigation yüklenemedi, fallback kullanılacak:", e?.message);
+      } finally {
+        dbLoading.value = false;
+        dbInflight = null;
+      }
+    })();
+    return dbInflight;
   }
 
   // Role-aware panel sections — auth store'dan dinamik okuma.
@@ -431,6 +454,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     hiddenRoutes.value = { admin: new Set(), seller: new Set() };
     dbLoaded.value = false;
     dbLoading.value = false;
+    dbFailedAt = 0;
     useEntitlement().reset();
     try {
       localStorage.removeItem(STORAGE_KEY);
