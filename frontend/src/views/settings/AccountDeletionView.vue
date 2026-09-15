@@ -38,6 +38,9 @@
   const consequences = computed(() => preview.value?.consequences || []);
   const activeSub = computed(() => preview.value?.active_subscription || null);
   const subUserCount = computed(() => preview.value?.sub_user_count || 0);
+  // AD-4 / AC-9: açık sipariş sayısı yalnız BİLGİLENDİRME — silme engellenmez;
+  // ayrıntılı uyarı maddesi backend consequences[]'ten otomatik gelir (BE-4).
+  const openOrderCount = computed(() => preview.value?.open_order_count || 0);
 
   function fmtDate(d) {
     if (!d) return "—";
@@ -110,6 +113,10 @@
         <h2 id="ad-consequences" class="ad-card__title">
           <AppIcon name="alert-triangle" :size="16" /> Hesabınızı sildiğinizde
         </h2>
+        <!-- AD-4 / AC-9: açık sipariş özet satırı — 0 ise hiç çizilmez. -->
+        <p v-if="openOrderCount" class="ad-open-orders" role="status">
+          Açık siparişleriniz: <strong>{{ openOrderCount }}</strong>
+        </p>
         <ul class="ad-list">
           <li v-for="c in consequences" :key="c">{{ c }}</li>
           <template v-if="!consequences.length">
@@ -250,6 +257,26 @@
     font-size: 0.92rem;
     font-weight: 700;
     color: $c-error;
+  }
+  .ad-open-orders {
+    margin: 0.7rem 0 0;
+    padding: 0.45rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    background: rgba($c-warning, 0.12);
+    border: 1px solid rgba($c-warning, 0.4);
+    color: $l-text-700;
+    @include dark {
+      background: rgba($c-warning, 0.14);
+      border-color: rgba($c-warning, 0.35);
+      color: $d-text;
+    }
+    strong {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
   }
   .ad-list {
     margin: 0.7rem 0 0;
