@@ -1,3 +1,16 @@
+## [v1.14.1-alpha.3] - 2026-09-15 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(abonelik): aylık/yıllık seçici + ödeme geçmişi + admin dikkat listesi (@boraydeger32)
+  - SubscriptionGateView: fatura dönemi seçici (sabit "yearly" kalktı; yalnız-yıllık planlarda toggle gizli), pending bloğunda döngü+tutar özeti ve "tutar güncel fiyata göre güncellendi" notu (E4)
+  - YENİ PaymentHistorySection: makbuz detaylı ödeme geçmişi; iOS'ta pending satırlar allowlist ile DOM'a hiç girmez (E2 — referans kodu + tutar harici ödeme talimatı sayılır, anti-steering); 403/hata durumunda bölüm sessiz gizlenir
+  - SubscriptionPaymentsView: "İptal Planlı & Ödemesi Geciken Mağazalar" bölümü (iki tablo + sebep dağılımı chip'leri, superadmin)
+  - AccountDeletionView: özet karta açık sipariş sayısı (0 ise gizli)
+  - 27 yeni SSR testi (toplam 1671, 0 hata); iOS+pending DOM-yok vakaları
+
+---
 ## [v1.14.1-alpha.2] - 2026-09-14 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
