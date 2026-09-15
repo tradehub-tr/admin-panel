@@ -1,5 +1,6 @@
 /**
- * `@/utils/api` yerine geçen test sahtesi — subscriptionCancellation.test.js.
+ * `@/utils/api` yerine geçen test sahtesi — subscriptionCancellation.test.js
+ * + subscriptionDunning.test.js.
  *
  * Vite alias'ı store'un api importunu buraya çevirir: gerçek `api.js`
  * yüklenmez (fetch/CSRF/401 yönlendirmesi yok). Gövde `globalThis`

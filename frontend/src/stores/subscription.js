@@ -33,7 +33,17 @@ export const useSubscriptionStore = defineStore("subscription", () => {
   const cancelAtPeriodEnd = computed(() => !!state.value?.cancel_at_period_end);
   const billingCycle = computed(() => state.value?.billing_cycle || null);
   const canceledAt = computed(() => state.value?.canceled_at || null);
-  // access === "ok" → satıcının kullanılabilir bir aboneliği var (trial veya active)
+  // Dunning hoşgörü penceresi (BE-4 additive alanlar — Faz C dilim 1):
+  //   access="ok" + status="past_due" → in_dunning + dunning_grace_end
+  //   access="locked" + reason="suspended" → suspended_at + dunning_expire_at
+  //   access="locked" + reason="trial_expired" → expired_cause ("dunning"|"trial")
+  const inDunning = computed(() => !!state.value?.in_dunning);
+  const dunningGraceEnd = computed(() => state.value?.dunning_grace_end || null);
+  const suspendedAt = computed(() => state.value?.suspended_at || null);
+  const dunningExpireAt = computed(() => state.value?.dunning_expire_at || null);
+  const expiredCause = computed(() => state.value?.expired_cause || null);
+  // access === "ok" → satıcının kullanılabilir bir aboneliği var (trial, active
+  // veya past_due hoşgörü penceresi — past_due artık kilitlemez, istenen davranış)
   const hasSubscription = computed(() => state.value?.access === "ok");
 
   // Trial bitimine kalan tam gün (banner için). trial_end "YYYY-MM-DD HH:MM:SS".
@@ -123,6 +133,11 @@ export const useSubscriptionStore = defineStore("subscription", () => {
     cancelAtPeriodEnd,
     billingCycle,
     canceledAt,
+    inDunning,
+    dunningGraceEnd,
+    suspendedAt,
+    dunningExpireAt,
+    expiredCause,
     hasSubscription,
     trialDaysLeft,
     cancelActing,

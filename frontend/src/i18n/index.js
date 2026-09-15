@@ -1,5 +1,5 @@
 import { createI18n } from "vue-i18n";
-import { loadStartupMessages } from "./localeLoader";
+import { FALLBACK_LANG, loadFallbackMessages, loadStartupMessages } from "./localeLoader";
 
 export const SUPPORTED_LANGS = ["en", "tr", "ar", "ru"];
 export const RTL_LANGS = ["ar"];
@@ -26,8 +26,14 @@ export function initializeI18n() {
         legacy: false,
         globalInjection: true,
         locale,
-        fallbackLocale: "en",
+        fallbackLocale: FALLBACK_LANG,
         messages,
+        // Fallback sözlüğü açılışta yok; ilk eksik anahtarda tembel yüklenir
+        // (bkz. localeLoader.loadStartupMessages). Yüklenene kadar vue-i18n
+        // anahtarı basar, sözlük gelince reaktif olarak yeniden render eder.
+        missing: (_locale, key) => ensureFallbackLoaded(key),
+        missingWarn: false,
+        fallbackWarn: false,
       });
       applyDocumentDirection(locale);
       return i18n;
@@ -37,6 +43,25 @@ export function initializeI18n() {
     });
   }
   return i18nInitializationPromise;
+}
+
+let fallbackInstalled = false;
+
+/** Eksik anahtar görülünce İngilizce sözlüğü bir kez yükleyip i18n'e takar. */
+function ensureFallbackLoaded() {
+  if (fallbackInstalled || !i18n) return;
+  const available = i18n.global.availableLocales || [];
+  if (available.includes(FALLBACK_LANG)) {
+    fallbackInstalled = true;
+    return;
+  }
+  fallbackInstalled = true; // aynı render'daki yüzlerce missing çağrısı tek yükleme
+  loadFallbackMessages()
+    .then((messages) => i18n.global.setLocaleMessage(FALLBACK_LANG, messages))
+    .catch((e) => {
+      fallbackInstalled = false;
+      console.warn("i18n fallback sözlüğü yüklenemedi:", e?.message);
+    });
 }
 
 export function isRtl(lang) {

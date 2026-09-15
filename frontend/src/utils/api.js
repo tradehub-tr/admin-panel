@@ -181,12 +181,20 @@ async function request(method, endpoint, data = null, _retriedCsrf = false, extr
         } catch {
           /* cookie temizleme defansif */
         }
-        // CRITICAL: `sid` cookie httpOnly=true (Frappe auth.py:382). JS'ten silemeyiz.
-        // fetch() ile gelen Set-Cookie'ler bazen browser tarafından (özellikle
-        // httpOnly) ignore edilebiliyor. HTML navigation Set-Cookie'leri kesin
-        // uygular. `/panel/reset` endpoint'i tüm session cookies'i expire ile
-        // siler ve 302 ile /panel/login'e yönlendirir.
-        window.location.href = `/panel/reset`;
+        // `sid` cookie httpOnly=true (Frappe auth.py:382) — JS'ten silinemez.
+        // Sunucu session'ını ve cookie'yi Frappe logout'u temizler: best-effort
+        // GET /api/method/logout (GET olduğu için CSRF gerektirmez; hata
+        // yutulur — oturum zaten ölü). Eski `reset` hedefi HİÇBİR yerde tanımlı
+        // değildi (ne backend route ne nginx location); kullanıcı SPA
+        // fallback'iyle login'e düşüyor, sid sunucuda temizlenmiyordu.
+        try {
+          await fetch(`${BASE_URL}/api/method/logout`, { credentials: "include" });
+        } catch {
+          /* best-effort — ölü oturumda logout hatası önemsiz */
+        }
+        // Gerçek SPA login rotası. import.meta.env.BASE_URL vite.config.js'ten
+        // gelir: prod build'de "/panel/", dev'de "/".
+        window.location.href = `${import.meta.env.BASE_URL}login`;
         throw new Error("Oturum süresi doldu. Giriş sayfasına yönlendiriliyorsunuz.");
       }
     }

@@ -41,7 +41,9 @@
         <a href="#" class="dd-item" @click.prevent="emit('navigate', '/settings')">{{
           t("userMenuDropdown.account")
         }}</a>
-        <a href="#" class="dd-item" @click.prevent="emit('navigate', '/subscription')">{{
+        <!-- Router'daki gerçek rota /abonelik — /subscription diye bir rota yok
+             (SPA fallback'e düşüyordu). -->
+        <a href="#" class="dd-item" @click.prevent="emit('navigate', '/abonelik')">{{
           t("userMenuDropdown.subscription")
         }}</a>
         <!-- Apple 5.1.1(v): hesap silme uygulama içinden keşfedilebilir olmalı.

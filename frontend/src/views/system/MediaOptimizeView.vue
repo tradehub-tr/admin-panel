@@ -12,6 +12,7 @@
   import MediaRetroRenameCard from "@/components/media/MediaRetroRenameCard.vue";
   import MediaUsageDialog from "@/components/media/MediaUsageDialog.vue";
   import MediaDensityToggle from "@/components/media/MediaDensityToggle.vue";
+  import { useCardGridWindow } from "@/components/media/useCardGridWindow";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useBreakpoint } from "@/composables/useBreakpoint";
@@ -115,6 +116,25 @@
   const { isXl: isDesktop } = useBreakpoint();
   const { viewMode } = useListViewMode("media-optimize-view", "list");
   const effectiveMode = computed(() => (isDesktop.value ? viewMode.value : "list"));
+
+  // Liste modu pencereleme (MOGEM-638 §3.1 / §7-12): 100 satırlık sayfa
+  // ~1.650 DOM düğümü çiziyordu, geçiş 7 s. Yalnız görünür satırlar + overscan
+  // DOM'da; toplam yükseklik padding ile korunur (kaydırma çubuğu sabit).
+  // Sabit satır yüksekliği `.mo__list--windowed` ile CSS'ten garanti edilir —
+  // pencereleme ölçümü ilk satırdan alıp hepsine yayar. Tablo/kart/kanban
+  // modları pencerelenmedi (tbody padding taşımaz; kart/kanban yüksekliği değişken).
+  const listEl = ref(null);
+  const LIST_VIRTUAL_THRESHOLD = 24;
+  const {
+    windowed: listWindowed,
+    visible: listVisible,
+    offset: listOffset,
+    padStyle: listPadStyle,
+  } = useCardGridWindow(listEl, {
+    items: () => m.items.value,
+    enabled: () => effectiveMode.value === "list",
+    threshold: LIST_VIRTUAL_THRESHOLD,
+  });
 
   // Yoğunluk (MOGEM-625 · C): yerleşim her genişlikte tek sütun kalır, değişen
   // satır ölçüsüdür. `viewMode`den AYRI — o "hangi yerleşim", bu "aynı yerleşim
@@ -1296,12 +1316,17 @@
     </div>
 
     <!-- ── Liste (varsayılan) ── -->
-    <div v-if="effectiveMode === 'list'" class="card mo__list">
+    <div v-if="effectiveMode === 'list'" class="card mo__list" :class="{ 'mo__list--windowed': listWindowed }">
+      <!-- Pencereleme padding'i iç gövdeye: `.card`'ın kendi 20px'i bozulmasın -->
+      <div ref="listEl" class="mo__list-body" :style="listPadStyle">
       <div
-        v-for="item in m.items.value"
+        v-for="(item, i) in listVisible"
         :key="item.name"
         class="mo__row"
         :class="{ 'mo__row--on': selected.has(item.name) }"
+        :data-cell="listOffset + i"
+        :aria-setsize="m.items.value.length"
+        :aria-posinset="listOffset + i + 1"
         @click="rowToggle($event, item)"
       >
         <!-- `@click.stop`: kutunun kendi tıklaması satıra ulaşırsa seçim iki
@@ -1508,6 +1533,7 @@
             </template>
           </ul>
         </div>
+      </div>
       </div>
       <p v-if="!m.items.value.length" class="mo__empty">{{ t("mediaOptimize.empty") }}</p>
     </div>
@@ -3202,6 +3228,21 @@
     @include media.hoverable;
     // Satırın tamamı seçim hedefi (`rowToggle`) — imleç bunu söylemeli.
     cursor: pointer;
+  }
+
+  // Pencereli liste: her satır AYNI yükseklikte olmalı (ölçüm ilk satırdan
+  // alınıp hepsine yayılır). Yedek değer yoğunluk anahtarı bağlanmasa da
+  // "rahat" kademesiyle aynı; alt satır (kullanım türü) tek satıra kırpılır.
+  .mo__list--windowed .mo__row {
+    height: calc(var(--m-row-min-h, 3.25rem) + 0.75rem);
+    overflow: hidden;
+  }
+
+  .mo__list--windowed .mo__file-name,
+  .mo__list--windowed .mo__row-sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mo__row-main {

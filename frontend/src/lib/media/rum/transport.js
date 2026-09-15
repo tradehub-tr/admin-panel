@@ -19,8 +19,9 @@
  * `CLAUDE.md` yeni HTTP isteklerinin `utils/api.js` üzerinden geçmesini
  * söyler. Telemetri bunun BİLİNÇLİ istisnasıdır, iki ölçülmüş nedenle:
  *
- *   1. `api.js` 401/417 aldığında `window.location.href = "/panel/reset"`
- *      ile SERT YÖNLENDİRME yapar (`src/utils/api.js:145,176`). Sayfa
+ *   1. `api.js` 401/417 aldığında best-effort sunucu logout'u çağırıp
+ *      login rotasına SERT YÖNLENDİRME yapar (`src/utils/api.js`,
+ *      session-expired dalı). Sayfa
  *      kapanırken atılan bir telemetri isteği bayat oturum yüzünden 401
  *      alırsa, kullanıcı ölçüm uğruna oturumundan atılırdı. Telemetrinin
  *      oturum yaşam döngüsüne dokunma yetkisi olamaz.
