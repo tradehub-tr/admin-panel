@@ -16,10 +16,24 @@ export async function loadLocaleMessages(lang) {
   return messages;
 }
 
+// Açılışta YALNIZ aktif dil. Eskiden İngilizce de her dil için fallback diye
+// peşinen indiriliyordu: tr açılışında tr+en = 711 KB ham / 246 KB gzip,
+// mount'tan önce (MOGEM-638 §3.3). tr ile en arasında ~40 anahtar fark var;
+// fallback gerekince `loadFallbackMessages` onu ilk eksik anahtarda getirir.
 export async function loadStartupMessages(lang) {
-  const languages = lang === "en" ? ["en"] : ["en", lang];
-  const entries = await Promise.all(
-    languages.map(async (code) => [code, await loadLocaleMessages(code)])
-  );
-  return Object.fromEntries(entries);
+  return { [lang]: await loadLocaleMessages(lang) };
+}
+
+export const FALLBACK_LANG = "en";
+let fallbackPromise = null;
+
+/** İngilizce fallback sözlüğünü bir kez, ihtiyaç anında yükler. */
+export function loadFallbackMessages() {
+  if (!fallbackPromise) {
+    fallbackPromise = loadLocaleMessages(FALLBACK_LANG).catch((e) => {
+      fallbackPromise = null;
+      throw e;
+    });
+  }
+  return fallbackPromise;
 }
