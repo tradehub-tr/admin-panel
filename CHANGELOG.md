@@ -1,3 +1,29 @@
+## [v1.15.0] - 2026-09-15 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(abonelik): aylık/yıllık seçici + ödeme geçmişi + admin dikkat listesi (@boraydeger32)
+  - SubscriptionGateView: fatura dönemi seçici (sabit "yearly" kalktı; yalnız-yıllık planlarda toggle gizli), pending bloğunda döngü+tutar özeti ve "tutar güncel fiyata göre güncellendi" notu (E4)
+  - YENİ PaymentHistorySection: makbuz detaylı ödeme geçmişi; iOS'ta pending satırlar allowlist ile DOM'a hiç girmez (E2 — referans kodu + tutar harici ödeme talimatı sayılır, anti-steering); 403/hata durumunda bölüm sessiz gizlenir
+  - SubscriptionPaymentsView: "İptal Planlı & Ödemesi Geciken Mağazalar" bölümü (iki tablo + sebep dağılımı chip'leri, superadmin)
+  - AccountDeletionView: özet karta açık sipariş sayısı (0 ise gizli)
+  - 27 yeni SSR testi (toplam 1671, 0 hata); iOS+pending DOM-yok vakaları
+
+### Duzeltildi
+- fix(panel): oturum düşüşünde gerçek logout + prod nginx /files proxy'leri + kırık link (@boraydeger32)
+  - Ölü /panel/reset yönlendirmesi kaldırıldı: oturum düşünce önce best-effort /api/method/logout (httpOnly sid sunucuda temizlenir), sonra gerçek login rotası
+  - Prod nginx template'ine eksik /files + /private/files proxy'leri (^~ ile — statik-uzantı regex'ine ezilmesin) + ölü cdn.tailwindcss.com CSP izni kaldırıldı
+  - "Aboneliğim" menü linki /subscription → /abonelik (rota yoktu)
+  - 8 yeni sözleşme testi
+  - Store'a additive alanlar: inDunning, dunningGraceEnd, suspendedAt, dunningExpireAt, expiredCause (mevcut computed'lar değişmedi)
+  - Gate: statusLabel'a past_due → "Ödeme bekleniyor"; suspended ve dunning-feshi copy'leri (iOS varyantları satın-almaya atıfsız, anti-steering korundu)
+  - YENİ DunningBanner: hoşgörü penceresinde bitiş tarihi + ödeme CTA'sı (iOS'ta nötr metin)
+  - Test fixture'larındaki gelecek-tarih sabitleri zaman-bombası denetimine uygun koşuma-göre-hesaplamaya çevrildi
+  - 13 yeni test (panel toplam 1615, 0 hata)
+- fix(media): yükleme hatasını boş klasörden ayır (#216) (@ahmeetseker)
+
+---
 ## [v1.14.1-rc.1] - 2026-09-15 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
