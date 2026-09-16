@@ -1,3 +1,23 @@
+## [v1.15.0-alpha.2] - 2026-09-16 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(i18n): panel arayüzü Rusça ve Arapçaya tamamlandı (@aliiball)
+  - Panelin i18n'i fallbackLocale en taşıdığı için eksik çeviri hata vermiyor, sessizce İngilizceye düşüyordu; Rus ve Arap yöneticiler modülleri İngilizce görüyordu.
+  - Düzleştirilmiş karşılaştırmada 1.618 anahtar eksikti: logistics 1213, nav 55, media 55, plans 46, mediaSeo 22, doctypeNames 11, listingForm 11 ve dört bütün ad alanı.
+  - Eksiklik yalnız kök seviyesinde değildi: permissionConsole kökü vardı ama tabFeatureCatalog anahtarı yoktu, sekme etiketi İngilizce geliyordu.
+  - Lojistik terminolojisi storefront sözlüğüyle hizalandı; Sevkiyat için panel operasyon aracı olduğundan genel 'Доставка' yerine 'Отправления' seçildi. Desi çevrilmedi, Türkiye'ye özgü birim.
+  - mediaRetroRename.confirmMessage iki cümle eksikti ve days yer tutucusunu hiç taşımıyordu: yeniden adlandırmanın kaç gün içinde geri alınabileceği uyarısı Rus ve Arap yöneticiye ulaşmıyordu.
+  - Sonuç: tr 9.551, ru 9.551, ar 9.551 anahtar.
+
+### Degistirildi
+- refactor(test): panel çeviri bütünlüğü denetimi eklendi (@aliiball)
+  - Denetim kökleri değil DÜZLEŞTİRİLMİŞ yolları karşılaştırıyor; kusur tam olarak kök içinde saklanıyordu.
+  - Yer tutucu bütünlüğü ayrı denetleniyor: düşen bir days ya da count sessiz bilgi kaybıdır, ekranda hata görünmez.
+  - Mutasyonla doğrulandı: bir anahtar silinince eksik-anahtar testi, bir yer tutucu düşürülünce yer-tutucu testi kırmızıya döndü.
+
+---
 ## [v1.15.0-alpha.1] - 2026-09-16 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
