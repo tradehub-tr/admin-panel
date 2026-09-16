@@ -1,3 +1,19 @@
+## [v1.15.0-alpha.3] - 2026-09-16 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(i18n): dil tercihi çerezi panelde de okunup yazılıyor (@aliiball)
+  - Panel yalnız localStorage th-lang okuyordu; storefrontta seçilen dil panele hiç geçmiyordu çünkü orası i18nextLng kullanıyor. Artık iki uygulama ortak th-lang çerezinde buluşuyor ve sıralama storefronttakiyle birebir aynı: hl, elle seçim, storefrontun otomatik kararı, tarayıcı, en.
+  - Panelin kendi ülke tespiti YOK: buraya giren kullanıcı giriş yapmış bir satıcı ya da yönetici, IP sine göre dil değiştirmek onun için sürpriz olurdu. Panel yalnız storefrontun verdiği kararı miras alıyor.
+  - hl adresten main.js içinde, router.isReady sonrasında düşürülüyor. Önce i18n içinde history.replaceState ile denendi ve parametre geri beliriyordu: router modül yükleme anında kirli konumu kaydedip ilk navigasyonda geri yazıyor. SPA da adresin sahibi routerdır.
+  - setLanguage çerezi AYRI bir try bloğunda yazıyor. localStorage kapalıyken de yazılmalı, çünkü gizli sekmede taşınacak bir seçim yok ve tercihi ancak çerez kurtarıyor. Birim testi tam bu durumu ölçüyor: E2E ölçemiyor, çünkü seçiciler seçimden sonra sayfayı yeniden yüklüyor ve yeniden yükleme çerezi başka yoldan yazıp mutasyonu maskeliyor.
+- feat(i18n): panelde dil seçimi tek nokta denetimi eklendi (@aliiball)
+  - Panelde iki dil seçici var: geniş ekranda başlıktaki küre düğmesi, dar ekranda taşma menüsündeki liste. Üçüncüsü eklendiğinde kimse bu kuralı hatırlamayacak; denetim hatırlatıyor.
+  - Hem localStorage hem çerez yazımı taranıyor. Merkezden geçmeyen bir seçici th-lang-source işaretini atlar; storefront o tercihi otomatik sayar ve ülke tespiti kullanıcının kendi seçimini ezer.
+  - Karşı kanıtla doğrulandı: LanguageSwitcher setLanguage yerine doğrudan çerez yazacak şekilde bozulunca iki denetim birden kırmızıya döndü.
+
+---
 ## [v1.15.0-alpha.2] - 2026-09-16 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
