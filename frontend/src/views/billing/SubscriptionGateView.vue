@@ -25,23 +25,32 @@
   const iosApp = isIosApp();
 
   // Sayfa-içi onboarding: paket kartları → birincil abone ol/öde butonu → bilgi/durum alanı.
-  usePageTour("subscription-gate", () => [
-    {
-      target: '[data-tour="sgt-plans"]',
-      title: t("tourSteps.page.sgtPlans_t"),
-      desc: t("tourSteps.page.sgtPlans_d"),
-    },
-    {
-      target: '[data-tour="sgt-subscribe"]',
-      title: t("tourSteps.page.sgtSubscribe_t"),
-      desc: t("tourSteps.page.sgtSubscribe_d"),
-    },
-    {
-      target: '[data-tour="sgt-info"]',
-      title: t("tourSteps.page.sgtInfo_t"),
-      desc: t("tourSteps.page.sgtInfo_d"),
-    },
-  ]);
+  // M4 (AC-1, anti-steering): iOS'ta tur adımları HİÇ kaydedilmez — adım metinleri
+  // fiyat/abonelik/havale anlatır (satış yüzeyi) ve [data-tour="sgt-*"] hedefleri
+  // iOS'ta render edilmediği için popover ekran ortasında sızardı. Boş listeyle
+  // tur otomatik BAŞLAMAZ (startPageTour boş adımda return eder) ve Yardım(?)
+  // restartContext'i satış içermeyen bölüm turuna düşer.
+  usePageTour("subscription-gate", () =>
+    iosApp
+      ? []
+      : [
+          {
+            target: '[data-tour="sgt-plans"]',
+            title: t("tourSteps.page.sgtPlans_t"),
+            desc: t("tourSteps.page.sgtPlans_d"),
+          },
+          {
+            target: '[data-tour="sgt-subscribe"]',
+            title: t("tourSteps.page.sgtSubscribe_t"),
+            desc: t("tourSteps.page.sgtSubscribe_d"),
+          },
+          {
+            target: '[data-tour="sgt-info"]',
+            title: t("tourSteps.page.sgtInfo_t"),
+            desc: t("tourSteps.page.sgtInfo_d"),
+          },
+        ]
+  );
   const sub = useSubscriptionStore();
   const {
     isLocked,

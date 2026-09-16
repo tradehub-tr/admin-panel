@@ -115,8 +115,24 @@ export const useTourStore = defineStore("tour", () => {
   // ── SAYFA turu ────────────────────────────────────────
   // steps: [{ target, title?, titleKey?, desc?, descKey? }] — yalnızca DOM'da bulunan
   // hedefler gösterilir (eksik anchor'lar atlanır).
+  // Koşullu render'lı (v-if) anchor'lar DOM'da hiç olmayabilir (örn. iOS'ta
+  // çizilmeyen satış yüzeyleri) — böyle adımlar GuidedTour'un ekran-ortası
+  // fallback popover'ına düşmesin diye başlangıçta elenir. GEÇ render eden ama
+  // var olan hedefler (scroll/veri) GuidedTour'un retry'ında çözülmeye devam
+  // eder. Bölüm turu (start) bilerek elenmez: kapalı accordion öğeleri adım
+  // sırası gelince ensureGroupOpen ile DOM'a girer.
+  function targetInDom(target) {
+    // SSR/test: document yoksa doğrulanamaz — adım korunur (tur overlay'i
+    // yalnız tarayıcıda render edilir; iOS sızıntısını kaynak katmanı kapatır).
+    if (typeof document === "undefined") return true;
+    try {
+      return !!document.querySelector(target);
+    } catch {
+      return false; // geçersiz seçici — GuidedTour.locate() da asla bulamazdı
+    }
+  }
   function startPageTour(key, rawSteps) {
-    const s = (rawSteps || []).filter((st) => st && st.target);
+    const s = (rawSteps || []).filter((st) => st && st.target && targetInDom(st.target));
     if (!s.length) return;
     mode.value = "page";
     pageKey.value = key;
