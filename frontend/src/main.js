@@ -3,6 +3,7 @@ import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./router";
 import { initializeI18n } from "./i18n";
+import { readLangParam, stripLangParam } from "./i18n/languageChoice";
 import txResize from "./plugins/txResize";
 import nativeSelectPicker from "./plugins/nativeSelectPicker";
 import "./assets/tailwind.css";
@@ -22,6 +23,17 @@ async function bootstrap() {
   // navigation store rail tıklayınca router.push yapabilsin
   if (import.meta.env.DEV) {
     window.__router = router;
+  }
+
+  // `?hl=` adresten DÜŞÜRÜLÜR — dil tercihi çoktan çereze yazıldı, parametre
+  // yalnız giriş kapısıydı. Router hazır olduktan sonra yapılıyor: `i18n`
+  // içinde `history.replaceState` ile denendi ve parametre geri beliriyordu,
+  // çünkü router modül yükleme anında kirli konumu kaydedip ilk navigasyonda
+  // geri yazıyor (ölçüldü 16 Eyl 2026, gerçek tarayıcı).
+  if (readLangParam(location.search)) {
+    await router.isReady();
+    const temiz = stripLangParam(router.currentRoute.value.fullPath);
+    if (temiz !== router.currentRoute.value.fullPath) await router.replace(temiz);
   }
 
   app.mount("#app");
