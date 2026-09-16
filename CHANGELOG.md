@@ -1,3 +1,14 @@
+## [v1.15.0-alpha.1] - 2026-09-16 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(panel): iOS'ta abonelik turu satış metni sızdırıyordu + tur motoru DOM filtresi (@boraydeger32)
+  - /abonelik rehberli turu iOS'ta hiç kaydedilmiyor (adımlarda fiyat + havale-EFT metni vardı; hedefler render edilmeyince ekran ortasında açılıyordu — Apple 3.1.1 riski)
+  - Savunma katmanı: tour store artık DOM'da bulunmayan hedefli adımı atlıyor (~60 turdaki ekran-ortası popover sınıfı da kapandı; SSR/geçersiz seçici güvenli tarafta)
+  - 6 yeni test (toplam 1677, 0 hata)
+
+---
 ## [v1.15.0] - 2026-09-15 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
