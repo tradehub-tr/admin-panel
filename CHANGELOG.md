@@ -1,3 +1,14 @@
+## [v1.15.0-alpha.4] - 2026-09-17 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(i18n): panelde dil ve yön ilk boyamada ayarlandı (@aliiball)
+  - initializeI18n belge yönünü ancak sözlük parçası indikten sonra uyguluyordu; Arapça kullanıcı o ana kadar lang=tr ve LTR bir belge görüyordu. Satır içi head script kararı yaklaşık 1 ms'te yazıyor.
+  - Test script'i index.html'DEN okuyup 13 senaryoda resolveLang ile karşılaştırıyor: kopya mantık ayrışırsa köprü sessizce kopmak yerine kırmızıya döner.
+  - localStorage basamağı auto çerezinin ÖNÜNE konuldu: panelde o anahtara yalnız setLanguage yazıyor, yani oradaki değer her zaman kullanıcının kendi seçimi.
+
+---
 ## [v1.15.0-alpha.3] - 2026-09-16 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
