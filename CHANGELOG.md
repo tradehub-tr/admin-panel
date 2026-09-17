@@ -1,3 +1,102 @@
+## [v1.15.0-alpha.3] - 2026-09-16 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(i18n): dil tercihi çerezi panelde de okunup yazılıyor (@aliiball)
+  - Panel yalnız localStorage th-lang okuyordu; storefrontta seçilen dil panele hiç geçmiyordu çünkü orası i18nextLng kullanıyor. Artık iki uygulama ortak th-lang çerezinde buluşuyor ve sıralama storefronttakiyle birebir aynı: hl, elle seçim, storefrontun otomatik kararı, tarayıcı, en.
+  - Panelin kendi ülke tespiti YOK: buraya giren kullanıcı giriş yapmış bir satıcı ya da yönetici, IP sine göre dil değiştirmek onun için sürpriz olurdu. Panel yalnız storefrontun verdiği kararı miras alıyor.
+  - hl adresten main.js içinde, router.isReady sonrasında düşürülüyor. Önce i18n içinde history.replaceState ile denendi ve parametre geri beliriyordu: router modül yükleme anında kirli konumu kaydedip ilk navigasyonda geri yazıyor. SPA da adresin sahibi routerdır.
+  - setLanguage çerezi AYRI bir try bloğunda yazıyor. localStorage kapalıyken de yazılmalı, çünkü gizli sekmede taşınacak bir seçim yok ve tercihi ancak çerez kurtarıyor. Birim testi tam bu durumu ölçüyor: E2E ölçemiyor, çünkü seçiciler seçimden sonra sayfayı yeniden yüklüyor ve yeniden yükleme çerezi başka yoldan yazıp mutasyonu maskeliyor.
+- feat(i18n): panelde dil seçimi tek nokta denetimi eklendi (@aliiball)
+  - Panelde iki dil seçici var: geniş ekranda başlıktaki küre düğmesi, dar ekranda taşma menüsündeki liste. Üçüncüsü eklendiğinde kimse bu kuralı hatırlamayacak; denetim hatırlatıyor.
+  - Hem localStorage hem çerez yazımı taranıyor. Merkezden geçmeyen bir seçici th-lang-source işaretini atlar; storefront o tercihi otomatik sayar ve ülke tespiti kullanıcının kendi seçimini ezer.
+  - Karşı kanıtla doğrulandı: LanguageSwitcher setLanguage yerine doğrudan çerez yazacak şekilde bozulunca iki denetim birden kırmızıya döndü.
+
+---
+## [v1.15.0-alpha.2] - 2026-09-16 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(i18n): panel arayüzü Rusça ve Arapçaya tamamlandı (@aliiball)
+  - Panelin i18n'i fallbackLocale en taşıdığı için eksik çeviri hata vermiyor, sessizce İngilizceye düşüyordu; Rus ve Arap yöneticiler modülleri İngilizce görüyordu.
+  - Düzleştirilmiş karşılaştırmada 1.618 anahtar eksikti: logistics 1213, nav 55, media 55, plans 46, mediaSeo 22, doctypeNames 11, listingForm 11 ve dört bütün ad alanı.
+  - Eksiklik yalnız kök seviyesinde değildi: permissionConsole kökü vardı ama tabFeatureCatalog anahtarı yoktu, sekme etiketi İngilizce geliyordu.
+  - Lojistik terminolojisi storefront sözlüğüyle hizalandı; Sevkiyat için panel operasyon aracı olduğundan genel 'Доставка' yerine 'Отправления' seçildi. Desi çevrilmedi, Türkiye'ye özgü birim.
+  - mediaRetroRename.confirmMessage iki cümle eksikti ve days yer tutucusunu hiç taşımıyordu: yeniden adlandırmanın kaç gün içinde geri alınabileceği uyarısı Rus ve Arap yöneticiye ulaşmıyordu.
+  - Sonuç: tr 9.551, ru 9.551, ar 9.551 anahtar.
+
+### Degistirildi
+- refactor(test): panel çeviri bütünlüğü denetimi eklendi (@aliiball)
+  - Denetim kökleri değil DÜZLEŞTİRİLMİŞ yolları karşılaştırıyor; kusur tam olarak kök içinde saklanıyordu.
+  - Yer tutucu bütünlüğü ayrı denetleniyor: düşen bir days ya da count sessiz bilgi kaybıdır, ekranda hata görünmez.
+  - Mutasyonla doğrulandı: bir anahtar silinince eksik-anahtar testi, bir yer tutucu düşürülünce yer-tutucu testi kırmızıya döndü.
+
+---
+## [v1.15.0-alpha.1] - 2026-09-16 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(panel): iOS'ta abonelik turu satış metni sızdırıyordu + tur motoru DOM filtresi (@boraydeger32)
+  - /abonelik rehberli turu iOS'ta hiç kaydedilmiyor (adımlarda fiyat + havale-EFT metni vardı; hedefler render edilmeyince ekran ortasında açılıyordu — Apple 3.1.1 riski)
+  - Savunma katmanı: tour store artık DOM'da bulunmayan hedefli adımı atlıyor (~60 turdaki ekran-ortası popover sınıfı da kapandı; SSR/geçersiz seçici güvenli tarafta)
+  - 6 yeni test (toplam 1677, 0 hata)
+
+---
+## [v1.15.0] - 2026-09-15 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(abonelik): aylık/yıllık seçici + ödeme geçmişi + admin dikkat listesi (@boraydeger32)
+  - SubscriptionGateView: fatura dönemi seçici (sabit "yearly" kalktı; yalnız-yıllık planlarda toggle gizli), pending bloğunda döngü+tutar özeti ve "tutar güncel fiyata göre güncellendi" notu (E4)
+  - YENİ PaymentHistorySection: makbuz detaylı ödeme geçmişi; iOS'ta pending satırlar allowlist ile DOM'a hiç girmez (E2 — referans kodu + tutar harici ödeme talimatı sayılır, anti-steering); 403/hata durumunda bölüm sessiz gizlenir
+  - SubscriptionPaymentsView: "İptal Planlı & Ödemesi Geciken Mağazalar" bölümü (iki tablo + sebep dağılımı chip'leri, superadmin)
+  - AccountDeletionView: özet karta açık sipariş sayısı (0 ise gizli)
+  - 27 yeni SSR testi (toplam 1671, 0 hata); iOS+pending DOM-yok vakaları
+
+### Duzeltildi
+- fix(panel): oturum düşüşünde gerçek logout + prod nginx /files proxy'leri + kırık link (@boraydeger32)
+  - Ölü /panel/reset yönlendirmesi kaldırıldı: oturum düşünce önce best-effort /api/method/logout (httpOnly sid sunucuda temizlenir), sonra gerçek login rotası
+  - Prod nginx template'ine eksik /files + /private/files proxy'leri (^~ ile — statik-uzantı regex'ine ezilmesin) + ölü cdn.tailwindcss.com CSP izni kaldırıldı
+  - "Aboneliğim" menü linki /subscription → /abonelik (rota yoktu)
+  - 8 yeni sözleşme testi
+  - Store'a additive alanlar: inDunning, dunningGraceEnd, suspendedAt, dunningExpireAt, expiredCause (mevcut computed'lar değişmedi)
+  - Gate: statusLabel'a past_due → "Ödeme bekleniyor"; suspended ve dunning-feshi copy'leri (iOS varyantları satın-almaya atıfsız, anti-steering korundu)
+  - YENİ DunningBanner: hoşgörü penceresinde bitiş tarihi + ödeme CTA'sı (iOS'ta nötr metin)
+  - Test fixture'larındaki gelecek-tarih sabitleri zaman-bombası denetimine uygun koşuma-göre-hesaplamaya çevrildi
+  - 13 yeni test (panel toplam 1615, 0 hata)
+- fix(media): yükleme hatasını boş klasörden ayır (#216) (@ahmeetseker)
+
+---
+## [v1.14.1-rc.1] - 2026-09-15 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(abonelik): aylık/yıllık seçici + ödeme geçmişi + admin dikkat listesi (@boraydeger32)
+  - SubscriptionGateView: fatura dönemi seçici (sabit "yearly" kalktı; yalnız-yıllık planlarda toggle gizli), pending bloğunda döngü+tutar özeti ve "tutar güncel fiyata göre güncellendi" notu (E4)
+  - YENİ PaymentHistorySection: makbuz detaylı ödeme geçmişi; iOS'ta pending satırlar allowlist ile DOM'a hiç girmez (E2 — referans kodu + tutar harici ödeme talimatı sayılır, anti-steering); 403/hata durumunda bölüm sessiz gizlenir
+  - SubscriptionPaymentsView: "İptal Planlı & Ödemesi Geciken Mağazalar" bölümü (iki tablo + sebep dağılımı chip'leri, superadmin)
+  - AccountDeletionView: özet karta açık sipariş sayısı (0 ise gizli)
+  - 27 yeni SSR testi (toplam 1671, 0 hata); iOS+pending DOM-yok vakaları
+
+### Duzeltildi
+- fix(panel): oturum düşüşünde gerçek logout + prod nginx /files proxy'leri + kırık link (@boraydeger32)
+  - Ölü /panel/reset yönlendirmesi kaldırıldı: oturum düşünce önce best-effort /api/method/logout (httpOnly sid sunucuda temizlenir), sonra gerçek login rotası
+  - Prod nginx template'ine eksik /files + /private/files proxy'leri (^~ ile — statik-uzantı regex'ine ezilmesin) + ölü cdn.tailwindcss.com CSP izni kaldırıldı
+  - "Aboneliğim" menü linki /subscription → /abonelik (rota yoktu)
+  - 8 yeni sözleşme testi
+  - Store'a additive alanlar: inDunning, dunningGraceEnd, suspendedAt, dunningExpireAt, expiredCause (mevcut computed'lar değişmedi)
+  - Gate: statusLabel'a past_due → "Ödeme bekleniyor"; suspended ve dunning-feshi copy'leri (iOS varyantları satın-almaya atıfsız, anti-steering korundu)
+  - YENİ DunningBanner: hoşgörü penceresinde bitiş tarihi + ödeme CTA'sı (iOS'ta nötr metin)
+  - Test fixture'larındaki gelecek-tarih sabitleri zaman-bombası denetimine uygun koşuma-göre-hesaplamaya çevrildi
+  - 13 yeni test (panel toplam 1615, 0 hata)
+- fix(media): yükleme hatasını boş klasörden ayır (#216) (@ahmeetseker)
+
+---
 ## [v1.14.1-alpha.3] - 2026-09-15 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

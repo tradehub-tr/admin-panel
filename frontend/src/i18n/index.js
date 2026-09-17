@@ -1,16 +1,33 @@
 import { createI18n } from "vue-i18n";
 import { FALLBACK_LANG, loadFallbackMessages, loadStartupMessages } from "./localeLoader";
+import {
+  LANG_STORAGE_KEY,
+  SUPPORTED_LANGS,
+  readAutoLang,
+  readLangParam,
+  readManualLang,
+  resolveLang,
+  writeLangCookie,
+} from "./languageChoice";
 
-export const SUPPORTED_LANGS = ["en", "tr", "ar", "ru"];
+export { SUPPORTED_LANGS };
 export const RTL_LANGS = ["ar"];
 
-const LANG_STORAGE_KEY = "th-lang";
-
+/**
+ * Panelin açılış dili (MOGEM-642 · Faz 1).
+ *
+ * Eskiden yalnız `localStorage.th-lang` okunuyordu; storefront'ta seçilen dil
+ * panele hiç geçmiyordu çünkü storefront ayrı bir anahtar (`i18nextLng`)
+ * kullanıyor. Karar artık ortak çerez üzerinden veriliyor — sıra ve gerekçesi
+ * `languageChoice.js:resolveLang`'da.
+ */
 function detectLang() {
-  const stored = localStorage.getItem(LANG_STORAGE_KEY);
-  if (stored && SUPPORTED_LANGS.includes(stored)) return stored;
-  const nav = (navigator.language || "en").slice(0, 2);
-  return SUPPORTED_LANGS.includes(nav) ? nav : "en";
+  return resolveLang({
+    hl: readLangParam(location.search),
+    manuel: readManualLang(),
+    otomatik: readAutoLang(),
+    tarayici: navigator.language,
+  }).lang;
 }
 
 export let i18n = null;
@@ -21,6 +38,7 @@ export function initializeI18n() {
   if (!i18nInitializationPromise) {
     i18nInitializationPromise = (async () => {
       const locale = detectLang();
+      uygulaDilYanEtkileri(locale);
       const messages = await loadStartupMessages(locale);
       i18n = createI18n({
         legacy: false,
@@ -82,6 +100,39 @@ export function getCurrentLang() {
 export function setLanguage(lang) {
   if (!SUPPORTED_LANGS.includes(lang)) return;
   if (i18n) i18n.global.locale.value = lang;
-  localStorage.setItem(LANG_STORAGE_KEY, lang);
+  try {
+    localStorage.setItem(LANG_STORAGE_KEY, lang);
+  } catch {
+    // localStorage kapalı (gizli sekme): seçim çerezde yaşar.
+  }
+  // Çerez AYRI try içinde — localStorage hata verse bile yazılmalı; storefront
+  // ve sunucu tercihi ancak buradan görüyor.
+  writeLangCookie(lang, "manual");
   applyDocumentDirection(lang);
+}
+
+/**
+ * Açılışta `?hl=` geldiyse tercihi KALICILAŞTIRIR.
+ *
+ * Adresi burada TEMİZLEMİYORUZ. Denendi ve ölçüldü (16 Eyl 2026, gerçek
+ * tarayıcı): `history.replaceState` çağrılıyor ama parametre adreste geri
+ * beliriyordu. Sebep sıralama — `main.js:4` router'ı modül yükleme anında
+ * import ediyor, `createWebHistory()` o anda `?hl=ru` taşıyan konumu
+ * kaydediyor; `app.use(router)` ilk navigasyonu yaparken kendi kaydını geri
+ * yazıyor. SPA'da adresin sahibi router'dır, arkasından iş yapılmaz —
+ * temizlik `main.js`'te `router.isReady()` sonrasına taşındı.
+ *
+ * `detectLang()` SAF kalsın diye ayrıldı: testte dil kararı yan etkisiz
+ * ölçülebilmeli.
+ */
+function uygulaDilYanEtkileri(locale) {
+  if (!readLangParam(location.search)) return;
+  // Bağlantıyla gelen dil kalıcı tercih sayılır; ikinci sayfada geri dönmesi
+  // bağlantıyı işlevsiz kılardı.
+  writeLangCookie(locale, "manual");
+  try {
+    localStorage.setItem(LANG_STORAGE_KEY, locale);
+  } catch {
+    // localStorage kapalı — çerez yeterli.
+  }
 }

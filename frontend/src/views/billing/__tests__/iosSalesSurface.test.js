@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { after, afterEach, before, test } from "node:test";
 
@@ -330,6 +331,25 @@ test("banner (iOS): link/CTA yok, kalan gün bilgisi KALIR (AC-1)", async () => 
   assert.ok(!html.includes("<a"), "iOS'ta anchor çizilmemeli");
   assert.ok(html.includes("kaldı"), "kalan gün bilgisi iOS'ta da görünür");
   assert.ok(html.includes("trial-banner--static"), "bilgi-only kip işareti");
+});
+
+// ── M4 — rehberli tur iOS'ta kaydedilmez (anti-steering) ──
+// usePageTour kaydı onMounted'da yapılır; SSR'de onMounted koşmadığı için
+// davranış burada ÖLÇÜLMEZ (errorStateRetry deseni) — kaynak sözleşmesi
+// sabitlenir, filtre davranışı stores/__tests__/tourPageStepsDomFilter.test.js.
+
+test("M4: tur adımları iosApp bayrağıyla boşaltılır — iOS'ta tur HİÇ kaydedilmez", () => {
+  const src = readFileSync(`${frontendRoot}/src/views/billing/SubscriptionGateView.vue`, "utf8");
+  assert.ok(
+    /usePageTour\(\s*"subscription-gate",\s*\(\)\s*=>\s*iosApp\s*\?\s*\[\]\s*:/.test(src),
+    "usePageTour adım üreticisi 'iosApp ? [] : [...]' guard'ı taşımalı — " +
+      "adım metinleri fiyat/abonelik/havale anlatır, hedefleri iOS'ta çizilmez"
+  );
+  // Regresyon: guard'sız düz liste dönüşü geri gelmesin.
+  assert.ok(
+    !/usePageTour\(\s*"subscription-gate",\s*\(\)\s*=>\s*\[/.test(src),
+    "koşulsuz adım listesi iOS'ta ekran-ortası popover'la satış metni sızdırır"
+  );
 });
 
 // ── CancelSubscriptionModal — zorunlu anket iskeleti ──
