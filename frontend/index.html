@@ -2,6 +2,103 @@
 <html lang="tr" class="h-full">
 
 <head>
+  <!--
+    İLK BOYAMA DİLİ (MOGEM-642 · Faz 2) — `<html lang>` ve `dir`, panelin JS
+    paketi inmeden ayarlanır.
+
+    Neden: `initializeI18n()` yönü ancak `await loadStartupMessages(locale)`
+    bittikten SONRA uyguluyor (src/i18n/index.js), yani sözlük parçası ağdan
+    gelene kadar Arapça kullanıcı `lang="tr"` ve LTR bir belge görüyor.
+    Ölçüldü 17 Eyl 2026 (dist + nginx, çerez th-lang=ar): nitelikler 217 ms'te
+    düzeliyordu; bu script ~1 ms'te yazıyor.
+
+    ⚠ SÖZLEŞME: sıra ve anahtarlar `src/i18n/languageChoice.js` ile birebir
+    aynı olmak ZORUNDA. Kopya mantık değil, aynı sözleşmenin erken koşan
+    hâli — `src/i18n/__tests__/ilkBoyamaDili.test.js` script'i bu dosyadan
+    okuyup `resolveLang()` ile senaryo senaryo karşılaştırır; ayrışırsa test
+    kırmızıya döner. Storefront'taki eşi `tradehubfront/src/i18n/
+    ilkBoyamaDili.ts` (orada bir de ülke basamağı var; panelin kendi ülke
+    tespiti YOKTUR, storefront'un "auto" çerezini miras alır).
+
+    SALT OKUR: çerez/localStorage yazmaz. Tercihi yazan tek yer setLanguage().
+  -->
+  <script>
+    (function () {
+      try {
+        var DILLER = ["en", "tr", "ar", "ru"];
+        var RTL = ["ar"];
+        function nrm(v) {
+          if (!v) return null;
+          var k = String(v).trim().slice(0, 2).toLowerCase();
+          return DILLER.indexOf(k) >= 0 ? k : null;
+        }
+        function cerez(ad) {
+          try {
+            var h = document.cookie;
+            if (!h) return null;
+            var p = h.split(";");
+            for (var i = 0; i < p.length; i++) {
+              var e = p[i].indexOf("=");
+              if (e < 0) continue;
+              if (p[i].slice(0, e).trim() !== ad) continue;
+              var d = p[i].slice(e + 1).trim();
+              try {
+                return decodeURIComponent(d);
+              } catch (x) {
+                return d;
+              }
+            }
+          } catch (x) {}
+          return null;
+        }
+        var lang = null,
+          kaynak = "default";
+        try {
+          var s = location.search;
+          if (s) {
+            var q = new URLSearchParams(s);
+            lang = nrm(q.get("hl")) || nrm(q.get("lang"));
+            if (lang) kaynak = "hl";
+          }
+        } catch (x) {}
+        var elle = cerez("th-lang-source") === "manual";
+        if (!lang && elle) {
+          lang = nrm(cerez("th-lang"));
+          if (lang) kaynak = "manual";
+        }
+        // localStorage, "auto" çerezinden ÖNCE: panelde bu anahtara yalnız
+        // setLanguage() yazar, yani oradaki değer HER ZAMAN kullanıcının
+        // kendi seçimidir ve otomatik karardan üstündür (readManualLang ile
+        // aynı sıra). Ters koyulsaydı, storefront'ta ülkeye göre verilmiş
+        // karar panelde kullanıcının eski seçimini ezerdi.
+        if (!lang) {
+          try {
+            lang = nrm(localStorage.getItem("th-lang"));
+          } catch (x) {}
+          if (lang) kaynak = "manual";
+        }
+        if (!lang && !elle) {
+          // Storefront'un ülkeye göre verdiği karar ("auto" çerezi).
+          lang = nrm(cerez("th-lang"));
+          if (lang) kaynak = "auto";
+        }
+        if (!lang) {
+          try {
+            lang = nrm(navigator.language);
+          } catch (x) {}
+          if (lang) kaynak = "browser";
+        }
+        if (!lang) {
+          lang = "en";
+          kaynak = "default";
+        }
+        var r = document.documentElement;
+        r.lang = lang;
+        r.dir = RTL.indexOf(lang) >= 0 ? "rtl" : "ltr";
+        window.__thDil = { lang: lang, kaynak: kaynak };
+      } catch (x) {}
+    })();
+  </script>
   <!-- Pre-render theme to prevent flash of wrong theme -->
   <script>
     (function () {
