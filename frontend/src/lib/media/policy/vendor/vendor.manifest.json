@@ -3,22 +3,23 @@
 	"gorev": "T-033 (TS ikizi + çapraz parite)",
 	"aciklama": "Bu klasördeki dosyalar tradehub_core'dan senkronlanmış/türetilmiştir. ELLE DÜZENLEME. Kaynağı değiştir, sonra `npm run sync:policy` koştur.",
 	"uretici": "admin-panel/frontend/scripts/sync-policy-engine.mjs",
-	"senkron_tarihi": "2026-08-28",
+	"senkron_tarihi": "2026-09-17",
 	"kaynaklar": {
 		"tradehub_core/tradehub_core/media/pipeline/policy/engine.py": "949c5a2ac64ea93a7e782470c98b6915a50ae79bd0cd934ab653919c72e4bb10",
 		"tradehub_core/tradehub_core/media/pipeline/core/errors.py": "f33ad5e2f2913da96c85ddf74cab60028291da55f8d12127af9e59e745454826",
 		"tradehub_core/tradehub_core/media/pipeline/core/probe.py": "ed90574745abe08f9d70dcbc50c9efb88a4c21b0c746fac7a9fcc3e503a6393f",
 		"tradehub_core/tradehub_core/tests/fixtures/media/manifest.json": "e5cce287d29fff7d3c2ed0cd0aafafdeb602bcb51d23e4c2461a148d379250a5",
 		"tradehub_core/tradehub_core/tests/fixtures/media/live-probe.json": "ceaa393243c10b03d28ea6218672c9eab38a0f33f17e1eb1085f3c165fabf454",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/brand-logo.json": "42ffb8b0bf9135b3cb41dee9dc6f6175772d0e32eca43d5c232cc0d1f5fffe49",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/category-banner.json": "9ea7405987864c58e5934e97a4bc055a87c8d49c897ef7c71b460e5b57cb6edb",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-image.json": "7898eb16e0b04f0afae6129594d91fb2ad37272c355e3be17d822c7a4dac1085",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-video.json": "64ea85562d0c9cbd8bb9200a365cf65261f1fb50ec0371656590a1f8544b02a1",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/document-attachment.json": "a96377bf6944d5fffd6527fd34b0d3967327f4f3dcb21e5af01d9b5143c22688",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-image.json": "0cc83b67bf47f33142eab25d7d77af4b9da41b35961fb3f4a77b8cdf8f7b85ca",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-video.json": "4c69da24854a16e9aff6758d3953b77754fae08112f690c498f962b0c4940202",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/seller-logo.json": "44b7e4d527e4d73e7de73ec93a4efb7cd02e8c3dd68f1bf846254ba28512da9c",
-		"tradehub_core/tradehub_core/media/pipeline/policy/slots/user-avatar.json": "b3cfc3ec027cb689cdcbd4ab463f23543bfd732893879de16575c77ec12d9140"
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/brand-logo.json": "e982a6cb01382bd3c040d5b19a0f69b1ad8d8506c22358265de4e231366ff344",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/category-banner.json": "a34ffde6809e6b7426693850bc98c13a6f2e986a84f158deb7e3efb7885536d4",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-image.json": "92adc83621a155aac1c7c007c6c8dc90aa77c11fa85f9f918f36df6a07fc4f61",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-video.json": "48c357a8d275fa6d782a536b72e80635e73f1de24f97733592894f57696ec12a",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/document-attachment.json": "41fb1d282230bbea634a353b25da4597227b734de34859b88dc8fc2bd95b6dbf",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/library-image.json": "6f13815b4aa2dd5810904f3d9a1c0dcbfa88693ff7802f9b0f56b8ae9935e1a3",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-image.json": "a6f6f7e52711cd0134ce684dbb1e9bcf212982e7a7490d43190534405176ae6a",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-video.json": "bca5f07253f7aac71c6a85cccc6e9de9438f493fb8e61f37d4276fa073c77ae0",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/seller-logo.json": "4962294ae22bcf5c36d5628d6d19c5892f88f32d81df2643f8b552f718abc46a",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/user-avatar.json": "8de8f0b6424d2621d2e1477a5bdac9ab907e201d92877132633c5ed8fcc2456c"
 	},
 	"turetilmis": {
 		"src/lib/media/policy/vendor/engine.js": {

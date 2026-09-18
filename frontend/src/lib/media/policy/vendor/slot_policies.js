@@ -30,6 +30,7 @@ export const FLOAT_REPRS = {
 		"video.safe_area.overlay_share_of_height_pct.viewport_360.bar": "24.0"
 	},
 	"document.attachment": {},
+	"library.image": {},
 	"product.image": {
 		"content_rules[2].threshold": "2.0"
 	},
@@ -139,9 +140,15 @@ export const SLOT_POLICIES = {
 			}
 		},
 		"quality": {
-			"metric": "bit_exact",
-			"lossless_required": true,
-			"reason": "Logo düz renk + keskin kenar. Kayıplı encode halkalanma (ringing) üretir; SSIM bu artefaktı logoda güvenilir ölçmez.",
+			"metric": "ssim",
+			"lossless_required": false,
+			"target_ssim_per_class": {
+				"photo": 0.99,
+				"graphic": 0.99,
+				"text": 0.99,
+				"fine_detail": 0.99
+			},
+			"reason": "Tek teslim biçimi AVIF. Grafik ve metin için q100 / 4:4:4 başlangıcı kullanılır; kayıpsızlık iddiası yerine SSIM ölçülür.",
 			"reencode_floor_saving_ratio": null
 		},
 		"profiles": [
@@ -150,10 +157,10 @@ export const SLOT_POLICIES = {
 				"width": 64,
 				"height": 64,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -171,10 +178,10 @@ export const SLOT_POLICIES = {
 				"width": 128,
 				"height": 128,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -193,10 +200,10 @@ export const SLOT_POLICIES = {
 				"width": 256,
 				"height": 256,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -215,10 +222,10 @@ export const SLOT_POLICIES = {
 				"width": 384,
 				"height": 384,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -236,10 +243,10 @@ export const SLOT_POLICIES = {
 				"width": 512,
 				"height": 512,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -258,10 +265,10 @@ export const SLOT_POLICIES = {
 				"width": 1200,
 				"height": 630,
 				"formats": [
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"jpeg": 85
+					"avif": 88
 				},
 				"fit": "pad",
 				"target_ratio": "1200:630",
@@ -715,12 +722,10 @@ export const SLOT_POLICIES = {
 				"name": "catbanner_480",
 				"width": 480,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "2:1",
@@ -735,12 +740,10 @@ export const SLOT_POLICIES = {
 				"name": "catbanner_960",
 				"width": 960,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "2:1",
@@ -756,12 +759,10 @@ export const SLOT_POLICIES = {
 				"name": "catbanner_1920",
 				"width": 1920,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "2:1",
@@ -975,12 +976,10 @@ export const SLOT_POLICIES = {
 				"name": "cover_768",
 				"width": 768,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "24:5",
@@ -995,12 +994,10 @@ export const SLOT_POLICIES = {
 				"name": "cover_1280",
 				"width": 1280,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "24:5",
@@ -1017,12 +1014,10 @@ export const SLOT_POLICIES = {
 				"name": "cover_1920",
 				"width": 1920,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "24:5",
@@ -1037,12 +1032,10 @@ export const SLOT_POLICIES = {
 				"name": "cover_2560",
 				"width": 2560,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "24:5",
@@ -1058,12 +1051,10 @@ export const SLOT_POLICIES = {
 				"width": 1000,
 				"height": 563,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "cover",
 				"target_ratio": "16:9",
@@ -1266,10 +1257,10 @@ export const SLOT_POLICIES = {
 				"width": 1280,
 				"height": 720,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 78
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "16:9",
@@ -1285,10 +1276,10 @@ export const SLOT_POLICIES = {
 				"width": 854,
 				"height": 480,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 70
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "16:9",
@@ -1304,10 +1295,10 @@ export const SLOT_POLICIES = {
 				"width": 192,
 				"height": 144,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 70
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "4:3",
@@ -2760,10 +2751,10 @@ export const SLOT_POLICIES = {
 				"name": "doc_thumb_512",
 				"width": 512,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 85
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "3:2",
@@ -2943,6 +2934,154 @@ export const SLOT_POLICIES = {
 			"Politika `upload_policy.check_slot()` üzerinden çalışma zamanında okunur; kyb.py'deki daha sıkı L1 kapısı aynen korunur."
 		]
 	},
+	"library.image": {
+		"$schema": "../schema/slot-policy.schema.json",
+		"schema_version": "1.3.0",
+		"status": "draft",
+		"standard_status": "fixed",
+		"slot_key": "library.image",
+		"title": "Medya kütüphanesi görseli",
+		"description": "Henüz bir kullanım alanına bağlanmamış public kütüphane görselleri. Kaynağın oranı korunur; kırpma ve büyütme yapılmaz.",
+		"roles": [
+			"seller",
+			"admin"
+		],
+		"bound_to": [],
+		"accept": {
+			"mime": [
+				"image/jpeg",
+				"image/png",
+				"image/webp",
+				"image/tiff",
+				"image/avif",
+				"image/bmp"
+			],
+			"extensions": [
+				".jpg",
+				".jpeg",
+				".png",
+				".webp",
+				".tif",
+				".tiff",
+				".avif",
+				".bmp"
+			],
+			"max_bytes": 26214400,
+			"max_megapixels_hard": 80,
+			"allow_animated": false
+		},
+		"require": {
+			"min_short_edge": 1,
+			"min_area": 1,
+			"allowed_ratios": [
+				"1:1"
+			],
+			"ratio_tolerance": 1
+		},
+		"master": {
+			"max_long_edge": 2400,
+			"min_long_edge": 1,
+			"max_megapixels": 5.76,
+			"dpi_out": 72,
+			"colorspace": "srgb",
+			"format": "webp",
+			"fit": "contain",
+			"allow_crop": false,
+			"allow_upscale": false,
+			"orientation": "apply_exif",
+			"strip_metadata": {
+				"exif": true,
+				"gps": true,
+				"xmp": true,
+				"icc": false
+			}
+		},
+		"quality": {
+			"metric": "ssim",
+			"target_ssim_per_class": {
+				"photo": 0.96,
+				"graphic": 0.98,
+				"text": 0.99,
+				"fine_detail": 0.975
+			},
+			"reencode_floor_saving_ratio": 0.1
+		},
+		"profiles": [
+			{
+				"name": "w96",
+				"width": 96,
+				"formats": [
+					"avif"
+				],
+				"encoder_quality": {
+					"avif": 88
+				},
+				"fit": "contain",
+				"derived_from": "product.image w96 basamağı; kütüphane için oran korunur."
+			},
+			{
+				"name": "w384",
+				"width": 384,
+				"formats": [
+					"avif"
+				],
+				"encoder_quality": {
+					"avif": 61
+				},
+				"fit": "contain",
+				"derived_from": "product.image w384 basamağı; kütüphane için oran korunur."
+			},
+			{
+				"name": "w768",
+				"width": 768,
+				"formats": [
+					"avif"
+				],
+				"encoder_quality": {
+					"avif": 61
+				},
+				"fit": "contain",
+				"derived_from": "product.image w768 basamağı; kütüphane için oran korunur."
+			},
+			{
+				"name": "w1280",
+				"width": 1280,
+				"formats": [
+					"avif"
+				],
+				"encoder_quality": {
+					"avif": 61
+				},
+				"fit": "contain",
+				"derived_from": "product.image w1280 basamağı; kütüphane için oran korunur."
+			},
+			{
+				"name": "w1920",
+				"width": 1920,
+				"formats": [
+					"avif"
+				],
+				"encoder_quality": {
+					"avif": 61
+				},
+				"fit": "contain",
+				"derived_from": "product.image w1920 basamağı; kütüphane için oran korunur."
+			}
+		],
+		"on_violation": {
+			"default": "warn",
+			"accept": "reject"
+		},
+		"messages": {
+			"tr": {
+				"too_large": "Görsel işleme sınırını aşıyor."
+			}
+		},
+		"sources": {
+			"profiles": "Ürün görseli politikasının mevcut boyut ve kalite basamakları; serbest kütüphane görsellerinde geometri contain olarak korunur.",
+			"scope": "File kaydı public, hassas belge referanslarından bağımsız ve daha özel bir slota bağlı değilse kullanılır."
+		}
+	},
 	"product.image": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.0.0",
@@ -3041,12 +3180,10 @@ export const SLOT_POLICIES = {
 				"name": "w96",
 				"width": 96,
 				"formats": [
-					"webp",
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 80,
-					"jpeg": 82
+					"avif": 88
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3062,12 +3199,10 @@ export const SLOT_POLICIES = {
 				"name": "w192",
 				"width": 192,
 				"formats": [
-					"webp",
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 80,
-					"jpeg": 82
+					"avif": 88
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3086,14 +3221,10 @@ export const SLOT_POLICIES = {
 				"name": "w384",
 				"width": 384,
 				"formats": [
-					"avif",
-					"webp",
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80,
-					"jpeg": 82
+					"avif": 61
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3111,14 +3242,10 @@ export const SLOT_POLICIES = {
 				"name": "w640",
 				"width": 640,
 				"formats": [
-					"avif",
-					"webp",
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80,
-					"jpeg": 82
+					"avif": 61
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3134,14 +3261,10 @@ export const SLOT_POLICIES = {
 				"name": "w768",
 				"width": 768,
 				"formats": [
-					"avif",
-					"webp",
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80,
-					"jpeg": 82
+					"avif": 61
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3157,14 +3280,10 @@ export const SLOT_POLICIES = {
 				"name": "w1280",
 				"width": 1280,
 				"formats": [
-					"avif",
-					"webp",
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80,
-					"jpeg": 82
+					"avif": 61
 				},
 				"fit": "contain",
 				"serves": [
@@ -3179,14 +3298,10 @@ export const SLOT_POLICIES = {
 				"name": "w1920",
 				"width": 1920,
 				"formats": [
-					"avif",
-					"webp",
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80,
-					"jpeg": 82
+					"avif": 61
 				},
 				"fit": "contain",
 				"serves": [
@@ -3462,10 +3577,10 @@ export const SLOT_POLICIES = {
 				"name": "poster_192",
 				"width": 192,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 80
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "1:1",
@@ -3480,12 +3595,10 @@ export const SLOT_POLICIES = {
 				"name": "poster_1024",
 				"width": 1024,
 				"formats": [
-					"avif",
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"avif": 61,
-					"webp": 80
+					"avif": 61
 				},
 				"fit": "contain",
 				"serves": [
@@ -3805,9 +3918,15 @@ export const SLOT_POLICIES = {
 			}
 		},
 		"quality": {
-			"metric": "bit_exact",
-			"lossless_required": true,
-			"reason": "Logo düz renk + keskin kenar. Kayıplı encode halkalanma (ringing) üretir; SSIM bu artefaktı logoda güvenilir ölçmez. Kayıpsızlık ölçülebilir bir kriter: çıktı, girdiyle piksel-eş olmalı.",
+			"metric": "ssim",
+			"lossless_required": false,
+			"target_ssim_per_class": {
+				"photo": 0.99,
+				"graphic": 0.99,
+				"text": 0.99,
+				"fine_detail": 0.99
+			},
+			"reason": "Tek teslim biçimi AVIF. Grafik ve metin için q100 / 4:4:4 başlangıcı kullanılır; kayıpsızlık iddiası yerine SSIM ölçülür.",
 			"reencode_floor_saving_ratio": null
 		},
 		"profiles": [
@@ -3816,10 +3935,10 @@ export const SLOT_POLICIES = {
 				"width": 64,
 				"height": 64,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3840,10 +3959,10 @@ export const SLOT_POLICIES = {
 				"width": 128,
 				"height": 128,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3863,10 +3982,10 @@ export const SLOT_POLICIES = {
 				"width": 256,
 				"height": 256,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3887,10 +4006,10 @@ export const SLOT_POLICIES = {
 				"width": 384,
 				"height": 384,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3908,10 +4027,10 @@ export const SLOT_POLICIES = {
 				"width": 512,
 				"height": 512,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": "lossless"
+					"avif": 100
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3932,10 +4051,10 @@ export const SLOT_POLICIES = {
 				"width": 1200,
 				"height": 630,
 				"formats": [
-					"jpeg"
+					"avif"
 				],
 				"encoder_quality": {
-					"jpeg": 85
+					"avif": 88
 				},
 				"fit": "pad",
 				"target_ratio": "1200:630",
@@ -4603,10 +4722,10 @@ export const SLOT_POLICIES = {
 				"name": "avatar_96",
 				"width": 96,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 82
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "1:1",
@@ -4623,10 +4742,10 @@ export const SLOT_POLICIES = {
 				"name": "avatar_160",
 				"width": 160,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 82
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "1:1",
@@ -4643,10 +4762,10 @@ export const SLOT_POLICIES = {
 				"name": "avatar_256",
 				"width": 256,
 				"formats": [
-					"webp"
+					"avif"
 				],
 				"encoder_quality": {
-					"webp": 82
+					"avif": 88
 				},
 				"fit": "cover",
 				"target_ratio": "1:1",

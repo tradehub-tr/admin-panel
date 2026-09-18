@@ -95,6 +95,7 @@ const MyCommissionsView = () => import("@/views/crm/MyCommissionsView.vue");
 const CommissionAdminView = () => import("@/views/crm/CommissionAdminView.vue");
 const CommissionSettingsView = () => import("@/views/crm/CommissionSettingsView.vue");
 const CommissionTeamView = () => import("@/views/crm/CommissionTeamView.vue");
+const SalesTeamsView = () => import("@/views/crm/SalesTeamsView.vue");
 const CrmNotesListView = () => import("@/views/crm/NotesListView.vue");
 const CrmContactsListView = () => import("@/views/crm/ContactsListView.vue");
 const CrmContactDetailView = () => import("@/views/crm/ContactDetailView.vue");
@@ -746,6 +747,17 @@ const routes = [
         meta: {
           title: "Hakediş Yönetimi",
           breadcrumb: "Hakediş Yönetimi",
+          section: "crm",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "satis-ekipleri",
+        name: "SalesTeams",
+        component: SalesTeamsView,
+        meta: {
+          title: "Satış Ekipleri",
+          breadcrumb: "Satış Ekipleri",
           section: "crm",
           requiresSuperAdmin: true,
         },
