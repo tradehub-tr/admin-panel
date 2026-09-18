@@ -1,3 +1,15 @@
+## [v1.15.0-alpha.5] - 2026-09-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(crm): satış ekipleri yönetimini ekle (#223) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+
+---
 ## [v1.15.0-alpha.4] - 2026-09-17 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
