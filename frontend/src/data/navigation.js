@@ -326,6 +326,13 @@ export const adminPanelSections = {
           route: "/hakedis-yonetimi",
           requires: ["admin"],
         },
+        // Ekip kur / lider + üye ata (roller otomatik) — yalnız Süper Admin.
+        {
+          label: "Satış Ekipleri",
+          icon: "users",
+          route: "/satis-ekipleri",
+          requires: ["admin"],
+        },
         {
           label: "Hakediş Ayarları",
           icon: "settings",

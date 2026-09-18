@@ -50,15 +50,16 @@ test("kopyalanan slot politikası kaynağıyla hâlâ aynı", () => {
   }
 });
 
-test("9 slotun hepsi katalogda ve ölçülebilir alanları dolu", () => {
+test("10 slotun hepsi katalogda ve ölçülebilir alanları dolu", () => {
   const anahtarlar = slotKeys();
-  assert.equal(anahtarlar.length, 9);
+  assert.equal(anahtarlar.length, 10);
   assert.deepEqual([...anahtarlar].sort(), [
     "brand.logo",
     "category.banner",
     "company.cover_image",
     "company.cover_video",
     "document.attachment",
+    "library.image",
     "product.image",
     "product.video",
     "seller.logo",
