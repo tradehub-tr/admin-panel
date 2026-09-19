@@ -264,7 +264,7 @@
             <span class="font-semibold">{{ row.seller_sku || "—" }}</span>
             <span class="sl-msep">·</span>
             <span class="truncate">{{ row.listing_code }}</span>
-            <SourceBadge :bulk-job="row.created_by_bulk_job" />
+            <SourceBadge :bulk-job="row.created_by_bulk_job" :source="row.import_source" />
           </div>
           <p v-if="row.rejectNote" class="sl-mreject">{{ row.rejectNote }}</p>
         </div>
@@ -339,7 +339,7 @@
           <span class="font-medium text-gray-800 dark:text-gray-200 text-xs">{{ row.title }}</span>
         </EditableCell>
         <div class="flex items-center gap-1.5 mt-0.5">
-          <SourceBadge :bulk-job="row.created_by_bulk_job" />
+          <SourceBadge :bulk-job="row.created_by_bulk_job" :source="row.import_source" />
           <router-link
             v-if="(certCounts[row.name] || 0) > 0"
             :to="'/my-certifications#product'"
@@ -553,7 +553,7 @@
             }}</span>
             <span class="text-gray-300 dark:text-gray-600">·</span>
             <span class="truncate">{{ listing.listing_code }}</span>
-            <SourceBadge :bulk-job="listing.created_by_bulk_job" />
+            <SourceBadge :bulk-job="listing.created_by_bulk_job" :source="listing.import_source" />
           </div>
         </div>
 
@@ -619,7 +619,7 @@
           <span v-else class="text-gray-400 font-normal italic">{{
             t("sellerListings.noSku")
           }}</span>
-          <SourceBadge :bulk-job="listing.created_by_bulk_job" />
+          <SourceBadge :bulk-job="listing.created_by_bulk_job" :source="listing.import_source" />
         </div>
         <div class="text-[10px] text-gray-400 font-mono mb-2">{{ listing.listing_code }}</div>
         <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -1035,6 +1035,7 @@
         variant: "select",
         options: [
           { value: "feed", label: t("sellerListings.sourceFeed") },
+          { value: "api", label: t("sellerListings.sourceApi") },
           { value: "manual", label: t("sellerListings.sourceManual") },
         ],
       },

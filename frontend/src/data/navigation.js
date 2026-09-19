@@ -688,6 +688,12 @@ export const sellerPanelSections = {
           route: "/seller-feed",
           feature: "feature.import.xml_feed",
         },
+        {
+          label: "nav.item.apiConnection",
+          icon: "plug",
+          route: "/seller-api",
+          feature: "feature.api.access",
+        },
       ],
     },
     {

@@ -1,7 +1,7 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { storeToRefs } from "pinia";
-  import { useRouter } from "vue-router";
+  import { useRouter, useRoute } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
@@ -16,6 +16,7 @@
 
   const { t } = useI18n();
   const router = useRouter();
+  const route = useRoute();
   const toast = useToast();
   const { isAdmin } = storeToRefs(useAuthStore());
   const { isLg } = useBreakpoint();
@@ -46,6 +47,10 @@
   const statusFilter = ref("all"); // all | completed | partial | failed
   const dateRange = ref("30"); // 30 | 90 (gün)
   const sellerFilter = ref("all"); // all | <seller_profile> — yalnızca admin görünümünde kullanılır
+  // all | file | feed | api — Ürün API'sinden gelen içe aktarmalar ayrı süzülür (MOGEM-665).
+  // `?source=api` ile açılınca (API Bağlantısı ekranındaki bağlantı) süzgeç hazır gelir.
+  const SOURCES = ["file", "feed", "api"];
+  const sourceFilter = ref(SOURCES.includes(route.query.source) ? route.query.source : "all");
 
   // DocType field adlarını (status / *_count / data_file ...) UI'ın okuduğu
   // polling-cache stilindeki kısa adlara aliasla.
@@ -68,6 +73,7 @@
     try {
       const res = await api.callMethodGET("tradehub_core.bulk_import.api.get_my_history", {
         limit: 50,
+        source: sourceFilter.value === "all" ? "" : sourceFilter.value,
       });
       const raw = Array.isArray(res.message) ? res.message : [];
       jobs.value = raw.map(_aliasJob);
@@ -80,6 +86,12 @@
   }
 
   onMounted(loadHistory);
+
+  function sourceLabel(source) {
+    if (source === "api") return t("bulkImportHistory.sourceApi");
+    if (source === "feed") return t("bulkImportHistory.sourceFeed");
+    return t("bulkImportHistory.sourceFile");
+  }
 
   // Admin geçmişinde backend `seller_name` (mağaza adı) enrich ediyor; yoksa
   // ham `seller_profile` kimliğine düş.
@@ -290,6 +302,20 @@
           </select>
         </div>
         <div class="bih-filter flex items-center gap-2">
+          <label class="text-xs text-gray-500">{{ t("bulkImportHistory.sourceLabel") }}</label>
+          <select
+            v-model="sourceFilter"
+            class="field-input text-xs py-1.5"
+            data-testid="bih-source"
+            @change="loadHistory"
+          >
+            <option value="all">{{ t("bulkImportHistory.allSources") }}</option>
+            <option value="file">{{ t("bulkImportHistory.sourceFile") }}</option>
+            <option value="feed">{{ t("bulkImportHistory.sourceFeed") }}</option>
+            <option value="api">{{ t("bulkImportHistory.sourceApi") }}</option>
+          </select>
+        </div>
+        <div class="bih-filter flex items-center gap-2">
           <label class="text-xs text-gray-500">{{ t("bulkImportHistory.dateLabel") }}</label>
           <select v-model="dateRange" class="field-input text-xs py-1.5">
             <option value="30">{{ t("bulkImportHistory.last30Days") }}</option>
@@ -340,6 +366,9 @@
           <span class="bc-date">{{ formatDate(job.creation || job.start_time) }}</span>
         </div>
         <p class="bc-file" :title="job.file_name || job.input_file_name || '—'">
+          <span class="src-badge mr-1" :class="`src-badge--${job.source || 'file'}`">
+            {{ sourceLabel(job.source) }}
+          </span>
           {{ fileBaseName(job) }}
         </p>
         <div class="bc-bottom">
@@ -490,6 +519,9 @@
                 {{ formatDate(job.creation || job.start_time) }}
               </td>
               <td class="px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
+                <span class="src-badge mr-1.5" :class="`src-badge--${job.source || 'file'}`">
+                  {{ sourceLabel(job.source) }}
+                </span>
                 {{ job.file_name || job.input_file_name || "—" }}
               </td>
               <td v-if="isAdmin" class="px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
@@ -565,6 +597,31 @@
     font-size: 0.65rem;
     font-weight: 600;
     border-radius: 9999px;
+  }
+
+  // Kaynak rozeti: dosya / XML feed / Ürün API'si (MOGEM-665)
+  .src-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+    border: 1px solid transparent;
+    background: rgba(#6b7280, 0.13);
+    color: #6b7280;
+    border-color: rgba(#6b7280, 0.3);
+
+    &--feed {
+      background: rgba($brand, 0.13);
+      color: $brand;
+      border-color: rgba($brand, 0.3);
+    }
+    &--api {
+      background: rgba($c-info, 0.13);
+      color: $c-info;
+      border-color: rgba($c-info, 0.3);
+    }
   }
 
   // ── Mobil iş kartları (<768px'te tablo/grid/kanban yerine) ─

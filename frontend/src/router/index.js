@@ -27,6 +27,7 @@ const BulkImportDetailView = () => import("@/views/bulk-import/BulkImportDetailV
 const XmlMappingView = () => import("@/views/bulk-import/XmlMappingView.vue");
 // XML Feed (otomatik ürün çekme)
 const SellerFeedView = () => import("@/views/bulk-import/SellerFeedView.vue");
+const SellerApiConnectionView = () => import("@/views/seller/SellerApiConnectionView.vue");
 const AdminFeedsView = () => import("@/views/feed/AdminFeedsView.vue");
 // ECA Rules
 const EcaRulesView = () => import("@/views/eca/EcaRulesView.vue");
@@ -954,6 +955,13 @@ const routes = [
         name: "seller-feed",
         component: SellerFeedView,
         meta: { title: "XML Feed", breadcrumb: "XML Feed", section: "products" },
+      },
+      // ── Ürün API'si bağlantısı (MOGEM-665: kimlik bilgisi, webhook, giden stok olayları)
+      {
+        path: "seller-api",
+        name: "seller-api",
+        component: SellerApiConnectionView,
+        meta: { title: "API Bağlantısı", breadcrumb: "API Bağlantısı", section: "products" },
       },
       {
         path: "admin-feeds",
