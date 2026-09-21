@@ -38,43 +38,32 @@
         </div>
 
         <div class="tabs">
-          <button type="button" :class="{ active: lang === 'tr' }" @click="lang = 'tr'">
-            Türkçe
-          </button>
-          <button type="button" :class="{ active: lang === 'en' }" @click="lang = 'en'">
-            English
+          <button
+            v-for="d in DILLER"
+            :key="d.kod"
+            type="button"
+            :class="{ active: lang === d.kod }"
+            @click="lang = d.kod"
+          >
+            {{ d.ad }}
           </button>
         </div>
 
         <!-- KATEGORİ alanları -->
         <template v-if="form.tile_type === 'category'">
-          <div v-show="lang === 'tr'" class="field-group">
+          <div v-for="d in DILLER" v-show="lang === d.kod" :key="d.kod" class="field-group">
             <label>
-              {{ t("showcase.edit.labelTr") }}
-              <input v-model="form.label_tr" type="text" maxlength="60" />
+              {{ t("showcase.edit.label") }} ({{ d.ad }})
+              <input v-model="form[`label_${d.kod}`]" type="text" maxlength="60" :dir="d.yon" />
             </label>
             <label>
-              {{ t("showcase.edit.hoverTr") }}
+              {{ t("showcase.edit.hover") }} ({{ d.ad }})
               <input
-                v-model="form.hover_text_tr"
+                v-model="form[`hover_text_${d.kod}`]"
                 type="text"
                 maxlength="60"
-                :placeholder="t('showcase.edit.hoverPlaceholderTr')"
-              />
-            </label>
-          </div>
-          <div v-show="lang === 'en'" class="field-group">
-            <label>
-              {{ t("showcase.edit.labelEn") }}
-              <input v-model="form.label_en" type="text" maxlength="60" />
-            </label>
-            <label>
-              {{ t("showcase.edit.hoverEn") }}
-              <input
-                v-model="form.hover_text_en"
-                type="text"
-                maxlength="60"
-                :placeholder="t('showcase.edit.hoverPlaceholderEn')"
+                :dir="d.yon"
+                :placeholder="t('showcase.edit.hoverPlaceholder')"
               />
             </label>
           </div>
@@ -99,42 +88,30 @@
 
         <!-- PROMO alanları -->
         <template v-else>
-          <div v-show="lang === 'tr'" class="field-group">
+          <div v-for="d in DILLER" v-show="lang === d.kod" :key="d.kod" class="field-group">
             <label>
-              {{ t("showcase.edit.promoBadgeTr") }}
+              {{ t("showcase.edit.promoBadge") }} ({{ d.ad }})
               <input
-                v-model="form.promo_badge_tr"
+                v-model="form[`promo_badge_${d.kod}`]"
                 type="text"
                 maxlength="30"
-                :placeholder="t('showcase.edit.promoBadgePlaceholderTr')"
+                :dir="d.yon"
+                :placeholder="t('showcase.edit.promoBadgePlaceholder')"
               />
             </label>
             <label>
-              {{ t("showcase.edit.promoTitleTr") }}
+              {{ t("showcase.edit.promoTitle") }} ({{ d.ad }})
               <input
-                v-model="form.promo_title_tr"
+                v-model="form[`promo_title_${d.kod}`]"
                 type="text"
                 maxlength="60"
-                :placeholder="t('showcase.edit.promoTitlePlaceholderTr')"
+                :dir="d.yon"
+                :placeholder="t('showcase.edit.promoTitlePlaceholder')"
               />
             </label>
             <label>
-              {{ t("showcase.edit.ctaTr") }}
-              <input v-model="form.cta_text_tr" type="text" maxlength="40" />
-            </label>
-          </div>
-          <div v-show="lang === 'en'" class="field-group">
-            <label>
-              {{ t("showcase.edit.promoBadgeEn") }}
-              <input v-model="form.promo_badge_en" type="text" maxlength="30" />
-            </label>
-            <label>
-              {{ t("showcase.edit.promoTitleEn") }}
-              <input v-model="form.promo_title_en" type="text" maxlength="60" />
-            </label>
-            <label>
-              {{ t("showcase.edit.ctaEn") }}
-              <input v-model="form.cta_text_en" type="text" maxlength="40" />
+              {{ t("showcase.edit.cta") }} ({{ d.ad }})
+              <input v-model="form[`cta_text_${d.kod}`]" type="text" maxlength="40" :dir="d.yon" />
             </label>
           </div>
           <label>
@@ -203,6 +180,35 @@
   const props = defineProps({ tile: { type: Object, required: true } });
   const emit = defineEmits(["save", "close"]);
 
+  /**
+   * Vitrin metinlerinin dilleri — backend `category_showcase.DILLER` ve
+   * storefront `SHOWCASE_LANGS` ile birebir.
+   *
+   * 2026-09-21: `ar` ve `ru` eklendi. Ölçüldü (17 Eyl, alpha'da gerçek Suudi
+   * IP'siyle): vitrin Arapça ziyaretçiye Türkçe görünüyordu. DocType alanları
+   * aynı gün açıldı; bu ekran olmadan admin o alanlara veri GİREMEZ, yani iş
+   * yarım kalırdı — kutu eklemek/düzenlemek de akışın parçası.
+   *
+   * Dil sekmeleri ve alan blokları artık bu listeden türüyor: eskiden her dil
+   * için şablon kopyalanıyordu (iki dil = iki blok), dört dilde bu dört kopya
+   * demekti. Beşinci dil eklendiğinde yapılacak iş tek satır.
+   */
+  const DILLER = [
+    { kod: "tr", ad: "Türkçe", yon: "ltr" },
+    { kod: "en", ad: "English", yon: "ltr" },
+    { kod: "ar", ad: "العربية", yon: "rtl" },
+    { kod: "ru", ad: "Русский", yon: "ltr" },
+  ];
+
+  /** `label_tr` … `cta_text_ru` — form alanları elle yazılmaz. */
+  const CEVRILEBILIR_KOKLER = ["label", "hover_text", "promo_badge", "promo_title", "cta_text"];
+  const dilliAlanlar = (kaynak = {}) =>
+    Object.fromEntries(
+      CEVRILEBILIR_KOKLER.flatMap((kok) =>
+        DILLER.map((d) => [`${kok}_${d.kod}`, kaynak[`${kok}_${d.kod}`] ?? ""])
+      )
+    );
+
   const lang = ref("tr");
   const saving = ref(false);
 
@@ -215,24 +221,15 @@
     tile_type: "category",
     col_span: 1,
     row_span: 1,
-    label_tr: "",
-    label_en: "",
     image: "",
     link_href: "",
-    hover_text_tr: "",
-    hover_text_en: "",
-    promo_badge_tr: "",
-    promo_badge_en: "",
-    promo_title_tr: "",
-    promo_title_en: "",
     background_color: "#cc9900",
-    cta_text_tr: "",
-    cta_text_en: "",
     cta_href: "",
     is_active: 1,
     sort_order: 0,
     start_at: null,
     end_at: null,
+    ...dilliAlanlar(),
   });
 
   const isEdit = computed(() => Boolean(form.name));
@@ -245,24 +242,15 @@
         tile_type: n.tile_type ?? "category",
         col_span: n.col_span ?? 1,
         row_span: n.row_span ?? 1,
-        label_tr: n.label_tr ?? "",
-        label_en: n.label_en ?? "",
         image: n.image ?? "",
         link_href: n.link_href ?? "",
-        hover_text_tr: n.hover_text_tr ?? "",
-        hover_text_en: n.hover_text_en ?? "",
-        promo_badge_tr: n.promo_badge_tr ?? "",
-        promo_badge_en: n.promo_badge_en ?? "",
-        promo_title_tr: n.promo_title_tr ?? "",
-        promo_title_en: n.promo_title_en ?? "",
         background_color: n.background_color ?? "#cc9900",
-        cta_text_tr: n.cta_text_tr ?? "",
-        cta_text_en: n.cta_text_en ?? "",
         cta_href: n.cta_href ?? "",
         is_active: n.is_active ?? 1,
         sort_order: n.sort_order ?? 0,
         start_at: n.start_at ?? null,
         end_at: n.end_at ?? null,
+        ...dilliAlanlar(n),
       });
     },
     { immediate: true }

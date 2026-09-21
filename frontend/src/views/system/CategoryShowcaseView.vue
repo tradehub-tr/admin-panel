@@ -37,20 +37,13 @@
           />
           <span>{{ t("showcase.enabled") }}</span>
         </label>
-        <label>
-          {{ t("showcase.titleTr") }}
+        <label v-for="d in BASLIK_DILLERI" :key="d">
+          {{ t("showcase.sectionTitle") }} ({{ DIL_ADI[d] }})
           <input
             type="text"
-            :value="draftSettings.section_title_tr"
-            @input="setDraftSettings({ section_title_tr: $event.target.value })"
-          />
-        </label>
-        <label>
-          {{ t("showcase.titleEn") }}
-          <input
-            type="text"
-            :value="draftSettings.section_title_en"
-            @input="setDraftSettings({ section_title_en: $event.target.value })"
+            :dir="d === 'ar' ? 'rtl' : 'ltr'"
+            :value="draftSettings[`section_title_${d}`]"
+            @input="setDraftSettings({ [`section_title_${d}`]: $event.target.value })"
           />
         </label>
         <label>
@@ -117,7 +110,10 @@
   import { useI18n } from "vue-i18n";
   import draggable from "vuedraggable";
   import { Plus } from "lucide-vue-next";
-  import { useCategoryShowcase } from "@/composables/useCategoryShowcase";
+  import { BASLIK_DILLERI, useCategoryShowcase } from "@/composables/useCategoryShowcase";
+
+  /** Sekme/etiket adları — dil kodunu kullanıcıya ham göstermemek için. */
+  const DIL_ADI = { tr: "Türkçe", en: "English", ar: "العربية", ru: "Русский" };
   import { useToast } from "@/composables/useToast";
   import { usePageTour } from "@/composables/usePageTour";
   import CategoryShowcasePreview from "@/components/system/CategoryShowcasePreview.vue";
@@ -168,9 +164,10 @@
   const isSettingsDirty = computed(
     () =>
       draftSettings.value.is_enabled !== settings.value.is_enabled ||
-      draftSettings.value.section_title_tr !== settings.value.section_title_tr ||
-      draftSettings.value.section_title_en !== settings.value.section_title_en ||
-      draftSettings.value.columns !== settings.value.columns
+      draftSettings.value.columns !== settings.value.columns ||
+      BASLIK_DILLERI.some(
+        (d) => draftSettings.value[`section_title_${d}`] !== settings.value[`section_title_${d}`]
+      )
   );
 
   const activeOrdered = computed(() =>

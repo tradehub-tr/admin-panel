@@ -28,15 +28,23 @@ const FIELDS = [
   "end_at",
 ];
 
+/**
+ * Vitrin bölüm başlığının dilleri — backend `category_showcase.DILLER` ile birebir.
+ *
+ * 2026-09-21: `ar` ve `ru` eklendi. DocType alanları aynı gün açıldı; bu liste
+ * olmadan admin o alanlara veri giremezdi (ekran yoksa iş yarım kalır).
+ */
+export const BASLIK_DILLERI = ["tr", "en", "ar", "ru"];
+
+const bosBasliklar = (kaynak = {}) =>
+  Object.fromEntries(
+    BASLIK_DILLERI.map((d) => [`section_title_${d}`, kaynak[`section_title_${d}`] ?? ""])
+  );
+
 export function useCategoryShowcase() {
   const tiles = ref([]);
-  const settings = ref({ is_enabled: 1, section_title_tr: "", section_title_en: "", columns: 4 });
-  const draftSettings = ref({
-    is_enabled: 1,
-    section_title_tr: "",
-    section_title_en: "",
-    columns: 4,
-  });
+  const settings = ref({ is_enabled: 1, ...bosBasliklar(), columns: 4 });
+  const draftSettings = ref({ is_enabled: 1, ...bosBasliklar(), columns: 4 });
   const savingSettings = ref(false);
   const loading = ref(false);
   const error = ref(null);
@@ -60,8 +68,7 @@ export function useCategoryShowcase() {
       const s = settingsRes?.message ?? {};
       const loaded = {
         is_enabled: s.is_enabled ?? 1,
-        section_title_tr: s.section_title_tr ?? "",
-        section_title_en: s.section_title_en ?? "",
+        ...bosBasliklar(s),
         columns: s.columns ?? 4,
       };
       settings.value = { ...loaded };
@@ -119,8 +126,7 @@ export function useCategoryShowcase() {
     try {
       await api.updateDoc(SETTINGS_RESOURCE, SETTINGS_RESOURCE, {
         is_enabled: draftSettings.value.is_enabled,
-        section_title_tr: draftSettings.value.section_title_tr,
-        section_title_en: draftSettings.value.section_title_en,
+        ...bosBasliklar(draftSettings.value),
         columns: draftSettings.value.columns,
       });
       settings.value = { ...draftSettings.value };
