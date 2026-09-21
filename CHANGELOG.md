@@ -1,3 +1,12 @@
+## [v1.16.0-alpha.2] - 2026-09-21 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(docs): kisisel not klasorune yapilan atif kaldirildi (@aliiball)
+  - A9 story kuralinin gerekcesi zaten belgenin icinde duruyor, dis dosya yoluna gerek yok
+
+---
 ## [v1.16.0] - 2026-09-21 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
