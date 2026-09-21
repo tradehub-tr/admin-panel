@@ -1,3 +1,62 @@
+## [v1.16.0] - 2026-09-21 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(i18n): panel arayüzü Rusça ve Arapçaya tamamlandı (@aliiball)
+  - Panelin i18n'i fallbackLocale en taşıdığı için eksik çeviri hata vermiyor, sessizce İngilizceye düşüyordu; Rus ve Arap yöneticiler modülleri İngilizce görüyordu.
+  - Düzleştirilmiş karşılaştırmada 1.618 anahtar eksikti: logistics 1213, nav 55, media 55, plans 46, mediaSeo 22, doctypeNames 11, listingForm 11 ve dört bütün ad alanı.
+  - Eksiklik yalnız kök seviyesinde değildi: permissionConsole kökü vardı ama tabFeatureCatalog anahtarı yoktu, sekme etiketi İngilizce geliyordu.
+  - Lojistik terminolojisi storefront sözlüğüyle hizalandı; Sevkiyat için panel operasyon aracı olduğundan genel 'Доставка' yerine 'Отправления' seçildi. Desi çevrilmedi, Türkiye'ye özgü birim.
+  - mediaRetroRename.confirmMessage iki cümle eksikti ve days yer tutucusunu hiç taşımıyordu: yeniden adlandırmanın kaç gün içinde geri alınabileceği uyarısı Rus ve Arap yöneticiye ulaşmıyordu.
+  - Sonuç: tr 9.551, ru 9.551, ar 9.551 anahtar.
+- feat(i18n): dil tercihi çerezi panelde de okunup yazılıyor (@aliiball)
+  - Panel yalnız localStorage th-lang okuyordu; storefrontta seçilen dil panele hiç geçmiyordu çünkü orası i18nextLng kullanıyor. Artık iki uygulama ortak th-lang çerezinde buluşuyor ve sıralama storefronttakiyle birebir aynı: hl, elle seçim, storefrontun otomatik kararı, tarayıcı, en.
+  - Panelin kendi ülke tespiti YOK: buraya giren kullanıcı giriş yapmış bir satıcı ya da yönetici, IP sine göre dil değiştirmek onun için sürpriz olurdu. Panel yalnız storefrontun verdiği kararı miras alıyor.
+  - hl adresten main.js içinde, router.isReady sonrasında düşürülüyor. Önce i18n içinde history.replaceState ile denendi ve parametre geri beliriyordu: router modül yükleme anında kirli konumu kaydedip ilk navigasyonda geri yazıyor. SPA da adresin sahibi routerdır.
+  - setLanguage çerezi AYRI bir try bloğunda yazıyor. localStorage kapalıyken de yazılmalı, çünkü gizli sekmede taşınacak bir seçim yok ve tercihi ancak çerez kurtarıyor. Birim testi tam bu durumu ölçüyor: E2E ölçemiyor, çünkü seçiciler seçimden sonra sayfayı yeniden yüklüyor ve yeniden yükleme çerezi başka yoldan yazıp mutasyonu maskeliyor.
+- feat(i18n): panelde dil seçimi tek nokta denetimi eklendi (@aliiball)
+  - Panelde iki dil seçici var: geniş ekranda başlıktaki küre düğmesi, dar ekranda taşma menüsündeki liste. Üçüncüsü eklendiğinde kimse bu kuralı hatırlamayacak; denetim hatırlatıyor.
+  - Hem localStorage hem çerez yazımı taranıyor. Merkezden geçmeyen bir seçici th-lang-source işaretini atlar; storefront o tercihi otomatik sayar ve ülke tespiti kullanıcının kendi seçimini ezer.
+  - Karşı kanıtla doğrulandı: LanguageSwitcher setLanguage yerine doğrudan çerez yazacak şekilde bozulunca iki denetim birden kırmızıya döndü.
+- feat(i18n): panelde dil ve yön ilk boyamada ayarlandı (@aliiball)
+  - initializeI18n belge yönünü ancak sözlük parçası indikten sonra uyguluyordu; Arapça kullanıcı o ana kadar lang=tr ve LTR bir belge görüyordu. Satır içi head script kararı yaklaşık 1 ms'te yazıyor.
+  - Test script'i index.html'DEN okuyup 13 senaryoda resolveLang ile karşılaştırıyor: kopya mantık ayrışırsa köprü sessizce kopmak yerine kırmızıya döner.
+  - localStorage basamağı auto çerezinin ÖNÜNE konuldu: panelde o anahtara yalnız setLanguage yazıyor, yani oradaki değer her zaman kullanıcının kendi seçimi.
+- feat(crm): satış ekipleri yönetimini ekle (#223) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+- feat(seller): MOGEM-665 API Bağlantısı ekranı, geçmişte kaynak süzgeci, API rozeti (@Metin Bektemur)
+  - Yeni ekran /seller-api (SellerApiConnectionView + useCatalogApi): bağlantı oluştur/yenile/kapat (sır bir kez, satır içi onay), webhook adresi + imza sırrı, giden stok olayları (sayaçlar, süzgeç, yeniden dene, sayfalama), hızlı başlangıç; paket kapısı (iOS nötr metin).
+  - Yükleme Geçmişim: kaynak süzgeci (dosya/XML feed/API), ?source=api ile açılış, kaynak rozeti; SourceBadge API varyantı; ürün listeleri import_source geçirir; satıcı ürün süzgecine "API".
+  - Router + statik nav (feature.api.access), i18n tr/en/ar/ru.
+  - node testi: sellerApiConnection.test.js (i18n parite, kablolama, stil dili); iosUpgradeCta fixture ikinci kapılı kalemi açar.
+- feat(vitrin): panel vitrin ekranı dört dile açıldı (@aliiball)
+  - Kutular Frappe Desk'ten değil bu panelden düzenleniyor; DocType alanlarını açmak tek başına yetmezdi, admin Arapça ve Rusça metni hiçbir yere giremezdi ve her yeni kutu yarım kalırdı. Kabul ölçüsü alan eklendi değil iş yapılabiliyor.
+  - Dil sekmeleri ve alan blokları kopyalanmak yerine listeden türüyor; eskiden her dil için şablon kopyalanıyordu.
+  - Arapça alanlar dir rtl ile çiziliyor, ayar ekranındaki bölüm başlığı dört dilde düzenleniyor ve kirli alan denetimi dillerin tamamını kapsıyor.
+  - i18n anahtarları dil sonekinden arındırıldı; title anahtarı showcase.title ile çakıştığı için sectionTitle oldu, eslint no-dupe-keys yakaladı.
+- feat(duyuru): panel duyuru ekranı dört dile açıldı (@aliiball)
+  - Duyurular bu panelden giriliyor; ekran iki dilde kalsaydı admin Arapça ve Rusça metni hiçbir yere giremez ve şerit o dillerde Türkçe görünmeye devam ederdi.
+  - Yalnız kaynak dil zorunlu tutuldu: dördü birden zorunlu olsaydı admin tek bir duyuruyu kaydedemez, özellik kullanılmaz hâle gelirdi. Eksik dil ön yüzde Türkçeye düşüyor.
+  - Panelin okuduğu alan listesi de genişletildi; alan listede yoksa panel onu hiç çekmez ve admin doldurduğu metni bir dahaki açılışta boş görür.
+  - Denetim testi bunu kilitliyor: dil listesi, kopyalanmayan bloklar, zorunluluk kuralı, okunan alanlar ve RTL yönü ayrı ayrı sınanıyor.
+
+### Duzeltildi
+- fix(panel): iOS'ta abonelik turu satış metni sızdırıyordu + tur motoru DOM filtresi (@boraydeger32)
+  - /abonelik rehberli turu iOS'ta hiç kaydedilmiyor (adımlarda fiyat + havale-EFT metni vardı; hedefler render edilmeyince ekran ortasında açılıyordu — Apple 3.1.1 riski)
+  - Savunma katmanı: tour store artık DOM'da bulunmayan hedefli adımı atlıyor (~60 turdaki ekran-ortası popover sınıfı da kapandı; SSR/geçersiz seçici güvenli tarafta)
+  - 6 yeni test (toplam 1677, 0 hata)
+
+### Degistirildi
+- refactor(test): panel çeviri bütünlüğü denetimi eklendi (@aliiball)
+  - Denetim kökleri değil DÜZLEŞTİRİLMİŞ yolları karşılaştırıyor; kusur tam olarak kök içinde saklanıyordu.
+  - Yer tutucu bütünlüğü ayrı denetleniyor: düşen bir days ya da count sessiz bilgi kaybıdır, ekranda hata görünmez.
+  - Mutasyonla doğrulandı: bir anahtar silinince eksik-anahtar testi, bir yer tutucu düşürülünce yer-tutucu testi kırmızıya döndü.
+
+---
 ## [v1.15.0-rc.2] - 2026-09-21 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
