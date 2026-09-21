@@ -5,10 +5,17 @@ const RESOURCE = "Header Notice";
 const SETTINGS_RESOURCE = "Header Notice Settings";
 const FIELDS = [
   "name",
+  // 2 kök × 4 dil — backend `header_notice.DILLER` ile birebir (2026-09-21).
+  // Eksik dil burada listelenmezse panel o alanı hiç okumaz ve admin
+  // doldurduğu metni bir dahaki açılışta BOŞ görür.
   "message_tr",
   "message_en",
+  "message_ar",
+  "message_ru",
   "link_text_tr",
   "link_text_en",
+  "link_text_ar",
+  "link_text_ru",
   "link_href",
   "icon",
   "background_color",

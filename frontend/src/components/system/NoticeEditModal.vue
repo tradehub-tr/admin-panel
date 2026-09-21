@@ -12,37 +12,36 @@
 
       <form class="modal-body" @submit.prevent="onSubmit">
         <div class="tabs">
-          <button type="button" :class="{ active: lang === 'tr' }" @click="lang = 'tr'">
-            Türkçe
-          </button>
-          <button type="button" :class="{ active: lang === 'en' }" @click="lang = 'en'">
-            English
+          <button
+            v-for="d in DILLER"
+            :key="d.kod"
+            type="button"
+            :class="{ active: lang === d.kod }"
+            @click="lang = d.kod"
+          >
+            {{ d.ad }}
           </button>
         </div>
 
-        <div v-show="lang === 'tr'" class="field-group">
+        <div v-for="d in DILLER" v-show="lang === d.kod" :key="d.kod" class="field-group">
           <label>
-            {{ t("noticeEdit.messageTr") }} <span class="required">*</span>
-            <textarea v-model="form.message_tr" rows="2" required maxlength="200"></textarea>
-            <small>{{ form.message_tr?.length || 0 }} / 200</small>
+            {{ t("noticeEdit.message") }} ({{ d.ad }})
+            <span v-if="d.kod === KAYNAK_DIL" class="required">*</span>
+            <textarea
+              v-model="form[`message_${d.kod}`]"
+              rows="2"
+              :required="d.kod === KAYNAK_DIL"
+              :dir="d.yon"
+              maxlength="200"
+            ></textarea>
+            <small>
+              {{ form[`message_${d.kod}`]?.length || 0 }} / 200
+              <template v-if="d.kod !== KAYNAK_DIL"> — {{ t("noticeEdit.fallbackHint") }}</template>
+            </small>
           </label>
           <label>
-            {{ t("noticeEdit.linkTextTr") }}
-            <input v-model="form.link_text_tr" type="text" maxlength="60" />
-          </label>
-        </div>
-
-        <div v-show="lang === 'en'" class="field-group">
-          <label>
-            {{ t("noticeEdit.messageEn") }}
-            <textarea v-model="form.message_en" rows="2" maxlength="200"></textarea>
-            <small
-              >{{ form.message_en?.length || 0 }} / 200 — {{ t("noticeEdit.fallbackHint") }}</small
-            >
-          </label>
-          <label>
-            {{ t("noticeEdit.linkTextEn") }}
-            <input v-model="form.link_text_en" type="text" maxlength="60" />
+            {{ t("noticeEdit.linkText") }} ({{ d.ad }})
+            <input v-model="form[`link_text_${d.kod}`]" type="text" :dir="d.yon" maxlength="60" />
           </label>
         </div>
 
@@ -118,15 +117,38 @@
   });
   const emit = defineEmits(["save", "close"]);
 
+  /**
+   * Duyuru metinlerinin dilleri — backend `header_notice.DILLER` ve storefront
+   * `NOTICE_LANGS` ile birebir.
+   *
+   * 2026-09-21: `ar` ve `ru` eklendi. Duyuru şeridi sitenin HER sayfasında
+   * çiziliyor; ekran iki dilde kalsaydı admin Arapça/Rusça metni hiçbir yere
+   * giremez ve şerit o dillerde Türkçe görünmeye devam ederdi.
+   */
+  const DILLER = [
+    { kod: "tr", ad: "Türkçe", yon: "ltr" },
+    { kod: "en", ad: "English", yon: "ltr" },
+    { kod: "ar", ad: "العربية", yon: "rtl" },
+    { kod: "ru", ad: "Русский", yon: "ltr" },
+  ];
+
+  /** Kaynak dil: yalnız bu zorunlu, diğerleri boşsa ekran buna düşer. */
+  const KAYNAK_DIL = "tr";
+
+  const CEVRILEBILIR_KOKLER = ["message", "link_text"];
+  const dilliAlanlar = (kaynak = {}) =>
+    Object.fromEntries(
+      CEVRILEBILIR_KOKLER.flatMap((kok) =>
+        DILLER.map((d) => [`${kok}_${d.kod}`, kaynak[`${kok}_${d.kod}`] ?? ""])
+      )
+    );
+
   const lang = ref("tr");
   const saving = ref(false);
 
   const form = reactive({
     name: null,
-    message_tr: "",
-    message_en: "",
-    link_text_tr: "",
-    link_text_en: "",
+    ...dilliAlanlar(),
     link_href: "",
     icon: "none",
     background_color: "#1a1a1a",
@@ -143,10 +165,7 @@
     (n) => {
       Object.assign(form, {
         name: n.name ?? null,
-        message_tr: n.message_tr ?? "",
-        message_en: n.message_en ?? "",
-        link_text_tr: n.link_text_tr ?? "",
-        link_text_en: n.link_text_en ?? "",
+        ...dilliAlanlar(n),
         link_href: n.link_href ?? "",
         icon: n.icon ?? "none",
         background_color: n.background_color ?? "#1a1a1a",

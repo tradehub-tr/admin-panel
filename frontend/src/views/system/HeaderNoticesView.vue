@@ -152,8 +152,12 @@
     editing.value = {
       message_tr: "",
       message_en: "",
+      message_ar: "",
+      message_ru: "",
       link_text_tr: "",
       link_text_en: "",
+      link_text_ar: "",
+      link_text_ru: "",
       link_href: "",
       icon: "none",
       background_color: "#1a1a1a",
