@@ -1,3 +1,27 @@
+## [v1.15.0-alpha.6] - 2026-09-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(seller): MOGEM-665 API Bağlantısı ekranı, geçmişte kaynak süzgeci, API rozeti (@Metin Bektemur)
+  - Yeni ekran /seller-api (SellerApiConnectionView + useCatalogApi): bağlantı oluştur/yenile/kapat (sır bir kez, satır içi onay), webhook adresi + imza sırrı, giden stok olayları (sayaçlar, süzgeç, yeniden dene, sayfalama), hızlı başlangıç; paket kapısı (iOS nötr metin).
+  - Yükleme Geçmişim: kaynak süzgeci (dosya/XML feed/API), ?source=api ile açılış, kaynak rozeti; SourceBadge API varyantı; ürün listeleri import_source geçirir; satıcı ürün süzgecine "API".
+  - Router + statik nav (feature.api.access), i18n tr/en/ar/ru.
+  - node testi: sellerApiConnection.test.js (i18n parite, kablolama, stil dili); iosUpgradeCta fixture ikinci kapılı kalemi açar.
+
+---
+## [v1.15.0-alpha.5] - 2026-09-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(crm): satış ekipleri yönetimini ekle (#223) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+
+---
 ## [v1.15.0-alpha.4] - 2026-09-17 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

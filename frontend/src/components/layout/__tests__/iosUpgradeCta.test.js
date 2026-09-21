@@ -181,7 +181,9 @@ test("SidePanel (feature açık): kilit ve ipucu iki platformda da yok", async (
     const html = await render(SIDE_PANEL, {
       ua,
       section: "products",
-      features: { [FEED_FEATURE]: true },
+      // MOGEM-665: Toplu Yükleme grubunda ikinci kapılı kalem (API Bağlantısı) —
+      // "feature açık" senaryosu iki kapıyı da açmalı, yoksa kilit ondan çizilir.
+      features: { [FEED_FEATURE]: true, "feature.api.access": true },
     });
     assert.ok(!html.includes("panel-item-lock"), "feature açıkken kilit çizilmemeli");
     assert.ok(!html.includes("Paketinize dahil değil"));

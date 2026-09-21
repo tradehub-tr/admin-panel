@@ -93,7 +93,10 @@
               </p>
               <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1.5">
                 {{ listing.listing_code }}
-                <SourceBadge :bulk-job="listing.created_by_bulk_job" />
+                <SourceBadge
+                  :bulk-job="listing.created_by_bulk_job"
+                  :source="listing.import_source"
+                />
               </p>
             </td>
             <!-- Seller -->
@@ -256,7 +259,7 @@
         <div class="list-grid-card-meta">
           <span class="flex items-center gap-1.5">
             {{ listing.listing_code }}
-            <SourceBadge :bulk-job="listing.created_by_bulk_job" />
+            <SourceBadge :bulk-job="listing.created_by_bulk_job" :source="listing.import_source" />
           </span>
           <span>{{ formatDate(listing.creation) }}</span>
         </div>

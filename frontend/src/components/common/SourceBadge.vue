@@ -10,12 +10,15 @@
   // tarafından erişilebilir).
   const props = defineProps({
     bulkJob: { type: String, default: null },
+    // Bulk Import Job.source (file/feed/api) — "api" Ürün API'si rozeti çizer (MOGEM-665).
+    source: { type: String, default: null },
   });
 
   const { t } = useI18n();
   const router = useRouter();
 
   const isFeed = computed(() => !!props.bulkJob);
+  const isApi = computed(() => isFeed.value && props.source === "api");
 
   function openJob() {
     if (!isFeed.value) return;
@@ -28,11 +31,12 @@
     v-if="isFeed"
     type="button"
     class="source-badge source-badge--feed"
-    :title="t('listingSource.feedTooltip', { job: bulkJob })"
+    :class="{ 'source-badge--api': isApi }"
+    :title="t(isApi ? 'listingSource.apiTooltip' : 'listingSource.feedTooltip', { job: bulkJob })"
     @click.stop="openJob"
   >
-    <AppIcon name="rss" :size="9" />
-    {{ t("listingSource.feed") }}
+    <AppIcon :name="isApi ? 'plug' : 'rss'" :size="9" />
+    {{ t(isApi ? "listingSource.api" : "listingSource.feed") }}
   </button>
   <span v-else class="source-badge source-badge--manual" :title="t('listingSource.manualTooltip')">
     <AppIcon name="pencil" :size="9" />
@@ -71,6 +75,13 @@
     &:focus {
       outline: none;
     }
+  }
+
+  // API rozeti — feed ile aynı davranış, ayırt edici ton (bilgi rengi)
+  .source-badge--api {
+    background: rgba($c-info, 0.13);
+    color: $c-info;
+    border-color: rgba($c-info, 0.3);
   }
 
   .source-badge--manual {
