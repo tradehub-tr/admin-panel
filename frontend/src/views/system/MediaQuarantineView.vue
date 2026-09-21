@@ -1,7 +1,6 @@
 <script setup>
-  import { onMounted, ref } from "vue";
+  import { computed, nextTick, onMounted, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
-
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import { useMediaSecurity } from "@/composables/useMediaSecurity";
@@ -9,7 +8,7 @@
   import { formatDateTime } from "@/utils/dateFormat";
   import { formatSize } from "@/utils/mediaFormat";
 
-  /** Dosya adının uzantısı — çapadaki monogram. Yoksa "?" (adsız/uzantısız). */
+  /** Dosya adının uzantısı — tür çipindeki monogram. Yoksa "?" (adsız/uzantısız). */
   function uzanti(ad) {
     const x = /\.([a-z0-9]+)$/i.exec(ad || "");
     return x ? x[1].toUpperCase() : "?";
@@ -23,6 +22,48 @@
   // dediği dosyayı erişime açıyor. Tek tıkla olmamalı.
   const confirming = ref(null);
 
+  // Mobilde politika ayrıntısı kapalı başlar; masaüstünde her zaman açık
+  // (CSS ile). Tek durum, iki görünüm — ikinci bir bayrak tutulmuyor.
+  const policyOpen = ref(false);
+
+  // Tarayıcı yolu değil adı: "/usr/bin/clamdscan" rozette yer kaplıyordu,
+  // bilgi olarak da yalnız son parça anlamlı.
+  const scannerName = computed(() => {
+    const yol = s.policy.value.scanner || "";
+    return yol.split("/").filter(Boolean).pop() || yol;
+  });
+
+  // Temiz oranı: sonucu OLAN taramalar üzerinden. `pending` sonuç değil,
+  // `unscanned` kapsam dışı; ikisi paydaya girmez. Tarama hiç yoksa halka
+  // çizilmez (0/0'ı %100 diye göstermek yalan olurdu).
+  const scanned = computed(() => {
+    const c = s.counts.value || {};
+    return (c.clean ?? 0) + (c.infected ?? 0) + (c.failed ?? 0);
+  });
+  const cleanRatio = computed(() =>
+    scanned.value ? ((s.counts.value.clean ?? 0) / scanned.value) * 100 : 0,
+  );
+  const ratioLabel = computed(() =>
+    new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(cleanRatio.value),
+  );
+  const fmtInt = (n) => new Intl.NumberFormat(locale.value).format(n ?? 0);
+
+  // Halka: r=22 → çevre 2π·22 ≈ 138.23. İlk boyamada boş (offset tam),
+  // sayaçlar gelince hedefe iner; CSS transition aradaki yolu çizer.
+  // "Sunum değerinden hedefe" — hedef değerden başlatılsaydı halka
+  // sıçrayarak belirirdi, çizilmezdi.
+  const CEVRE = 138.23;
+  const ringOffset = ref(CEVRE);
+  watch(cleanRatio, async (oran) => {
+    await nextTick();
+    ringOffset.value = CEVRE * (1 - oran / 100);
+  });
+
+  const quarantineCount = computed(
+    () => (s.counts.value.infected ?? 0) + (s.counts.value.failed ?? 0),
+  );
+  const holdCount = computed(() => s.counts.value.pending ?? 0);
+
   onMounted(() => s.loadAll());
 
   async function doRelease(row) {
@@ -34,7 +75,6 @@
       toast.error(e.message);
     }
   }
-
   async function doRetry(row) {
     try {
       await s.retry(row.file_url);
@@ -43,7 +83,6 @@
       toast.error(e.message);
     }
   }
-
   async function doSweep() {
     try {
       const r = await s.sweep();
@@ -52,7 +91,6 @@
       toast.error(e.message);
     }
   }
-
   async function doBackfill() {
     try {
       const r = await s.backfill(500);
@@ -65,17 +103,80 @@
 
 <template>
   <section class="mq">
-    <header class="mq__head">
-      <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          {{ t("mediaQuarantine.title") }}
-        </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("mediaQuarantine.subtitle") }}</p>
+    <!-- ── Başlık: ad + durum rozeti + politika rozetleri + eylemler ──── -->
+    <header class="mq__head mq-in" style="--i: 0">
+      <div class="mq__head-text">
+        <div class="mq__title-row">
+          <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+            {{ t("mediaQuarantine.title") }}
+          </h1>
+          <!-- Durum rozeti: tarama açıkken nabız atan nokta. Kapalıyken nabız
+               YOK — hareket "canlı" demek, kapalı bir şeyi canlı göstermek
+               yanlış sinyal olurdu. -->
+          <span
+            class="mq__status"
+            :class="s.scanningOff.value ? 'mq__status--off' : 'mq__status--on'"
+          >
+            <span class="mq__status-dot" aria-hidden="true"></span>
+            {{ s.scanningOff.value ? t("mediaQuarantine.policy.off") : t("mediaQuarantine.policy.on") }}
+          </span>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("mediaQuarantine.subtitle") }}</p>
+
+        <!-- Politika. Tarayıcı yoksa bunu SESSİZ geçmek, hiç çalışmayan bir
+             güvenlik özelliğini çalışıyor gibi göstermek olurdu. Mobilde
+             açılır-kapanır, masaüstünde her zaman açık. -->
+        <p v-if="s.scanningOff.value" class="mq__policy-off">
+          {{ t("mediaQuarantine.policy.offHint") }}
+        </p>
+        <template v-else>
+          <button
+            type="button"
+            class="mq__policy-toggle"
+            :aria-expanded="policyOpen"
+            aria-controls="mq-policy-facts"
+            @click="policyOpen = !policyOpen"
+          >
+            {{ t("mediaQuarantine.policy.details") }}
+            <AppIcon :name="policyOpen ? 'chevron-up' : 'chevron-down'" :size="14" />
+          </button>
+          <Transition name="mq-collapse">
+            <ul
+              v-show="policyOpen"
+              id="mq-policy-facts"
+              class="mq__facts"
+            >
+              <li class="mq__fact">
+                <AppIcon name="shield-check" :size="14" />
+                {{ t("mediaQuarantine.policy.scanner", { name: scannerName }) }}
+              </li>
+              <li class="mq__fact">
+                <AppIcon name="lock" :size="14" />
+                {{
+                  s.policy.value.hold_until_clean
+                    ? t("mediaQuarantine.policy.holdOn")
+                    : t("mediaQuarantine.policy.holdOff")
+                }}
+              </li>
+              <li class="mq__fact">
+                <AppIcon name="triangle-alert" :size="14" />
+                {{
+                  s.policy.value.fail_closed
+                    ? t("mediaQuarantine.policy.failClosed")
+                    : t("mediaQuarantine.policy.failOpen")
+                }}
+              </li>
+            </ul>
+          </Transition>
+        </template>
       </div>
+
+      <!-- Mobilde bu grup ekranın altına sabitlenir (alt işlem çubuğu),
+           masaüstünde başlığın sağında durur. Aynı iki düğme, iki yer değil. -->
       <div class="mq__head-actions">
         <button
           type="button"
-          class="hdr-btn-outlined"
+          class="hdr-btn-outlined mq__btn"
           :disabled="!!s.acting.value"
           @click="doSweep"
         >
@@ -84,70 +185,67 @@
         </button>
         <button
           type="button"
-          class="hdr-btn-outlined"
+          class="hdr-btn-primary mq__btn"
           :disabled="!!s.acting.value"
           @click="doBackfill"
         >
-          <AppIcon name="scan-line" :size="14" />
+          <AppIcon name="history" :size="14" />
           {{ t("mediaQuarantine.action.backfill") }}
         </button>
       </div>
     </header>
 
-    <!-- Politika bandı. Tarayıcı yoksa bunu SESSİZ geçmek, hiç çalışmayan bir
-         güvenlik özelliğini çalışıyor gibi göstermek olurdu. -->
-    <div
-      class="card mq__policy"
-      :class="s.scanningOff.value ? 'mq__policy--off' : 'mq__policy--on'"
-    >
-      <AppIcon :name="s.scanningOff.value ? 'shield-off' : 'shield-check'" :size="18" />
-      <div class="mq__policy-text">
-        <strong>{{
-          s.scanningOff.value ? t("mediaQuarantine.policy.off") : t("mediaQuarantine.policy.on")
-        }}</strong>
-        <span v-if="s.scanningOff.value">{{ t("mediaQuarantine.policy.offHint") }}</span>
-        <span v-else>
-          {{ t("mediaQuarantine.policy.scanner", { name: s.policy.value.scanner }) }}
-          ·
-          {{
-            s.policy.value.hold_until_clean
-              ? t("mediaQuarantine.policy.holdOn")
-              : t("mediaQuarantine.policy.holdOff")
-          }}
-          ·
-          {{
-            s.policy.value.fail_closed
-              ? t("mediaQuarantine.policy.failClosed")
-              : t("mediaQuarantine.policy.failOpen")
-          }}
-        </span>
-      </div>
-    </div>
-
+    <!-- ── Sayaçlar ─────────────────────────────────────────────────────── -->
     <div class="mq__stats">
-      <div class="card mq__stat mq__stat--danger">
-        <strong>{{ s.counts.value.infected ?? 0 }}</strong>
+      <div class="card mq__stat mq__stat--danger mq-in" style="--i: 1">
+        <strong>{{ fmtInt(s.counts.value.infected) }}</strong>
         <span>{{ t("mediaQuarantine.stat.infected") }}</span>
       </div>
-      <div class="card mq__stat mq__stat--warn">
-        <strong>{{ s.counts.value.failed ?? 0 }}</strong>
+      <div class="card mq__stat mq__stat--warn mq-in" style="--i: 2">
+        <strong>{{ fmtInt(s.counts.value.failed) }}</strong>
         <span>{{ t("mediaQuarantine.stat.failed") }}</span>
       </div>
-      <div class="card mq__stat">
-        <strong>{{ s.counts.value.pending ?? 0 }}</strong>
+      <div class="card mq__stat mq__stat--info mq-in" style="--i: 3">
+        <strong>{{ fmtInt(s.counts.value.pending) }}</strong>
         <span>{{ t("mediaQuarantine.stat.pending") }}</span>
       </div>
-      <div class="card mq__stat">
-        <strong>{{ s.counts.value.clean ?? 0 }}</strong>
+      <div class="card mq__stat mq__stat--ok mq-in" style="--i: 4">
+        <strong>{{ fmtInt(s.counts.value.clean) }}</strong>
         <span>{{ t("mediaQuarantine.stat.clean") }}</span>
       </div>
-      <div class="card mq__stat mq__stat--muted">
-        <strong>{{ s.counts.value.unscanned ?? 0 }}</strong>
+      <div class="card mq__stat mq__stat--muted mq-in" style="--i: 5">
+        <strong>{{ fmtInt(s.counts.value.unscanned) }}</strong>
         <span>{{ t("mediaQuarantine.stat.unscanned") }}</span>
+      </div>
+      <!-- Sağlık halkası: sonucu olan taramalar içinde temiz payı. -->
+      <div v-if="scanned > 0" class="card mq__stat mq__ring mq-in" style="--i: 6">
+        <svg class="mq__ring-svg" viewBox="0 0 56 56" aria-hidden="true">
+          <circle class="mq__ring-track" cx="28" cy="28" r="22" />
+          <circle
+            class="mq__ring-arc"
+            cx="28"
+            cy="28"
+            r="22"
+            :stroke-dasharray="CEVRE"
+            :stroke-dashoffset="ringOffset"
+            transform="rotate(-90 28 28)"
+          />
+          <text class="mq__ring-label" x="28" y="31.5" text-anchor="middle">%{{ ratioLabel }}</text>
+        </svg>
+        <div class="mq__ring-text">
+          <strong>{{ t("mediaQuarantine.stat.cleanRatio") }}</strong>
+          <span>{{
+            t("mediaQuarantine.stat.scannedOf", {
+              clean: fmtInt(s.counts.value.clean),
+              total: fmtInt(scanned),
+            })
+          }}</span>
+        </div>
       </div>
     </div>
 
-    <nav class="mq__tabs" role="tablist">
+    <!-- ── Sekmeler (segmentli, sayaçlı) ────────────────────────────────── -->
+    <nav class="mq__tabs mq-in" style="--i: 7" role="tablist">
       <button
         v-for="k in ['quarantine', 'hold']"
         :key="k"
@@ -159,104 +257,156 @@
         @click="s.setTab(k)"
       >
         {{ t(`mediaQuarantine.tab.${k}`) }}
+        <span
+          class="mq__tab-count"
+          :class="{ 'mq__tab-count--danger': k === 'quarantine' && quarantineCount > 0 }"
+        >
+          {{ fmtInt(k === "quarantine" ? quarantineCount : holdCount) }}
+        </span>
       </button>
     </nav>
+    <p class="mq__hint mq-in" style="--i: 7">{{ t(`mediaQuarantine.hint.${s.tab.value}`) }}</p>
 
-    <p class="mq__hint">{{ t(`mediaQuarantine.hint.${s.tab.value}`) }}</p>
-
-    <div v-if="s.loading.value" class="mq__empty">{{ t("common.loading") }}</div>
-    <div v-else-if="s.error.value" class="mq__empty mq__empty--err">{{ s.error.value }}</div>
-    <div v-else-if="!s.items.value.length" class="mq__empty">
-      {{ t(`mediaQuarantine.empty.${s.tab.value}`) }}
+    <!-- ── Liste ────────────────────────────────────────────────────────── -->
+    <div v-if="s.loading.value" class="card mq__empty">{{ t("common.loading") }}</div>
+    <div v-else-if="s.error.value" class="card mq__empty mq__empty--err">{{ s.error.value }}</div>
+    <div v-else-if="!s.items.value.length" class="card mq__empty mq-in" style="--i: 8">
+      <span class="mq__empty-icon" aria-hidden="true">
+        <AppIcon :name="s.tab.value === 'hold' ? 'inbox' : 'shield-check'" :size="26" />
+      </span>
+      <strong>{{ t(`mediaQuarantine.empty.${s.tab.value}`) }}</strong>
+      <span>{{ t(`mediaQuarantine.hint.${s.tab.value}`) }}</span>
     </div>
-
-    <!-- Tablo KENDİ kabında kayar: 5 sütun 375px'e sıkışınca dosya adı kelime
-         kelime bölünüyor, tarih dört satıra iniyordu (ölçüldü). Sayfa gövdesi
-         yatay kaymıyor — kaydırma bu kabın içinde kalıyor. -->
-    <div v-else class="mq__table-wrap">
+    <!-- Masaüstünde tablo (sabit sütun düzeni: hiçbir hücre alt satıra
+         kaymaz, dosya adı/yol taşarsa "…"), dokunmatikte aynı markup KART
+         olur (aşağıdaki @media). İkinci bir liste şablonu yazmak aynı eylem
+         mantığını iki yerde tutmak demekti. -->
+    <div v-else class="card mq__table-wrap mq-in" style="--i: 8">
       <table class="mq__table">
         <thead>
           <tr>
-            <th>{{ t("mediaQuarantine.col.file") }}</th>
-            <th>{{ t("mediaQuarantine.col.size") }}</th>
-            <th>{{ t("mediaQuarantine.col.status") }}</th>
-            <th>{{ t("mediaQuarantine.col.when") }}</th>
+            <th class="mq__col-file">{{ t("mediaQuarantine.col.file") }}</th>
+            <th class="mq__col-size">{{ t("mediaQuarantine.col.size") }}</th>
+            <th class="mq__col-status">{{ t("mediaQuarantine.col.status") }}</th>
+            <th class="mq__col-when">{{ t("mediaQuarantine.col.when") }}</th>
             <th class="mq__col-actions">{{ t("mediaQuarantine.col.actions") }}</th>
-            <!-- Çapa sütunu EN SONA eklendi, başa değil: dokunmatik yerleşim
-                 hücreleri `nth-child` ile yerleştiriyor, başa eklemek beş
-                 seçicinin hepsini kaydırırdı. Görsel yeri ızgarada
-                 belirleniyor (1. sütun), belge sırasında değil. -->
-            <th class="mq__col-thumb"></th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="row in s.items.value" :key="row.name">
-            <td>
-              <span class="mq__file">{{ row.file_name }}</span>
-              <code class="mq__url" :title="row.file_url">{{ row.file_url }}</code>
+        <!-- Satır giriş/çıkışı: karantinadan çıkan satır solup gidiyor,
+             liste "yerinden fırlamıyor". Süre kısa, eğri ease-out — UI'da
+             ease-in yasak (variables.scss). -->
+        <TransitionGroup tag="tbody" name="mq-row">
+          <tr v-for="row in s.items.value" :key="row.name" class="mq__row">
+            <td class="mq__col-file">
+              <div class="mq__file-cell">
+                <!-- Karantinadaki dosya public ağaçtan çıkmıştır, önizlemesi
+                     yoktur — tür çipi uzantı monogramı taşır. -->
+                <span
+                  class="mq__type"
+                  :class="row.scan_status === 'infected' ? 'mq__type--danger' : 'mq__type--warn'"
+                  aria-hidden="true"
+                >
+                  <AppIcon name="file-text" :size="16" />
+                  <code>{{ uzanti(row.file_name) }}</code>
+                </span>
+                <div class="mq__file-text">
+                  <span class="mq__file" :title="row.file_name">{{ row.file_name }}</span>
+                  <code class="mq__url" :title="row.file_url">{{ row.file_url }}</code>
+                </div>
+              </div>
             </td>
-            <td>{{ formatSize(row.file_size) }}</td>
-            <td>
-              <span v-if="s.tab.value === 'hold'" class="mq__badge">
-                {{ t("media.scanStatus.pending") }}
-              </span>
-              <span
-                v-else
-                class="mq__badge"
-                :class="row.scan_status === 'infected' ? 'mq__badge--danger' : 'mq__badge--warn'"
-              >
-                {{ t(`media.scanStatus.${row.scan_status}`) }}
-              </span>
-              <!-- Dosya diskte gerçekten kapalı mı: damga ile fiziksel durumun
-                 ayrışması sessiz bir kusur olurdu, açıkça gösteriliyor. -->
-              <span
-                v-if="s.tab.value === 'hold' ? !row.in_hold : !row.in_quarantine"
-                class="mq__badge mq__badge--warn"
-                :title="t('mediaQuarantine.notIsolatedHint')"
-              >
-                {{ t("mediaQuarantine.notIsolated") }}
-              </span>
+            <td class="mq__col-size">{{ formatSize(row.file_size) }}</td>
+            <td class="mq__col-status">
+              <div class="mq__status-cell">
+                <span v-if="s.tab.value === 'hold'" class="mq__badge mq__badge--info">
+                  {{ t("media.scanStatus.pending") }}
+                </span>
+                <span
+                  v-else
+                  class="mq__badge"
+                  :class="row.scan_status === 'infected' ? 'mq__badge--danger' : 'mq__badge--warn'"
+                >
+                  <AppIcon
+                    :name="row.scan_status === 'infected' ? 'triangle-alert' : 'circle-help'"
+                    :size="12"
+                  />
+                  {{ t(`media.scanStatus.${row.scan_status}`) }}
+                </span>
+                <!-- Dosya diskte gerçekten kapalı mı: damga ile fiziksel
+                     durumun ayrışması sessiz bir kusur olurdu, açıkça
+                     gösteriliyor — ikon + başlık, metin sütunu şişirmiyor. -->
+                <span
+                  v-if="s.tab.value === 'hold' ? row.in_hold : row.in_quarantine"
+                  class="mq__isolated mq__isolated--ok"
+                  :title="t('mediaQuarantine.isolated')"
+                  :aria-label="t('mediaQuarantine.isolated')"
+                  role="img"
+                >
+                  <AppIcon name="check" :size="12" />
+                </span>
+                <span
+                  v-else
+                  class="mq__isolated mq__isolated--warn"
+                  :title="t('mediaQuarantine.notIsolatedHint')"
+                  :aria-label="t('mediaQuarantine.notIsolated')"
+                  role="img"
+                >
+                  <AppIcon name="triangle-alert" :size="12" />
+                </span>
+              </div>
             </td>
-            <td>{{ formatDateTime(row.started_at || row.creation, locale) }}</td>
+            <td class="mq__col-when">{{ formatDateTime(row.started_at || row.creation, locale) }}</td>
             <td class="mq__col-actions">
               <template v-if="s.tab.value === 'quarantine'">
-                <button
-                  v-if="row.scan_status === 'failed'"
-                  type="button"
-                  class="mq__link"
-                  :disabled="s.acting.value === row.file_url"
-                  @click="doRetry(row)"
-                >
-                  {{ t("mediaQuarantine.action.retry") }}
-                </button>
-                <template v-if="confirming === row.name">
-                  <button type="button" class="mq__link mq__link--danger" @click="doRelease(row)">
-                    {{ t("mediaQuarantine.action.releaseConfirm") }}
-                  </button>
-                  <button type="button" class="mq__link" @click="confirming = null">
-                    {{ t("common.cancel") }}
-                  </button>
-                </template>
-                <button
-                  v-else
-                  type="button"
-                  class="mq__link"
-                  :disabled="s.acting.value === row.file_url"
-                  @click="confirming = row.name"
-                >
-                  {{ t("mediaQuarantine.action.release") }}
-                </button>
+                <!-- Onay adımı: çıkarma düğmesinin yerinde açılır, kaynağından
+                     büyür (transform-origin sağ). Apple: "bir şey nereden
+                     çıktıysa oraya döner". -->
+                <Transition name="mq-pop" mode="out-in">
+                  <div v-if="confirming === row.name" key="confirm" class="mq__confirm">
+                    <p class="mq__confirm-text">{{ t("mediaQuarantine.action.confirmHint") }}</p>
+                    <div class="mq__confirm-actions">
+                      <button
+                        type="button"
+                        class="hdr-btn-danger mq__btn mq__btn--sm"
+                        @click="doRelease(row)"
+                      >
+                        {{ t("mediaQuarantine.action.releaseConfirm") }}
+                      </button>
+                      <button
+                        type="button"
+                        class="hdr-btn-outlined mq__btn mq__btn--sm"
+                        @click="confirming = null"
+                      >
+                        {{ t("common.cancel") }}
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else key="actions" class="mq__row-actions">
+                    <button
+                      v-if="row.scan_status === 'failed'"
+                      type="button"
+                      class="hdr-btn-outlined mq__btn mq__btn--sm"
+                      :disabled="s.acting.value === row.file_url"
+                      @click="doRetry(row)"
+                    >
+                      <AppIcon name="refresh-cw" :size="14" />
+                      {{ t("mediaQuarantine.action.retry") }}
+                    </button>
+                    <button
+                      type="button"
+                      class="hdr-btn-outlined mq__btn mq__btn--sm mq__btn--danger"
+                      :disabled="s.acting.value === row.file_url"
+                      @click="confirming = row.name"
+                    >
+                      {{ t("mediaQuarantine.action.release") }}
+                    </button>
+                  </div>
+                </Transition>
               </template>
               <span v-else class="mq__muted">{{ t("mediaQuarantine.action.waiting") }}</span>
             </td>
-            <!-- Karantinadaki dosya public ağaçtan çıkmıştır, önizlemesi
-                 yoktur — çapa uzantı monogramı. `media-optimize`teki
-                 önizlemesiz karo ile aynı dil. -->
-            <td class="mq__col-thumb" aria-hidden="true">
-              <span class="mq__thumb">{{ uzanti(row.file_name) }}</span>
-            </td>
           </tr>
-        </tbody>
+        </TransitionGroup>
       </table>
     </div>
 
@@ -271,17 +421,48 @@
 
 <style scoped lang="scss">
   /* Tipografi `media.text()` ölçeğinden geliyor (body 14 / sm 13 / xs 12 px),
-     elle rem yazılmıyor. Sebebi yalnız tutarlılık değil: mixin MOBİL karşılığı
-     da veriyor (16/14/13 px). Elle yazılan boyutlar telefonda küçük kalıyordu
-     ve bir değer (11px) ölçeğin en küçüğünün bile altındaydı.
+     elle rem yazılmıyor — mixin MOBİL karşılığını da veriyor. Düğme/kutu/
+     başlık panel standardından (`hdr-btn-*`, `card`, tipografi sınıfları) —
+     bkz. `.claude/rules/scss.md` §8. Burada yalnız bu ekrana ÖZEL olan şeyler
+     var: durum rozeti, politika rozetleri, sayaç ızgarası, sağlık halkası,
+     segmentli sekmeler, tablo ve dokunmatik kart düzeni.
 
-     Düğme/kutu/başlık panel standardından geliyor (`hdr-btn-*`, `card`,
-     tipografi sınıfları) — bkz. `.claude/rules/scss.md` §8. Burada yalnız bu
-     ekrana ÖZEL olan şeyler var: politika bandının durum renkleri, sayaç
-     ızgarası, sekmeler ve tablo. Panel iki stil ailesi biriktirmişti; ikinci
-     bir aile daha açmıyoruz. */
+     HAREKET (Apple "fluid interfaces" ilkeleri, CSS ile):
+     • Basılma geri bildirimi pointer-DOWN anında (`:active`), release'te değil.
+     • Giriş: 6px yukarıdan, opaklıkla, `$ease-out` — aşım yok (kritik sönümlü).
+     • Halka sunum değerinden hedefe çizilir; hedeften başlatılsaydı sıçrardı.
+     • Onay paneli tetikleyicisinin yerinden büyür (`transform-origin`).
+     • Yalnız `transform`/`opacity` animasyonu (compositor); layout animasyonu yok.
+     • `prefers-reduced-motion`: kayma ve nabız kapanır, yalnız opaklık kalır. */
   @use "@/assets/scss/variables" as *;
   @use "@/assets/scss/media" as media;
+
+  // ── Giriş hareketi: kademeli belirme (--i = sıra) ────────────────────
+  @keyframes mq-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes mq-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba($c-success, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 7px rgba($c-success, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba($c-success, 0);
+    }
+  }
+  .mq-in {
+    animation: mq-fade-in 0.4s $ease-out both;
+    animation-delay: calc(var(--i, 0) * 50ms);
+  }
 
   .mq {
     padding: media.$s-4;
@@ -290,521 +471,822 @@
     gap: media.$s-4;
   }
 
+  // ── Başlık ───────────────────────────────────────────────────────────
   .mq__head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: media.$s-4;
+  }
+  .mq__head-text {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-2;
+    min-width: 0;
+  }
+  .mq__title-row {
+    display: flex;
+    align-items: center;
+    gap: media.$s-3;
     flex-wrap: wrap;
   }
-
   .mq__head-actions {
     display: flex;
     gap: media.$s-2;
+    flex: 0 0 auto;
+  }
+  // Ortak düğme sınıfları basılma tepkisi vermiyor; burada ekleniyor.
+  .mq__btn {
+    white-space: nowrap;
+    @include media.press(0.97);
+    @include media.focus-ring;
+    &--sm {
+      min-height: 2.25rem;
+      padding-inline: media.$s-3;
+    }
+    &--danger {
+      color: $c-error-text;
+      border-color: rgba($c-error, 0.45);
+      @include dark {
+        color: $c-error;
+      }
+    }
   }
 
-  .mq__policy {
-    display: flex;
-    align-items: center;
+  // Durum rozeti + nabız
+  .mq__status {
+    @include media.chip("neutral");
     gap: media.$s-2;
-    padding: media.$s-3 media.$s-4;
-    border-radius: media.$r-lg;
-    border: 1px solid transparent;
-
+    padding-inline-start: media.$s-2;
     &--on {
+      color: $c-success-text;
       background: media.$tint-success;
-      border-color: media.$tint-success;
-      color: $c-success;
+      @include dark {
+        color: $c-success;
+        background: media.$tint-success;
+      }
+      .mq__status-dot {
+        background: $c-success;
+        animation: mq-pulse 2.4s ease-out infinite;
+      }
     }
     &--off {
+      color: $c-warning-text;
       background: media.$tint-warning;
-      border-color: media.$tint-warning;
+      @include dark {
+        color: $c-warning;
+        background: media.$tint-warning;
+      }
+      .mq__status-dot {
+        background: $c-warning;
+      }
+    }
+  }
+  .mq__status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: media.$r-pill;
+    flex: 0 0 auto;
+  }
+  .mq__policy-off {
+    @include media.text("sm");
+    color: $c-warning-text;
+    @include dark {
       color: $c-warning;
     }
   }
+  // Politika rozetleri: masaüstünde her zaman görünür, geçiş düğmesi gizli.
+  .mq__policy-toggle {
+    display: none;
+    align-items: center;
+    gap: media.$s-1;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $l-text-600;
+    @include media.text("xs");
+    font-weight: 600;
+    cursor: pointer;
+    @include media.tap-target;
+    @include media.focus-ring;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .mq__facts {
+    display: flex !important; // v-show masaüstünde etkisiz — her zaman açık
+    flex-wrap: wrap;
+    gap: media.$s-2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .mq__fact {
+    @include media.chip("neutral");
+    font-weight: 500;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    color: $l-text-700;
+    :deep(svg) {
+      color: $l-text-500;
+    }
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $d-text;
+    }
+  }
 
-  .mq__policy-text {
+  // ── Sayaçlar ─────────────────────────────────────────────────────────
+  .mq__stats {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: media.$s-3;
+  }
+  .mq__stat {
     display: flex;
     flex-direction: column;
-    gap: media.$s-05;
-    @include media.text("sm");
-
+    gap: media.$s-1;
+    padding: media.$s-3 media.$s-4;
+    min-width: 0;
+    strong {
+      // Ölçek dışı tek değer ve bilerek: sayaç rakamı bir "başlık"tır.
+      @include media.text("display");
+      @include media.numeric;
+      font-size: 1.5rem;
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
     span {
-      color: $l-text-600;
+      @include media.text("xs");
+      @include media.truncate;
+      color: $l-text-500;
       @include dark {
         color: $d-text-muted;
       }
     }
-  }
-
-  .mq__stats {
-    display: flex;
-    gap: media.$s-3;
-    flex-wrap: wrap;
-  }
-
-  .mq__stat {
-    flex: 1 1 7rem;
-    padding: media.$s-2 media.$s-3;
-    border: 1px solid $l-border;
-    border-radius: media.$r-lg;
-    background: $l-bg;
-    display: flex;
-    flex-direction: column;
-
-    strong {
-      // Ölçek dışı tek değer ve bilerek: sayaç rakamı bir "başlık"tır,
-      // gövde metniyle aynı boyda olursa göz onu sayı olarak seçemiyor.
-      // Komşu ekranlarla (MediaAudit/MediaOptimize) AYNI ölçü.
-      @include media.text("display");
-      font-weight: 700;
-    }
-    span {
-      @include media.text("xs");
-      color: $l-text-500;
-    }
-
-    @include dark {
-      background: $d-bg-card;
-      border-color: $d-border;
-      span {
-        color: $d-text-muted;
+    &--danger strong {
+      color: $c-error-text;
+      @include dark {
+        color: $c-error;
       }
     }
-
-    &--danger strong {
-      color: $c-error;
-    }
     &--warn strong {
-      color: $c-warning;
+      color: $c-warning-text;
+      @include dark {
+        color: $c-warning;
+      }
+    }
+    &--info strong {
+      color: $c-info-text;
+      @include dark {
+        color: $c-info;
+      }
+    }
+    &--ok strong {
+      color: $c-success-text;
+      @include dark {
+        color: $c-success;
+      }
     }
     &--muted strong {
-      color: $l-text-400;
+      color: $l-text-500;
       @include dark {
         color: $d-text-faint;
       }
     }
   }
-
-  .mq__tabs {
-    display: flex;
-    gap: media.$s-1;
-    border-bottom: 1px solid $l-border;
+  // Sağlık halkası
+  .mq__ring {
+    flex-direction: row;
+    align-items: center;
+    gap: media.$s-3;
+  }
+  .mq__ring-svg {
+    width: 3.5rem;
+    height: 3.5rem;
+    flex: 0 0 auto;
+  }
+  .mq__ring-track {
+    fill: none;
+    stroke: $l-bg-muted;
+    stroke-width: 5;
     @include dark {
-      border-color: $d-border;
+      stroke: $d-bg-elevated;
     }
   }
-
-  .mq__tab {
-    padding: media.$s-2 media.$s-3;
-    border: 0;
-    background: none;
-    color: $l-text-500;
-    @include media.text("sm");
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-
-    &--active {
-      color: $brand;
-      border-bottom-color: $brand;
-      font-weight: 600;
-    }
+  .mq__ring-arc {
+    fill: none;
+    stroke: $c-success;
+    stroke-width: 5;
+    stroke-linecap: round;
+    // Çizim: 1.2s, ease-out. Sayaç güncellenince (yeniden tarama sonrası)
+    // aynı geçişle yeni değere kayar — sıfırdan baştan çizmez.
+    transition: stroke-dashoffset 1.2s $ease-out;
+  }
+  .mq__ring-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    fill: $l-text-900;
+    @include media.numeric;
     @include dark {
-      color: $d-text-muted;
-      &.mq__tab--active {
-        color: $brand-light;
+      fill: $d-text-hi;
+    }
+  }
+  .mq__ring-text {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-05;
+    min-width: 0;
+    strong {
+      @include media.text("sm");
+      font-weight: 600;
+      @include media.truncate;
+    }
+    span {
+      @include media.text("xs");
+      @include media.numeric;
+      color: $l-text-500;
+      @include media.truncate;
+      @include dark {
+        color: $d-text-muted;
       }
     }
   }
 
+  // ── Sekmeler: segmentli kontrol ───────────────────────────────────────
+  .mq__tabs {
+    display: flex;
+    gap: media.$s-1;
+    padding: media.$s-1;
+    width: fit-content;
+    border-radius: media.$r-lg;
+    background: $l-bg-muted;
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+  .mq__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-2;
+    padding: 0 media.$s-3;
+    min-height: 2.25rem;
+    border: 0;
+    border-radius: media.$r-md;
+    background: none;
+    color: $l-text-600;
+    @include media.text("sm");
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background $t-fast,
+      color $t-fast,
+      box-shadow $t-fast;
+    @include media.press(0.98);
+    @include media.focus-ring;
+    &--active {
+      background: $l-bg;
+      color: $l-text-900;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+    }
+    @include dark {
+      color: $d-text-muted;
+      &.mq__tab--active {
+        background: $d-bg-card;
+        color: $d-text-hi;
+      }
+    }
+  }
+  .mq__tab-count {
+    @include media.chip("neutral");
+    padding-inline: media.$s-2;
+    min-width: 1.25rem;
+    justify-content: center;
+    @include media.numeric;
+    &--danger {
+      @include media.chip("danger");
+      @include dark {
+        background: media.$tint-danger;
+      }
+    }
+  }
   .mq__hint {
     @include media.text("sm");
     color: $l-text-500;
+    margin-top: calc(-1 * #{media.$s-2});
     @include dark {
       color: $d-text-muted;
     }
   }
 
+  // ── Boş / yükleniyor ─────────────────────────────────────────────────
   .mq__empty {
-    padding: media.$s-6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: media.$s-2;
+    padding: media.$s-8 media.$s-4;
     text-align: center;
-    color: $l-text-400;
+    color: $l-text-500;
     @include media.text("body");
-
+    border-style: dashed;
+    strong {
+      color: $l-text-900;
+      font-weight: 600;
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
+    span {
+      @include media.text("sm");
+      max-width: 34rem;
+    }
     &--err {
       color: $c-error;
+      border-style: solid;
     }
     @include dark {
-      color: $d-text-faint;
+      color: $d-text-muted;
+    }
+  }
+  .mq__empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: media.$r-lg;
+    background: media.$tint-info;
+    color: $c-info-text;
+    @include dark {
+      color: $c-info;
     }
   }
 
   // ── Genel koyu tema kurallarının bu ekrandaki etkisini kaldır ────────
-  //
   // `scss/tables.scss` içindeki `html.dark tbody tr td` her hücreyi opak
   // `$d-bg-card` ile boyuyor, `scss/base.scss` içindeki `html.dark header`
-  // aynısını sayfa başlığına yapıyor. İkisi de sınıfsız etiket seçicisi ve
-  // ikisi de `!important` — yani bu ekran onları istemese de alıyor.
-  //
-  // Sonucu ölçüldü: dokunmatikte hücreler alt alta dizildiği için her hücre
-  // ayrı bir açık gri BANT olarak boyanıyor ve kart yatay şeritlere bölünmüş
-  // görünüyordu; başlık da sayfadan kopuk gri bir kutuya dönüyordu.
-  //
-  // KURALLAR SİLİNMİYOR, BU EKRANDA ETKİSİZLEŞTİRİLİYOR: ikisi de panelin
-  // sınıfsız eski tablolarını okunur tutmak için var. Global silmek bu
-  // ekranın sorununu çözmek için tüm paneli riske atmak olurdu.
-  //
-  // `!important` şart: karşı taraf da `!important` yazıyor, normal bildirim
-  // onu yenemez. Özgüllük scoped `[data-v]` eki sayesinde zaten daha yüksek.
-  // `@include dark` burada kullanılamıyor: mixin `html.dark &` üretiyor ve
-  // `&` en üst düzeyde geçersiz. Seçici açık yazıldı — sonuç aynı.
+  // aynısını sayfa başlığına yapıyor; ikisi de sınıfsız etiket seçicisi ve
+  // `!important`. Kurallar silinmiyor, bu ekranda etkisizleştiriliyor.
   html.dark .mq__head,
   html.dark .mq__table td {
     background-color: transparent !important;
   }
 
+  // ── Tablo (masaüstü) ─────────────────────────────────────────────────
   .mq__table-wrap {
-    max-width: 100%;
-    overflow-x: auto;
+    padding: 0;
+    overflow: hidden;
   }
-
-  // Çapa sütunu YALNIZ dokunmatikte var. Masaüstünde `display: none` — tablo
-  // beş sütunlu kalıyor, mevcut yerleşim hiç değişmiyor.
-  .mq__col-thumb {
-    display: none;
-  }
-
   .mq__table {
     width: 100%;
-    // Altında sütunlar ezilmeye başlıyor; bu genişliğin altında kap kaydırır.
-    min-width: 40rem;
+    // Sabit düzen: sütun genişlikleri başlıktan gelir, hücre içeriği
+    // sütunu genişletemez → hiçbir hücre alt satıra kaymaz, uzun dosya
+    // adı/yol "…" ile kısalır (`truncate`).
+    table-layout: fixed;
     border-collapse: collapse;
     @include media.text("sm");
-
     th,
     td {
-      padding: media.$s-2 media.$s-2;
+      padding: media.$s-3 media.$s-4;
       text-align: start;
       border-bottom: 1px solid $l-border;
-      vertical-align: top;
-    }
-    // Sütunlar: 1 dosya · 2 boyut · 3 durum · 4 zaman · 5 işlem.
-    //
-    // Yalnız ATOMİK değerler kırılmaz — boyut ve zaman ("17 Ağu 2026 14:53"
-    // dört satıra bölünüyordu). Durum bir cümle, kırılabilir: ona da `nowrap`
-    // verilince sütun şişip dosya sütununu 60px'e sıkıştırdı ve adres dokuz
-    // satıra indi (ölçüldü — ilk denemenin hatası).
-    th:nth-child(2),
-    td:nth-child(2),
-    th:nth-child(4),
-    td:nth-child(4) {
+      vertical-align: middle;
       white-space: nowrap;
+      overflow: hidden;
     }
-
-    // Dosya sütunu adı ve adresi taşıyor; payını önden alır.
-    th:first-child,
-    td:first-child {
-      min-width: 13rem;
-    }
-    th {
+    thead th {
+      @include media.text("xs");
       color: $l-text-500;
       font-weight: 600;
+      background: $l-bg-soft;
+    }
+    tbody tr:last-child td {
+      border-bottom: 0;
     }
     @include dark {
       th,
       td {
         border-color: $d-border;
       }
-      th {
+      thead th {
         color: $d-text-muted;
+        background: $d-bg-elevated;
       }
     }
   }
-
+  .mq__col-size {
+    width: 5.5rem;
+  }
+  .mq__col-status {
+    width: 15rem;
+  }
+  .mq__col-when {
+    width: 10rem;
+  }
+  .mq__col-actions {
+    width: 17rem;
+    text-align: end;
+  }
+  .mq__row {
+    transition: background $t-fast;
+    @include media.hoverable {
+      &:hover td {
+        background: $l-bg-soft;
+        @include dark {
+          background: $d-bg-hover;
+        }
+      }
+    }
+  }
+  .mq__file-cell {
+    display: flex;
+    align-items: center;
+    gap: media.$s-3;
+    min-width: 0;
+  }
+  .mq__type {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    border-radius: media.$r-md;
+    code {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+    &--danger {
+      background: media.$tint-danger;
+      color: $c-error-text;
+      @include dark {
+        color: $c-error;
+      }
+    }
+    &--warn {
+      background: media.$tint-warning;
+      color: $c-warning-text;
+      @include dark {
+        color: $c-warning;
+      }
+    }
+  }
+  .mq__file-text {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-05;
+    min-width: 0;
+  }
   .mq__file {
     display: block;
     font-weight: 600;
+    @include media.truncate;
   }
-
   .mq__url {
     display: block;
     @include media.text("xs");
-    color: $l-text-400;
-    word-break: break-all;
+    @include media.truncate;
+    color: $l-text-500;
     @include dark {
-      color: $d-text-faint;
+      color: $d-text-muted;
     }
   }
-
-  // Ortak `chip()` mixin'ine bağlandı. ÖNCEKİ HÂLİ KOYU TEMADA BOZUKTU:
-  // `@include dark` kural gövdesinde `&--danger`/`&--warn`'dan SONRA geliyordu
-  // ve `html.dark .mq__badge` özgüllük olarak (0,2,0) ton değiştiricilerini
-  // (0,1,0) eziyordu. Sonuç ölçüldü: koyu temada "zararlı" rozetinin arka
-  // planı `rgb(33,32,29)`, metni `rgb(237,235,230)` — yani kırmızı tamamen
-  // kayboluyor, "zararlı" ile "taranıyor" AYNI gri görünüyordu. Ciddiyet
-  // koyu temada okunmuyordu; bu yalnız bir görünüm sorunu değildi.
-  //
-  // `chip()` her tonun koyu tema karşılığını kendi içinde taşıyor. Mixin'in
-  // kendi yorumu bu ekranı zaten işaret ediyor: "dört medya ekranı kendi
-  // kırmızısını uydurmuştu" — burası onlardan biriydi.
-  //
-  // Yan etki masaüstünde de görünür: rozet köşeli kutudan hap biçimine
-  // geçiyor. Bilinçli — diğer dört medya ekranındaki rozet zaten hap ve
-  // koyu zeminde köşeli kutu satırı yatay bantlara bölüyordu.
+  .mq__status-cell {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    min-width: 0;
+  }
+  // Rozet: ortak `chip()` mixin'i. Koyu temada tonun tekrar yazılması ŞART —
+  // mixin'in koyu bloğu (0-2-1) ton değiştiricisini (0-1-0) eziyor (ölçüldü).
   .mq__badge {
     @include media.chip("neutral");
-    margin-inline-end: 0.25rem;
-
-    // TONUN KOYU TEMADA TEKRAR EDİLMESİ ŞART: `chip("neutral")`ın koyu
-    // bloğu `html.dark .mq__badge` seçicisini üretiyor (0-2-1) ve ton
-    // değiştiricisinin düz kuralını (0-1-0) eziyor. `chip("danger")` koyu
-    // temada yalnız `color` yazdığı için metin kırmızıya dönüyor ama arka
-    // plan nötr gri kalıyordu — ölçüldü. Arka planı burada aynı özgüllükte
-    // tekrar yazmak tek doğru çözüm; mixin'i bozmadan.
     &--danger {
       @include media.chip("danger");
-
       @include dark {
         background: media.$tint-danger;
       }
     }
-
     &--warn {
       @include media.chip("warning");
-
       @include dark {
         background: media.$tint-warning;
       }
     }
-  }
-
-  .mq__col-actions {
-    text-align: end;
-    white-space: nowrap;
-  }
-
-  .mq__link {
-    background: none;
-    border: 0;
-    color: $brand;
-    cursor: pointer;
-    @include media.text("xs");
-    padding: media.$s-05 media.$s-1;
-
-    &--danger {
-      color: $c-error;
-      font-weight: 600;
-    }
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    &--info {
+      @include media.chip("info");
+      @include dark {
+        background: media.$tint-info;
+      }
     }
   }
-
+  .mq__isolated {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: media.$r-pill;
+    flex: 0 0 auto;
+    &--ok {
+      background: media.$tint-success;
+      color: $c-success-text;
+      @include dark {
+        color: $c-success;
+      }
+    }
+    &--warn {
+      background: media.$tint-warning;
+      color: $c-warning-text;
+      @include dark {
+        color: $c-warning;
+      }
+    }
+  }
+  .mq__row-actions {
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: media.$s-2;
+  }
   .mq__muted {
-    color: $l-text-400;
+    color: $l-text-500;
     @include media.text("xs");
     @include dark {
-      color: $d-text-faint;
+      color: $d-text-muted;
+    }
+  }
+  // Onay paneli: tetikleyicinin (sağdaki düğme) yerinden büyür.
+  .mq__confirm {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: media.$s-2;
+    padding: media.$s-2 media.$s-3;
+    border-radius: media.$r-md;
+    background: media.$tint-danger;
+    transform-origin: right center;
+    white-space: normal;
+    text-align: end;
+  }
+  .mq__confirm-text {
+    @include media.text("xs");
+    color: $c-error-text;
+    margin: 0;
+    max-width: 16rem;
+    @include dark {
+      color: $c-error;
+    }
+  }
+  .mq__confirm-actions {
+    display: flex;
+    gap: media.$s-2;
+  }
+
+  // ── Geçişler ─────────────────────────────────────────────────────────
+  // Onay: kaynağından ölçekle + opaklık, kritik sönümlü (aşım yok).
+  .mq-pop-enter-active {
+    transition:
+      opacity $d-pop $ease-out,
+      transform $d-pop $ease-out;
+  }
+  .mq-pop-leave-active {
+    transition:
+      opacity $d-fast $ease-out,
+      transform $d-fast $ease-out;
+  }
+  .mq-pop-enter-from,
+  .mq-pop-leave-to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  // Satır çıkışı: solup 6px kayar; giriş aynı yolun tersi.
+  .mq-row-enter-active,
+  .mq-row-leave-active {
+    transition:
+      opacity $d-pop $ease-out,
+      transform $d-pop $ease-out;
+  }
+  .mq-row-enter-from,
+  .mq-row-leave-to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  // Politika ayrıntısı (yalnız mobilde anlamlı): kısa opaklık geçişi.
+  .mq-collapse-enter-active,
+  .mq-collapse-leave-active {
+    transition: opacity $d-fast $ease-out;
+  }
+  .mq-collapse-enter-from,
+  .mq-collapse-leave-to {
+    opacity: 0;
+  }
+
+  // ── Laptop (≤1279): sayaçlar 3+3 ─────────────────────────────────────
+  @media (max-width: media.$m-bp-detail) {
+    .mq__stats {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .mq__col-status {
+      width: 13rem;
+    }
+    .mq__col-actions {
+      width: 15rem;
     }
   }
 
-  // ── MOGEM-625 · dokunmatikte tablo KART olur ───────────────────────
-  //
-  // Beş sütun 375px'e sığmıyor. İlk çözüm yatay kaydırmaydı; gözle bakınca
-  // yanlış olduğu görüldü — telefonda kimse tabloyu yana kaydırmıyor, dosya
-  // adının yanındaki durumu göremiyor. Referans `media-audit`: orada satırlar
-  // DİKEY yığılıyor ve her satır kendi kartı gibi okunuyor.
-  //
-  // Markup TEK: `<table>` olduğu gibi kalıyor, yalnız görüntüleme kutusu
-  // değişiyor. İkinci bir liste şablonu yazmak aynı eylem mantığını
-  // (yeniden dene / serbest bırak / onay) iki yerde tutmak demekti.
+  // ── Dokunmatik (≤1023): tablo KART olur ──────────────────────────────
+  // Markup TEK: `<table>` kalıyor, yalnız görüntüleme kutusu değişiyor.
   @media (max-width: media.$m-bp-rail) {
-    // Kaydırma kabı devre dışı: artık kaydıracak bir şey yok.
-    .mq__table-wrap {
-      overflow-x: visible;
-    }
-
     .mq__table {
-      min-width: 0;
       display: block;
     }
-
-    // Başlık satırı kartta anlamsız — her değer kendi bağlamında okunuyor.
     .mq__table thead {
       @include media.sr-only;
     }
-
     .mq__table tbody,
     .mq__table tr,
     .mq__table td {
       display: block;
     }
-
-    // Kart ızgaraya geçti: `media-optimize` ile aynı kalıp — sol sütunda
-    // satır boyu uzanan çapa, sağdaki metinlerin hepsi TEK dikey çizgide.
-    // Esnek + `order` ile bu yapılamıyordu; sarılan satırın başlangıcı
-    // çapanın genişliğine elle hesaplanmış bir girintiyle bağlanırdı ve o
-    // hesap `media-optimize`te 7px şaşmıştı. Izgarada hücreler AYNI sütuna
-    // konuyor, hizasızlık matematiğe değil yapıya bağlı.
     .mq__table tr {
-      display: grid;
-      grid-template-columns: auto auto minmax(0, 1fr);
-      align-items: center;
-      column-gap: media.$s-3;
-      row-gap: media.$s-1;
-      padding: media.$s-3 0;
+      display: flex;
+      flex-direction: column;
+      gap: media.$s-2;
+      padding: media.$s-3 media.$s-4;
       @include media.divider(bottom);
-
       &:last-child {
         border-bottom: 0;
       }
     }
-
     .mq__table td {
       padding: 0;
       border: 0;
-      white-space: normal;
-      min-width: 0;
+      overflow: visible;
     }
-
-    // Çapa: 1. sütun, dört satırın tamamı boyunca. Dört satır HER ZAMAN var
-    // (dosya, durum, boyut+zaman, eylem) — eylem hücresi boşken bile
-    // "bekleniyor" metnini taşıyor, yani `span 4` boş satır üretmiyor.
-    // Çapa 1. sütunda, dört satırın hizasında ORTALANIYOR — uzatılmıyor.
-    //
-    // UZATMA DENENDİ VE BIRAKILDI: karantina satırı dört metin satırı
-    // taşıyor (ad+yol, durum, boyut·zaman, eylem) ve çapa 56×163'lük boş bir
-    // kutuya dönüşüyordu; kart "bölünmüş" görünüyordu. `media-optimize`te
-    // uzatma doğru çünkü orada içi dolu bir FOTOĞRAF var. Burada içerik yok
-    // (karantinadaki dosya public ağaçtan çıkmıştır, önizlemesi olamaz), o
-    // yüzden referans `media-audit`in kalıbı doğru olan: küçük kare rozet,
-    // metin bloğuna göre ortalanmış.
-    .mq__table td.mq__col-thumb {
-      display: block;
-      grid-column: 1;
-      grid-row: 1 / span 4;
-      align-self: center;
+    .mq__col-size,
+    .mq__col-status,
+    .mq__col-when,
+    .mq__col-actions {
+      width: auto;
     }
-
-    .mq__thumb {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: media.$r-sm;
-      background: $l-bg-muted;
-      font-weight: 600;
+    // Sıra: dosya · durum · (boyut · zaman) · eylem. Belge sırası
+    // dosya/boyut/durum/zaman/eylem olduğu için boyut ve zaman `order` ile
+    // tek meta satırında yan yana getiriliyor.
+    .mq__col-status {
+      order: 2;
+    }
+    .mq__col-size,
+    .mq__col-when {
+      order: 3;
       @include media.text("xs");
-      @include media.muted(2);
-
+      color: $l-text-500;
       @include dark {
-        background: $d-bg-elevated;
+        color: $d-text-muted;
       }
     }
-
-    // Yol tek satıra iniyor: iki satıra sarınca kart gereksiz uzuyor ve
-    // dosya adının altında ikinci bir metin bloğu gibi duruyordu. Tam yol
-    // `title` ile duruyor, bilgi kaybı yok.
-    .mq__url {
-      display: block;
-      @include media.truncate;
-    }
-
-    // Sıra: 1 dosya · 2 durum · 3 boyut+zaman · 4 eylemler. Belge sırası
-    // dosya/boyut/durum/zaman/eylem/çapa olduğu için konumlar açık yazılıyor.
-    .mq__table td:nth-child(1) {
-      grid-column: 2 / -1;
-      grid-row: 1;
-      min-width: 0;
-    }
-
-    .mq__table td:nth-child(3) {
-      grid-column: 2 / -1;
-      grid-row: 2;
-    }
-
-    // Boyut ve zaman yan yana, ince meta satırı.
-    .mq__table td:nth-child(2),
-    .mq__table td:nth-child(4) {
-      grid-row: 3;
-      @include media.text("xs");
-      @include media.muted(2);
-    }
-
-    .mq__table td:nth-child(2) {
-      grid-column: 2;
-    }
-
-    .mq__table td:nth-child(4) {
-      grid-column: 3;
-      justify-self: start;
-    }
-
-    // Aralarına ayraç: "0 KB · 17 Ağu 2026 14:53"
-    .mq__table td:nth-child(4)::before {
-      content: "·";
-      margin-inline-end: media.$s-2;
-    }
-
-    .mq__table td:nth-child(5) {
-      grid-column: 2 / -1;
-      grid-row: 4;
-      text-align: start;
-      display: flex;
+    .mq__table tr {
       flex-wrap: wrap;
-      gap: media.$s-2;
-      margin-top: media.$s-1;
     }
-
-    // Eylemler kartta gerçek düğme gibi görünmeli — satır içi bağlantı
-    // dokunmatikte 44px hedefi karşılamıyordu.
-    //
-    // HAP BİÇİMİ, KÖŞELİ KUTU DEĞİL: köşeli rozet ve köşeli düğme koyu
-    // zeminde açık renkli yatay BANTLAR gibi okunuyordu ve kart üst üste
-    // dizilmiş şeritlere bölünmüş görünüyordu. Hap, aynı bilgiyi taşırken
-    // satırın içinde bir nesne olarak duruyor — `media-optimize`teki rozet
-    // ve çiplerle de aynı dil.
-    .mq__link {
+    .mq__col-size::after {
+      content: "·";
+      margin-inline: media.$s-2;
+    }
+    .mq__col-size {
+      flex: 0 0 auto;
+    }
+    .mq__col-when {
+      flex: 1 1 auto;
+    }
+    .mq__col-actions {
+      order: 4;
+      width: 100%;
+      text-align: start;
+    }
+    .mq__row-actions,
+    .mq__confirm {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .mq__confirm {
+      transform-origin: center top;
+      text-align: start;
+    }
+    .mq__confirm-text {
+      max-width: none;
+    }
+    .mq__confirm-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    // Eylemler kartta gerçek düğme: 44px hedef, tam genişlik.
+    .mq__btn--sm {
       @include media.tap-target;
-      padding-inline: media.$s-3;
-      border: 1px solid $l-border;
-      border-radius: 999px;
+      width: 100%;
+      justify-content: center;
+    }
+    .mq__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .mq__ring {
+      grid-column: 1 / -1;
+    }
+    .mq__tabs {
+      width: 100%;
+    }
+    .mq__tab {
+      flex: 1 1 0;
+      justify-content: center;
+      @include media.tap-target;
+    }
+  }
 
+  // ── Telefon (≤767): politika katlanır, eylemler alt çubuğa iner ───────
+  @media (max-width: media.$m-bp-md) {
+    .mq {
+      // Alt işlem çubuğunun kapladığı yer.
+      padding-bottom: calc(#{media.$m-float-bottom} + 3.5rem);
+    }
+    .mq__head {
+      flex-direction: column;
+    }
+    .mq__policy-toggle {
+      display: inline-flex;
+    }
+    .mq__facts {
+      display: flex !important;
+    }
+    // v-show'un display:none'ı `!important` ile ezilmesin: masaüstü kuralı
+    // burada geri alınıyor, geçiş/v-show mobilde kendi işini yapıyor.
+    .mq__facts[style*="display: none"] {
+      display: none !important;
+    }
+    .mq__head-actions {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(#{media.$m-tabbar-h} + env(safe-area-inset-bottom));
+      z-index: 20;
+      padding: media.$s-2 media.$s-4;
+      background: rgba($l-bg, 0.92);
+      backdrop-filter: blur(12px) saturate(160%);
+      border-top: 1px solid $l-border;
       @include dark {
-        border-color: $d-border;
+        background: rgba($d-bg-card, 0.92);
+        border-top-color: $d-border;
       }
     }
-
-    .mq__url {
-      @include media.text("xs");
+    .mq__head-actions .mq__btn {
+      flex: 1 1 0;
+      justify-content: center;
+      @include media.tap-target;
+    }
+    .mq__title-row {
+      gap: media.$s-2;
     }
   }
 
-  // Sayaç kartları — beş kart, ikişerli ızgara.
-  //
-  // `flex-wrap` ile beşinci kart satır sonunda yarım genişlikte tek başına
-  // kalıyordu. `auto-fit` denendi, telefonda tek sütuna düştü — daha kötü.
-  // Çözüm bilinçli: dördü ikişerli, beşinci TAM SATIR. Zaten farklı bir
-  // kategori ("Hiç taranmadı" tarama sonucu değil, kapsam dışı), tam satır
-  // onu ayrı okutuyor.
-  .mq__stats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mq__stat--muted {
-    grid-column: 1 / -1;
-  }
-
-  @media (min-width: 1280px) {
-    .mq__stats {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+  // ── Erişilebilirlik: hareket azaltma / saydamlık azaltma ─────────────
+  @media (prefers-reduced-motion: reduce) {
+    .mq-in {
+      animation-duration: 0.01ms;
+      animation-delay: 0ms;
     }
-
-    .mq__stat--muted {
-      grid-column: auto;
+    .mq__status-dot {
+      animation: none !important;
+    }
+    .mq__ring-arc {
+      transition: none;
+    }
+    .mq-pop-enter-from,
+    .mq-pop-leave-to,
+    .mq-row-enter-from,
+    .mq-row-leave-to {
+      transform: none;
+    }
+    .mq__btn,
+    .mq__tab {
+      transition: none;
+      &:active {
+        transform: none;
+      }
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .mq__head-actions {
+      background: $l-bg;
+      backdrop-filter: none;
+      @include dark {
+        background: $d-bg-card;
+      }
     }
   }
 </style>
