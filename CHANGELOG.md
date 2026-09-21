@@ -1,3 +1,20 @@
+## [v1.15.0-beta.2] - 2026-09-21 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(vitrin): panel vitrin ekranı dört dile açıldı (@aliiball)
+  - Kutular Frappe Desk'ten değil bu panelden düzenleniyor; DocType alanlarını açmak tek başına yetmezdi, admin Arapça ve Rusça metni hiçbir yere giremezdi ve her yeni kutu yarım kalırdı. Kabul ölçüsü alan eklendi değil iş yapılabiliyor.
+  - Dil sekmeleri ve alan blokları kopyalanmak yerine listeden türüyor; eskiden her dil için şablon kopyalanıyordu.
+  - Arapça alanlar dir rtl ile çiziliyor, ayar ekranındaki bölüm başlığı dört dilde düzenleniyor ve kirli alan denetimi dillerin tamamını kapsıyor.
+  - i18n anahtarları dil sonekinden arındırıldı; title anahtarı showcase.title ile çakıştığı için sectionTitle oldu, eslint no-dupe-keys yakaladı.
+- feat(duyuru): panel duyuru ekranı dört dile açıldı (@aliiball)
+  - Duyurular bu panelden giriliyor; ekran iki dilde kalsaydı admin Arapça ve Rusça metni hiçbir yere giremez ve şerit o dillerde Türkçe görünmeye devam ederdi.
+  - Yalnız kaynak dil zorunlu tutuldu: dördü birden zorunlu olsaydı admin tek bir duyuruyu kaydedemez, özellik kullanılmaz hâle gelirdi. Eksik dil ön yüzde Türkçeye düşüyor.
+  - Panelin okuduğu alan listesi de genişletildi; alan listede yoksa panel onu hiç çekmez ve admin doldurduğu metni bir dahaki açılışta boş görür.
+  - Denetim testi bunu kilitliyor: dil listesi, kopyalanmayan bloklar, zorunluluk kuralı, okunan alanlar ve RTL yönü ayrı ayrı sınanıyor.
+
+---
 ## [v1.15.0-alpha.7] - 2026-09-21 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
