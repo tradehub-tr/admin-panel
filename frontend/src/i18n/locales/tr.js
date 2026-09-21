@@ -2276,9 +2276,11 @@ export default {
     title: "Medya Karantinası",
     subtitle: "Zararlı bulunan ve taraması bitmemiş dosyalar",
     notIsolated: "Diskte ayrılmamış",
+    isolated: "Diskte ayrılmış",
     notIsolatedHint:
       "Kayıt bu durumda görünüyor ama dosya diskte beklenen yerde değil. Elle kontrol edin.",
     policy: {
+      details: "Politika",
       on: "Tarama açık",
       off: "Tarama kapalı",
       offHint: "Sunucuda virüs tarayıcı kurulu değil. Yüklenen dosyalar taranmıyor.",
@@ -2289,6 +2291,8 @@ export default {
       failOpen: "Taranamayan dosya açık kalır",
     },
     stat: {
+      cleanRatio: "Temiz oranı",
+      scannedOf: "{clean} / {total} tarandı",
       infected: "Zararlı",
       failed: "Taranamadı",
       pending: "Taranıyor",
@@ -2316,6 +2320,7 @@ export default {
       actions: "İşlem",
     },
     action: {
+      confirmHint: "Dosya yeniden herkese açık olacak. Yanlış pozitif olduğuna eminseniz devam edin.",
       sweep: "Takılanları topla",
       backfill: "Eskileri tara",
       retry: "Yeniden tara",

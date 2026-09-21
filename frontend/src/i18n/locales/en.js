@@ -2271,9 +2271,11 @@ export default {
     title: "Media Quarantine",
     subtitle: "Files found malicious, and files still awaiting a scan",
     notIsolated: "Not isolated on disk",
+    isolated: "Isolated on disk",
     notIsolatedHint:
       "The record says so, but the file is not where it should be on disk. Check manually.",
     policy: {
+      details: "Policy",
       on: "Scanning is on",
       off: "Scanning is off",
       offHint: "No virus scanner is installed on the server. Uploaded files are not being scanned.",
@@ -2284,6 +2286,8 @@ export default {
       failOpen: "Unscannable files stay reachable",
     },
     stat: {
+      cleanRatio: "Clean ratio",
+      scannedOf: "{clean} / {total} scanned",
       infected: "Malicious",
       failed: "Scan failed",
       pending: "Scanning",
@@ -2311,6 +2315,7 @@ export default {
       actions: "Actions",
     },
     action: {
+      confirmHint: "The file will be reachable by everyone again. Continue only if you are sure it is a false positive.",
       sweep: "Collect stuck scans",
       backfill: "Scan older files",
       retry: "Scan again",
