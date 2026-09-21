@@ -108,7 +108,7 @@ Saf bileşende bu risk yok — props tip tanımlı, sapma derleme hatası verir.
 (`PodQueueView`, `PackingQueueView`, `LabelPrintView` …) store'lu tek dosya
 olarak yazıldı ve çalışıyor; E2E ile korunuyorlar. 2959 satırı bölmek regresyon
 riski taşır, karşılığında yalnız Storybook kazancı var. Onların story'leri
-**A9 turunda store mock'uyla** yazılacak (`docs/lojistik/KALAN-ISLER.md`).
+**A9 turunda store mock'uyla** yazılacak.
 
 > Bu kural yazılana kadar iki desen paralel yürüdü: bölünmüş 12 ekran
 > Storybook'ta göründü, tek dosya yazılan 9 ekran görünmedi. Sonuç,
