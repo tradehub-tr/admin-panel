@@ -1,3 +1,20 @@
+## [v1.16.0-alpha.3] - 2026-09-22 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(seo): MOGEM-663 SEO Helper süper admin ekranı (/seo/helper) — MCP taslak onayı, denetim, kuyruk & MCP istemcileri (@Metin Bektemur)
+
+---
+## [v1.16.0-alpha.2] - 2026-09-21 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(docs): kisisel not klasorune yapilan atif kaldirildi (@aliiball)
+  - A9 story kuralinin gerekcesi zaten belgenin icinde duruyor, dis dosya yoluna gerek yok
+
+---
 ## [v1.16.0] - 2026-09-21 PROD
 
 Bu surum istoc.com/panel'de yayindadir.

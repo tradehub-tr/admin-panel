@@ -592,6 +592,7 @@ export const adminPanelSections = {
         { label: "nav.item.allPages", icon: "list-checks", route: "/seo" },
         { label: "nav.item.urlRedirects", icon: "git-fork", route: "/seo/redirects" },
         { label: "nav.item.notFoundLogs", icon: "file-warning", route: "/seo/404s" },
+        { label: "nav.item.seoHelper", icon: "bot", route: "/seo/helper" },
       ],
     },
     {

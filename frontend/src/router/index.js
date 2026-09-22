@@ -304,6 +304,18 @@ const routes = [
         },
       },
       {
+        // MOGEM-663 — SEO Helper (MCP taslak onayı, denetim, kuyruk & MCP istemcileri); yalnız süper admin
+        path: "seo/helper",
+        name: "SeoHelper",
+        component: () => import("@/views/seo/SeoHelperView.vue"),
+        meta: {
+          title: "SEO Helper",
+          breadcrumb: "SEO Helper",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
         path: "seo/404s",
         name: "Seo404Report",
         component: () => import("@/views/seo/Seo404ReportView.vue"),
