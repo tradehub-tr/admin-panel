@@ -1,3 +1,11 @@
+## [v1.16.0-alpha.3] - 2026-09-22 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(seo): MOGEM-663 SEO Helper süper admin ekranı (/seo/helper) — MCP taslak onayı, denetim, kuyruk & MCP istemcileri (@Metin Bektemur)
+
+---
 ## [v1.16.0-alpha.2] - 2026-09-21 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
