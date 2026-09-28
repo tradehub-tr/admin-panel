@@ -52,6 +52,14 @@
     () => (r.plan.value?.refs_exact || 0) + (r.plan.value?.refs_embedded || 0)
   );
 
+  // Optimizasyon arşivi orijinali ESKİ adla tutuyor; taşıma onu izlemez. Bu
+  // dosyalar koşuda tek tek atlanır (kilit yok), not operatöre bunu söyler ve
+  // onay penceresi gerçekten taşınacak sayıyı gösterir. `?? 0`: eski backend.
+  const archivedCount = computed(() => r.plan.value?.archived ?? 0);
+  const willRenameCount = computed(() =>
+    Math.max(0, (r.plan.value?.renamable || 0) - archivedCount.value)
+  );
+
   // ── Katlama ────────────────────────────────────────────────────────
   // Kullanıcı dokunmadıysa kart kendi karar verir: ilgi isteyen bir şey
   // (bekleyen dosya, çalışan/biten iş, hata, açık önizleme) varsa açık,
@@ -66,7 +74,19 @@
       !!r.lastError.value ||
       !!r.pollError.value
   );
-  const expanded = computed(() => manualExpanded.value ?? autoExpanded.value);
+  // Gövdede gösterilecek bir şey yoksa katlama da yok: ok ve tıklanabilir satır
+  // gizlenir. Önceden önizleme açılmadan ok görünüyor, basınca boş gövde açılıyordu.
+  const hasBody = computed(
+    () =>
+      previewOpen.value ||
+      !!r.job.key ||
+      !!r.lastError.value ||
+      !!r.pollError.value ||
+      r.historyLoading.value ||
+      !!r.historyError.value ||
+      r.canRollback.value
+  );
+  const expanded = computed(() => hasBody.value && (manualExpanded.value ?? autoExpanded.value));
   function toggleExpanded() {
     manualExpanded.value = !expanded.value;
   }
@@ -94,6 +114,8 @@
   function openPreview() {
     previewOpen.value = true;
     r.loadPlan();
+    // Elle katlanmış olsa bile Önizle kartı açar.
+    manualExpanded.value = null;
   }
   function askStart() {
     confirmOpen.value = true;
@@ -122,6 +144,9 @@
     }
     const s = r.job.state;
     if (s === "not_found") return t("mediaRetroRename.error");
+    // Biten prova "Tamamlandı" demesin: okuyan dosyaların taşındığını sanıyordu.
+    if (r.job.dry_run && (s === "completed" || !s)) return t("mediaRetroRename.dryRunDone");
+    if (r.job.dry_run && s === "stopped") return t("mediaRetroRename.dryRunStopped");
     return t(`mediaRetroRename.${s === "completed" ? "done" : s || "done"}`);
   });
 </script>
@@ -133,6 +158,7 @@
          serilir, metinler pointer-events almaz, Önizle üstte kalır. -->
     <div class="mrr__summary">
       <button
+        v-if="hasBody"
         type="button"
         class="mrr__stretch"
         :aria-expanded="expanded"
@@ -185,12 +211,15 @@
         v-if="renamableCount > 0 && !r.running.value"
         type="button"
         class="hdr-btn-outlined mrr__preview-btn"
+        :disabled="r.planLoading.value"
+        :aria-busy="r.planLoading.value"
         @click="openPreview"
       >
+        <AppIcon v-if="r.planLoading.value" name="loader" :size="14" class="animate-spin" />
         {{ t("mediaRetroRename.preview") }}
       </button>
 
-      <AppIcon name="chevron-down" :size="16" class="mrr__chev" aria-hidden="true" />
+      <AppIcon v-if="hasBody" name="chevron-down" :size="16" class="mrr__chev" aria-hidden="true" />
     </div>
 
     <div v-show="expanded" class="mrr__body">
@@ -205,7 +234,13 @@
       <div v-if="previewOpen" class="mt-3 border-t pt-3">
         <strong>{{ t("mediaRetroRename.previewTitle") }}</strong>
 
-        <p v-if="r.planLoading.value" class="text-sm opacity-70 mt-2">
+        <p
+          v-if="r.planLoading.value"
+          class="flex items-center gap-2 text-sm opacity-70 mt-2"
+          role="status"
+          aria-live="polite"
+        >
+          <AppIcon name="loader" :size="16" class="animate-spin" />
           {{ t("mediaRetroRename.planLoading") }}
         </p>
         <p v-else-if="r.planError.value" class="text-sm text-red-600 mt-2">
@@ -248,11 +283,31 @@
               <b>{{ r.plan.value.refs_readonly }}</b>
             </dd>
           </div>
+          <div>
+            <dt class="opacity-70">{{ t("mediaRetroRename.stats.doubleDots") }}</dt>
+            <dd>
+              <b>{{ r.plan.value.double_dots ?? 0 }}</b>
+            </dd>
+          </div>
+          <div>
+            <dt class="opacity-70">{{ t("mediaRetroRename.stats.archived") }}</dt>
+            <dd>
+              <b>{{ r.plan.value.archived ?? 0 }}</b>
+            </dd>
+          </div>
         </dl>
 
         <label v-if="r.plan.value" class="flex items-center gap-2 mt-3 text-sm">
           <input v-model="dryRun" type="checkbox" /> {{ t("mediaRetroRename.dryRun") }}
         </label>
+
+        <p
+          v-if="r.plan.value && archivedCount > 0"
+          class="text-sm text-amber-700 mt-2"
+          role="status"
+        >
+          {{ t("mediaRetroRename.archiveSkipped", { n: archivedCount }) }}
+        </p>
 
         <div class="flex justify-end gap-2 mt-3">
           <button type="button" class="hdr-btn-outlined" @click="previewOpen = false">
@@ -262,7 +317,7 @@
             v-if="r.plan.value"
             type="button"
             class="hdr-btn-primary"
-            :disabled="!r.plan.value.renamable || r.actionLoading.value"
+            :disabled="!willRenameCount || r.actionLoading.value"
             @click="askStart"
           >
             {{ t("mediaRetroRename.start") }}
@@ -305,11 +360,14 @@
           <span class="mrr__progress-fill" :style="{ width: percent + '%' }" />
         </div>
         <div class="flex flex-wrap gap-3 text-sm mt-1">
+          <!-- Prova hiçbir şey taşımaz: sayaçlar gerçek koşunun önizlemesi. -->
           <span
-            >{{ t("mediaRetroRename.renamed") }}: <b>{{ r.job.renamed }}</b></span
+            >{{ t(r.job.dry_run ? "mediaRetroRename.willRename" : "mediaRetroRename.renamed") }}:
+            <b>{{ r.job.renamed }}</b></span
           >
           <span
-            >{{ t("mediaRetroRename.skipped") }}: <b>{{ r.job.skipped }}</b></span
+            >{{ t(r.job.dry_run ? "mediaRetroRename.willSkip" : "mediaRetroRename.skipped") }}:
+            <b>{{ r.job.skipped }}</b></span
           >
           <span v-if="r.job.errors" class="text-red-600">
             {{ t("mediaRetroRename.errors") }}: <b>{{ r.job.errors }}</b>
@@ -317,7 +375,10 @@
         </div>
         <!-- Dosya sayısı ≠ referans sayısı: tek blob onlarca alanda geçebilir.
              `refsSkipped` "kaç referans 301 köprüsüne muhtaç kaldı" demek. -->
-        <div class="text-sm mt-1 opacity-80">
+        <div v-if="r.job.dry_run" class="text-sm mt-1 opacity-80">
+          {{ t("mediaRetroRename.dryRunNote") }}
+        </div>
+        <div v-else class="text-sm mt-1 opacity-80">
           {{ t("mediaRetroRename.refsUpdated") }}: <b>{{ r.job.refs_updated }}</b> ·
           {{ t("mediaRetroRename.refsSkipped") }}: <b>{{ r.job.refs_skipped }}</b>
         </div>
@@ -403,7 +464,7 @@
       :title="t('mediaRetroRename.confirmTitle')"
       :message="
         t('mediaRetroRename.confirmMessage', {
-          count: r.plan.value?.renamable || 0,
+          count: willRenameCount,
           refs: refsTotal,
           days: DAYS,
         })
@@ -471,9 +532,23 @@
     pointer-events: none;
   }
 
-  .mrr__preview-btn {
+  // Seçici `.mrr__summary > :not(.mrr__stretch)` kadar özgül olmalı; tek sınıf
+  // yetmiyordu, düğme `pointer-events: none` alıp tıklamayı alttaki katlama
+  // katmanına kaçırıyordu (Önizle kartı katlıyordu, plan hiç istenmiyordu).
+  .mrr__summary > .mrr__preview-btn {
     pointer-events: auto;
     flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  // Ortak düğme stilinde kapalı hâl yok; arşiv kilidinde "Başlat" açık görünüyordu.
+  .mrr .hdr-btn-primary:disabled,
+  .mrr .hdr-btn-outlined:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   .mrr__state-ic {
