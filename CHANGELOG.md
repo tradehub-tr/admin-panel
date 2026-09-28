@@ -1,3 +1,23 @@
+## [v1.17.0-alpha.1] - 2026-09-28 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(media): retro rename önizleme, prova ve arşiv durumlarını düzelt (#230) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+  - Politika durumunu, izolasyon bilgisini ve temiz oranı görünür hale getir
+  - Mobilde karantina listesini kart düzenine taşıyarak tablo sıkışmasını azalt
+  - Serbest bırakma işlemi için yanlış pozitif uyarılı onay akışı ekle
+  - Yeni arayüz metinlerini TR/EN/RU/AR yerelleştirmelerine ekle
+  - Önizle düğmesinin tıklanabilirliğini ve yükleme durumunu netleştirerek plan isteğinin katlama davranışına takılmasını engelle
+  - Arşivdeki orijinalleri koşuda atlayıp onay sayısını gerçek taşınacak dosyalara göre göstererek geri alma akışını koru
+  - Dry-run sonuçlarını gelecek zamanlı sayaçlar ve açıklama notuyla göstererek dosya taşındığı izlenimini kaldır
+  - Çift nokta ve arşiv sayaçları ile yeni durum metinlerini dört dilde ekle
+
+---
 ## [v1.17.0] - 2026-09-25 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
