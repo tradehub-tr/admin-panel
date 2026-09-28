@@ -104,14 +104,14 @@ async function renderCard(state) {
 test("bekleyen dosya varken sayaç mesajı + Önizle butonu basılır", async () => {
   const html = await renderCard({ pendingCount: 3 });
   assert.match(html, /3 dosya hâlâ tahmin edilebilir/);
-  assert.match(html, />Önizle</);
+  assert.match(html, />\s*Önizle</);
   assert.doesNotMatch(html, /Tüm dosyalar yeni adlandırma standardında/);
 });
 
 test("bekleyen dosya yokken (0) allDone mesajı basılır, Önizle yok", async () => {
   const html = await renderCard({ pendingCount: 0 });
   assert.match(html, /Tüm dosyalar yeni adlandırma standardında/);
-  assert.doesNotMatch(html, />Önizle</);
+  assert.doesNotMatch(html, />\s*Önizle</);
 });
 
 // ── 2. Çalışan iş ──
@@ -182,6 +182,53 @@ test("Önizle tıklanınca loadPlan() çağrılır; planLoading göstergesi doğ
   );
   assert.match(cardSrc, /r\.planLoading\.value/);
   assert.match(cardSrc, /t\(["']mediaRetroRename\.planLoading["']\)/);
+});
+
+test("Önizle tıklamayı alır: kural katlama katmanını ezen özgüllükte, yüklenirken döner", () => {
+  // `.mrr__summary > :not(.mrr__stretch)` düğmeye `pointer-events: none` veriyor;
+  // tek sınıflı seçici onu ezemiyordu ve tık katlama katmanına düşüyordu.
+  assert.match(cardSrc, /\.mrr__summary > \.mrr__preview-btn \{\s*pointer-events: auto;/);
+  assert.match(cardSrc, /:disabled="r\.planLoading\.value"/);
+  assert.match(cardSrc, /<AppIcon v-if="r\.planLoading\.value" name="loader"[^>]*animate-spin/);
+});
+
+test("gövde boşken ok ve katlama yok; Önizle kartı her zaman açar", () => {
+  assert.match(cardSrc, /v-if="hasBody"\s*type="button"\s*class="mrr__stretch"/);
+  assert.match(cardSrc, /v-if="hasBody"\s*name="chevron-down"/);
+  assert.match(cardSrc, /hasBody\.value && \(manualExpanded\.value \?\? autoExpanded\.value\)/);
+  assert.match(cardSrc, /function openPreview\(\) \{[\s\S]*?manualExpanded\.value = null;/);
+});
+
+test("biten prova 'Tamamlandı/Taşındı' demez; gelecek zamanla önizleme gibi okunur", () => {
+  assert.match(
+    cardSrc,
+    /r\.job\.dry_run && \(s === "completed" \|\| !s\)\) return t\("mediaRetroRename\.dryRunDone"\)/
+  );
+  assert.match(
+    cardSrc,
+    /r\.job\.dry_run && s === "stopped"\) return t\("mediaRetroRename\.dryRunStopped"\)/
+  );
+  assert.match(
+    cardSrc,
+    /r\.job\.dry_run \? "mediaRetroRename\.willRename" : "mediaRetroRename\.renamed"/
+  );
+  assert.match(
+    cardSrc,
+    /r\.job\.dry_run \? "mediaRetroRename\.willSkip" : "mediaRetroRename\.skipped"/
+  );
+  // Provada referans satırı yerine "hiçbir şey değişmedi" notu.
+  assert.match(
+    cardSrc,
+    /<div v-if="r\.job\.dry_run"[^>]*>\s*\{\{ t\("mediaRetroRename\.dryRunNote"\) \}\}/
+  );
+  for (const [ad, dil] of Object.entries({ tr, en })) {
+    const m = dil.mediaRetroRename;
+    for (const k of ["dryRunDone", "dryRunStopped", "willRename", "willSkip", "dryRunNote"]) {
+      assert.ok(m[k], `${ad}: mediaRetroRename.${k}`);
+    }
+  }
+  assert.equal(tr.mediaRetroRename.willRename, "Taşınacak");
+  assert.equal(tr.mediaRetroRename.willSkip, "Atlanacak");
 });
 
 test("önizleme paneli plan istatistiklerini ve dry-run onayını bağlar", () => {
@@ -299,14 +346,44 @@ test("sonuç bloğunda güncellenen/atlanan referans sayısı basılır", async 
 test("yalnız diskte-olmayan kayıt kaldıysa: taşınamaz mesajı, Önizle YOK, allDone YOK", async () => {
   const html = await renderCard({ pendingCount: 4, renamableCount: 0, diskMissingCount: 4 });
   assert.match(html, /4 kayıt diskte olmayan dosyaya işaret ediyor/);
-  assert.doesNotMatch(html, />Önizle</);
+  assert.doesNotMatch(html, />\s*Önizle</);
   assert.doesNotMatch(html, /Tüm dosyalar yeni adlandırma standardında/);
 });
 
 test("taşınabilir kayıt varsa diskte-yok kırılımına rağmen Önizle basılır", async () => {
   const html = await renderCard({ pendingCount: 5, renamableCount: 2, diskMissingCount: 3 });
-  assert.match(html, />Önizle</);
+  assert.match(html, />\s*Önizle</);
   assert.doesNotMatch(html, /kayıt diskte olmayan dosyaya işaret ediyor/);
+});
+
+test("önizleme çift nokta ve arşiv sayaçlarını gösterir; arşivdekiler kilitlemez, atlanır", () => {
+  assert.match(cardSrc, /r\.plan\.value\.double_dots/);
+  assert.match(cardSrc, /r\.plan\.value\.archived/);
+  assert.match(cardSrc, /t\(["']mediaRetroRename\.stats\.doubleDots["']\)/);
+  assert.match(cardSrc, /t\(["']mediaRetroRename\.stats\.archived["']\)/);
+  // Eski backend alanı göndermezse 0 sayılır.
+  assert.match(
+    cardSrc,
+    /const archivedCount = computed\(\(\) => r\.plan\.value\?\.archived \?\? 0\)/
+  );
+  // Gerçek koşu kilitlenmez: taşınacak dosya varsa Başlat açık.
+  assert.doesNotMatch(cardSrc, /startBlocked/);
+  assert.match(cardSrc, /:disabled="!willRenameCount \|\| r\.actionLoading\.value"/);
+  // Onay penceresi arşivdekiler düşülmüş sayıyı söyler.
+  assert.match(cardSrc, /\(r\.plan\.value\?\.renamable \|\| 0\) - archivedCount\.value/);
+  assert.match(cardSrc, /count: willRenameCount,/);
+  assert.match(cardSrc, /t\(["']mediaRetroRename\.archiveSkipped["'], \{ n: archivedCount \}\)/);
+});
+
+test("arşiv notu ve yeni sayaçlar dört dilde çevrili", () => {
+  for (const [ad, dil] of Object.entries({ tr, en })) {
+    const m = dil.mediaRetroRename;
+    assert.ok(m.stats.doubleDots, `${ad}: stats.doubleDots`);
+    assert.ok(m.stats.archived, `${ad}: stats.archived`);
+    assert.ok(m.skip.archived, `${ad}: skip.archived`);
+    assert.match(m.archiveSkipped, /\{n\}/, `${ad}: archiveSkipped {n} içermeli`);
+    assert.equal(m.archiveBlocked, undefined, `${ad}: eski kilit metni kalmamalı`);
+  }
 });
 
 test("yükleme ve polling hataları kullanıcıya görünür, progress ARIA sözleşmesi taşır", async () => {
