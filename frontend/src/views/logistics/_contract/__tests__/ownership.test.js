@@ -215,7 +215,8 @@ test("src/api dizinindeki her lojistik dosya sahiplik haritasında", () => {
   // "diskteki her dizinin bir sahibi var" kuralının API karşılığı: kapsam
   // dışı (lojistik-dışı) dosyalar AÇIKÇA listelenir, kalan her dosya
   // haritada olmak zorunda.
-  const NON_LOGISTICS_API_FILES = ["seo.js", "seoRedirects.js"];
+  // seoHelper.js: SEO Helper süper admin ekranı (MOGEM-663, 22 Eyl) — lojistik değil.
+  const NON_LOGISTICS_API_FILES = ["seo.js", "seoHelper.js", "seoRedirects.js"];
   const onDisk = readdirSync(join(SRC_DIR, "api"), { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
     .map((entry) => entry.name);
@@ -254,6 +255,7 @@ test("src/stores dizinindeki her lojistik store sahiplik haritasında", () => {
     "notification.js",
     "permission.js",
     "reservation.js",
+    "salesTeams.js", // saha satış ekipleri (18 Eyl) — lojistik değil
     "seoEditor.js",
     "seoRedirects.js",
     "sidebar.js",
