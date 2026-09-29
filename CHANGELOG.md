@@ -1,3 +1,14 @@
+## [v1.17.0-alpha.3] - 2026-09-29 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(seo): MOGEM-662 SEO Helper ekranına tarama, bot logu, pano, denetim, GSC ve deney sekmeleri (@Metin Bektemur)
+  - API yolları tradehub_core.seo_helper.* olarak güncellendi (seoHelper.js), yeni seoHelper662.js (31 uç)
+  - 6 yeni sekme bileşeni: SeoCrawlTab, SeoBotLogTab, SeoBoardTab, SeoAuditTab, SeoGscTab, SeoExperimentsTab
+  - i18n: seoHelper bloğu tr/en/ru/ar dört dilde 272 anahtar, birebir eşit
+
+---
 ## [v1.17.0-alpha.2] - 2026-09-29 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
