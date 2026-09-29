@@ -1,3 +1,32 @@
+## [v1.17.0-alpha.4] - 2026-09-29 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): ayar testi anahtar sayısını API den alacak hâle getirildi (@aliiball)
+  - verify-0904 M3 ayar ekranında 13 anahtar bekliyordu; carrier_webhook_enabled 16 Eyl de eklenince 14 oldu. Sayı get_logistics_settings yanıtından türetiliyor, her bayrağın okunur adı ve açıklaması aranıyor.
+  - Yeni bayrağın 4 dilde adı ve açıklaması eklendi; ölü webhook_notifications_enabled açıklaması düzeltildi. Aynı dosyalarda gizli ekran uyarı metni (screenNotOpenHere) de var.
+- fix(lojistik): lojistik mock verisi PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 F-03: PROD panel JS inin 13 parçasında mock tohumu vardı, 43 mock ucunun 41 inin backend i yok, MockDevPanel PROD da admin e görünüyordu.
+  - İki kilit: derleme anahtarı VITE_LOGISTICS_MOCK (repo Dockerfile ında açık, PROD un birleşik Dockerfile ında yok) ve sunucu adı kapısı (yerel, alpha, beta, rc).
+  - Mock bekleyen ekranlar MOCK haritasından türetilip gizleniyor; uç yazılınca kendiliğinden açılır. CI da mock-kapisi işi varsayılan derlemede sahte veri izi arar.
+  - Veritabanından gelen menü de filtreleniyor (bulgu 18: PROD satıcı lojistik menüsünde 9 öğenin 8 i ölü bağlantıydı); gizli ekran adresi en yakın açık ekrana yönlenip uyarı gösteriyor.
+  - CLAUDE.md: build:onizleme kuralı ve panelde npm test koşan CI işi olmadığı (bulgu 21) yazıldı.
+- fix(lojistik): sabit mağaza kodu PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 bulgu 19: pricing ve returns store undaki SEL-00001 yayın paketinde duruyordu ve satıcı rolünde gerçek uca sabit mağaza kodu gidiyordu.
+  - Sabit derleme anahtarına bağlandı: PROD derlemesinde 2 -> 0 dosya, önizlemede mock bozulmadı.
+- fix(medya): kırpma politikası kopyası backend ile senkronlandı (@aliiball)
+  - MOGEM-685 bulgu 16: kopya 23 Ağu dan beri bayattı (9 slot biçimi webp/jpeg -> avif, yeni library.image slotu).
+  - AVIF saydamlığı taşıdığı için alphaToJpeg uyarısı artık doğru olarak üretilmiyor; 3 uyarı testi bugünkü gerçeğe ve geçici JPEG profilli uyarı yoluna bağlandı (jpegProfil).
+- fix(test): sahiplik testine SEO ve satış ekibi dosyaları eklendi (@aliiball)
+  - seoHelper.js (MOGEM-663) ve salesTeams.js lojistik değil; sahiplik testinin kapsam dışı listesine eklendi. Panel birim testleri 1807/0.
+
+### Degistirildi
+- refactor(deps): tiptap 3.31 ve undici 8.11 e güncellendi (@aliiball)
+  - MOGEM-685 F-01: npm audit fix ve tiptap 3.29 -> 3.31; A-3 bulgu 25: jsdom un undici paketi 8.11.2 (WebSocket DoS, yalnız test ortamı).
+  - CI a uyarı veren npm audit işi eklendi (derlemeyi kırmaz). Kilit npm 10 ile üretildi; node:22-alpine içinde npm ci sınandı.
+
+---
 ## [v1.17.0-alpha.3] - 2026-09-29 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
