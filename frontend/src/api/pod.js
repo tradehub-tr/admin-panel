@@ -21,6 +21,7 @@
 
 import { getCatalogItem, LogisticsApiError } from "./logistics";
 import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 import { podMock } from "./podMock.js";
 
 // Demo verisi ve hata tetikleyicisi — yalnız mock modunda anlamlı.
@@ -69,7 +70,7 @@ export const MOCK = {
 };
 
 /** Hâlâ mock'ta olan uç var mı — DEMO paneli buna bakıyor. */
-export const USE_MOCK = Object.values(MOCK).some(Boolean);
+export const USE_MOCK = __LOJISTIK_MOCK__ && mockCalisiyor() && Object.values(MOCK).some(Boolean);
 
 /** Mock hatalarını sözleşmedeki tipli hataya çevirir — `fields` korunur. */
 async function viaMock(fn) {
@@ -107,7 +108,7 @@ export async function getPodQueue({
   asSeller = false,
   sellerName = null,
 } = {}) {
-  if (MOCK.get_pod_queue)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_pod_queue)
     return viaMock(() =>
       podMock.getPodQueue({
         bucket,
@@ -149,7 +150,7 @@ export async function getProofOfDelivery(
   shipment,
   { canViewMedia = true, asSeller = false, sellerName = null } = {}
 ) {
-  if (MOCK.get_proof_of_delivery)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_proof_of_delivery)
     return viaMock(() =>
       podMock.getProofOfDelivery(shipment, { canViewMedia, asSeller, sellerName })
     );
@@ -164,7 +165,8 @@ export async function getProofOfDelivery(
  * rolünden okunur ve bu alan gönderilmez.
  */
 export async function recordProofOfDelivery(payload) {
-  if (MOCK.record_proof_of_delivery) return viaMock(() => podMock.recordProofOfDelivery(payload));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.record_proof_of_delivery)
+    return viaMock(() => podMock.recordProofOfDelivery(payload));
 
   // `asSeller` ve `sellerName` yalnız mock'un işine yarıyor; gerçek uçta
   // sunucu ikisini de oturumdan okuyor ve istemci beyanına güvenmiyor.
@@ -174,7 +176,8 @@ export async function recordProofOfDelivery(payload) {
 
 /** Kaydı düzeltir — gerekçe zorunlu, iz bırakır, satıcıda yetki yok. */
 export async function amendProofOfDelivery(payload) {
-  if (MOCK.amend_proof_of_delivery) return viaMock(() => podMock.amendProofOfDelivery(payload));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.amend_proof_of_delivery)
+    return viaMock(() => podMock.amendProofOfDelivery(payload));
 
   const { asSeller: _rol, sellerName: _ad, ...gonderilecek } = payload;
   return logisticsPost(`${POD}.amend_proof_of_delivery`, gonderilecek);
@@ -207,7 +210,7 @@ export async function listDeliveryFlows(
     sellerName = null,
   } = {}
 ) {
-  if (MOCK.list_delivery_flows)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_delivery_flows)
     return viaMock(() =>
       podMock.listDeliveryFlows({
         flowType,
@@ -242,7 +245,8 @@ export async function listDeliveryFlows(
  * aksiyonu POD'u doğurur, iki iş ayrılamaz (K-F).
  */
 export async function handOverShipment(payload) {
-  if (MOCK.hand_over_shipment) return viaMock(() => podMock.handOverShipment(payload));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.hand_over_shipment)
+    return viaMock(() => podMock.handOverShipment(payload));
 
   const { asSeller: _rol, sellerName: _ad, ...gonderilecek } = payload;
   return logisticsPost(`${POD}.hand_over_shipment`, gonderilecek);
@@ -260,7 +264,8 @@ export async function handOverShipment(payload) {
  * bayrağına bağlıydı; kuyruk canlıya alınınca bu da yazılmamış uca düşerdi.
  */
 export async function getExceptionCodes() {
-  if (MOCK.get_shipment_exception_codes) return viaMock(() => podMock.getExceptionCodes());
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_shipment_exception_codes)
+    return viaMock(() => podMock.getExceptionCodes());
   return logisticsGet(`${POD}.get_shipment_exception_codes`);
 }
 
@@ -277,7 +282,8 @@ export async function getExceptionCodes() {
  * duruyor — gerekçe MOCK haritasının başındaki yorumda.
  */
 export async function getCarrierBranch(name) {
-  if (MOCK.get_catalog_item) return viaMock(() => podMock.getCarrierBranch(name));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_catalog_item)
+    return viaMock(() => podMock.getCarrierBranch(name));
   return { branch: await getCatalogItem("carrier_branch", name) };
 }
 
@@ -287,6 +293,7 @@ export async function getCarrierBranch(name) {
  * `amend_proof_of_delivery` bayrağına bağlıydı.
  */
 export async function getPodAudit(shipment) {
-  if (MOCK.get_pod_audit) return viaMock(() => podMock.getPodAudit(shipment));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_pod_audit)
+    return viaMock(() => podMock.getPodAudit(shipment));
   return logisticsGet(`${POD}.get_pod_audit`, { shipment });
 }

@@ -7,7 +7,14 @@ import { logisticsTitleMeta } from "@/router/pageTitle";
 
 // Layout
 import AppLayout from "@/layouts/AppLayout.vue";
-import { LOGISTICS_SECTION, readyScreens } from "@/router/logisticsScreens";
+import {
+  LOGISTICS_SECTION,
+  kapaliEkranHedefi,
+  mockHiddenScreens,
+  readyScreens,
+} from "@/router/logisticsScreens";
+import { useToast } from "@/composables/useToast";
+import { i18n } from "@/i18n";
 
 // Views (lazy-loaded)
 const LoginView = () => import("@/views/auth/LoginView.vue");
@@ -165,6 +172,24 @@ function logisticsRoutes() {
       // dashboard'a atar. Veri sınırı backend'de; bu kapı ekran VARLIĞININ
       // sızmasını önler (F1 menü kararıyla aynı gerekçe).
       ...(screen.sellerVisible || screen.sellerRoute ? {} : { logisticsPlatformOnly: true }),
+    },
+  }));
+}
+
+/**
+ * Bu derlemede gizlenen (mock bekleyen) ekranların adresleri — MOGEM-685 bulgu 18.
+ *
+ * Kayıt edilmeyen ekranın adresi komşu parametreli rotaya düşüyordu:
+ * `/lojistik/sevkiyatlar/yeni` → `sevkiyatlar/:name` → "Kayıt bulunamadı: yeni" (RC/PROD,
+ * L3 ölçüldü). Sabit yol parametreli yoldan önce eşleşir; eski yer imiyle gelen kullanıcı
+ * en yakın açık ekrana yönlenir ve nedenini okur.
+ */
+function kapaliLogisticsRoutes() {
+  return mockHiddenScreens().map((screen) => ({
+    path: screen.path,
+    redirect: () => {
+      useToast().info(i18n.global.t("logistics.screenNotOpenHere"));
+      return { path: kapaliEkranHedefi(screen) };
     },
   }));
 }
@@ -1177,6 +1202,7 @@ const routes = [
       // yalnız `ready: true` olanlar kaydediliyor. Bir uç yazıldığında o
       // dosyadaki bayrak açılır, route ve menü kendiliğinden oluşur.
       ...logisticsRoutes(),
+      ...kapaliLogisticsRoutes(),
     ],
   },
   {

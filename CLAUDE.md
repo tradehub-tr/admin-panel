@@ -37,6 +37,14 @@ Bu dosya kısa orkestrasyon kurallarını içerir. Detaylı kurallar `admin-pane
 > cd admin-panel/frontend && npm run build
 > ```
 > Sonra tarayıcıda **Ctrl+Shift+R** ile hard refresh. Yeni dosya/route ekleyince index.html yeniden üretilir, eski bundle hash'i geçersiz olur.
+>
+> ⚠ **`npm run build` PROD eşdeğeridir — lojistik mock'u yok** (MOGEM-685 F-03): ucu
+> yazılmamış 22 lojistik ekranı gizlenir (derleme günlüğü "Gizli lojistik ekranları"
+> listesini yazar). Mock'lu ekranlar ve panel E2E'si için **`npm run build:onizleme`**.
+> Mock dalı yazma kuralı: `src/api/logisticsMockGate.js` başlığı ve
+> `docs/Kurallar/FE-MOCK-DISIPLINI.md` §6. Birim testleri `npm test` ile koşar
+> (`frontend/scripts/node-test-setup.mjs` sabitleri kuruyor); tek dosya:
+> `node --import ./scripts/node-test-setup.mjs --test <dosya>`.
 
 ## 1.1 Storybook (2026-08-12)
 
@@ -126,13 +134,16 @@ biçim denetimleri henüz bir ekrana bağlanmamış prototiplere girmemeli. Öl�
 ## 1.2 Testler
 
 ```bash
-npm test          # node --test "src/**/*.test.js"  — 108 test
+npm test          # node --import ./scripts/node-test-setup.mjs --test "src/**/*.test.js"
 npm run test:watch
 ```
 
 Testler **Node'un yerleşik koşucusunu** kullanıyor (`node:test` + `node:assert`),
-vitest/jest **yok** — yeni test yazarken aynı deseni sürdür. CI (`lint.yml`) bu
-script'i çalıştırıyor.
+vitest/jest **yok** — yeni test yazarken aynı deseni sürdür. ⚠ **CI'da bu
+script'i koşan iş YOK** (29 Eyl 2026 ölçüldü; eskiden var olmayan bir `lint.yml`'ye
+atıf vardı): `.github/workflows/` altında `npm test` çağıran iş yok,
+`mock-kapisi.yml` yalnız derleme + `check:no-mock` koşuyor. Birim testleri yerelde
+koşulmazsa kimse fark etmez.
 
 > Dizin verip `node --test src/` çalıştırma — hata verir. Glob deseni gerekli.
 

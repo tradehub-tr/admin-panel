@@ -7,9 +7,17 @@ COPY . .
 ARG VITE_FRAPPE_BACKEND=https://rcistoc.cronbi.com
 ARG VITE_FRAPPE_SOCKETIO=https://rcistoc.cronbi.com
 ARG VITE_STOREFRONT_URL=/
+# Lojistik örnek verisi (MOGEM-685 F-03) — VARSAYILAN AÇIK. Ürün kararı (29 Eyl 2026):
+# Alpha, Beta ve RC'de örnek veri olabilir, PROD'da HİÇ olmamalı. Bu Dockerfile yalnız
+# Alpha/Beta/RC'de kullanılıyor; PROD sunucudaki AYRI, birleşik Dockerfile ile ve bu
+# anahtar verilmeden derleniyor (Jenkins rc-to-prod #47 koşum çıktısında ölçüldü, 29 Eyl).
+# PROD bir gün bu Dockerfile'a geçirilirse satır `ARG VITE_LOGISTICS_MOCK=` yapılmalı —
+# yoksa örnek veri PROD'un JS dosyalarına girer (sunucu adı kilidi yine çalıştırmaz).
+ARG VITE_LOGISTICS_MOCK=1
 ENV VITE_FRAPPE_BACKEND=$VITE_FRAPPE_BACKEND
 ENV VITE_FRAPPE_SOCKETIO=$VITE_FRAPPE_SOCKETIO
 ENV VITE_STOREFRONT_URL=$VITE_STOREFRONT_URL
+ENV VITE_LOGISTICS_MOCK=$VITE_LOGISTICS_MOCK
 RUN npm run build
 
 # ---- Serve Stage ----

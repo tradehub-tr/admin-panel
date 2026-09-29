@@ -98,6 +98,8 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
     order: 40,
     componentPath: "@/views/logistics/shipments/tabs/ShipmentTrackingTab.vue",
     component: () => import("@/views/logistics/shipments/tabs/ShipmentTrackingTab.vue"),
+    // PROD'da (mock yok) `list_shipment_events` ucu yazılana dek sekme gizli (MOGEM-685 F-03).
+    mockApi: ["shipmentEvents"],
     // Olaylar ayrı DocType (`get_shipment_detail` taşıyamıyor) — sekme
     // kendi verisini `api/shipmentEvents.js` üzerinden yükler (11-FE, mock;
     // 11-BE'de canlıya bağlanır). Sayaç bu yüzden YOK: kayıt anında olay
@@ -180,6 +182,7 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
     order: 70,
     componentPath: "@/views/logistics/pod/tabs/ProofOfDeliveryTab.vue",
     component: () => import("@/views/logistics/pod/tabs/ProofOfDeliveryTab.vue"),
+    mockApi: ["pod", "shipmentEvents"],
     props: ({ shipment }) => ({ shipment }),
     // Sekme SAYAÇ BASMIYOR: POD tek kayıt, "1" yazmak bilgi taşımaz; yokluğu
     // ise sekmenin kendi boş durumu anlatıyor.
@@ -194,6 +197,7 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
     order: 80,
     componentPath: "@/views/logistics/pod/tabs/StationTimelineTab.vue",
     component: () => import("@/views/logistics/pod/tabs/StationTimelineTab.vue"),
+    mockApi: ["pod", "shipmentEvents"],
     props: ({ shipment }) => ({ shipment }),
     // Takip sekmesiyle (B6) aynı veriden FARKLI soru: orası "ne oldu", burası
     // "nerede ne kadar kalındı". Ayrım K-G kararı.

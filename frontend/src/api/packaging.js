@@ -18,6 +18,7 @@
 
 import { LogisticsApiError } from "./logistics";
 import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 import { packagingMock } from "./packagingMock";
 
 // Demo verisi ve hata tetikleyicisi — yalnız mock modunda anlamlı.
@@ -55,7 +56,7 @@ export const MOCK = {
 };
 
 /** Hâlâ mock'ta olan uç var mı — DEMO paneli buna bakıyor. */
-export const USE_MOCK = Object.values(MOCK).some(Boolean);
+export const USE_MOCK = __LOJISTIK_MOCK__ && mockCalisiyor() && Object.values(MOCK).some(Boolean);
 
 /** Mock hatalarını sözleşmedeki tipli hataya çevirir. */
 async function viaMock(fn) {
@@ -94,7 +95,7 @@ export async function getPackingQueue({
   asSeller = false,
   sellerName = null,
 } = {}) {
-  if (MOCK.get_packing_queue)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_packing_queue)
     // Süzgeçler mock dalına GEÇİRİLMİYORDU: arama, satıcı ve taşıyıcı
     // seçimleri sessizce yok sayılıyor, ekran filtrelenmiş sanılan bir liste
     // gösteriyordu (ölçüldü 2026-08-24). Gerçek uç bunların hepsini alıyor.
@@ -129,7 +130,7 @@ export async function getPackingQueue({
 
 /** Çalışma alanının tam yükü — kalemler, koliler, toplamlar, paket tipleri. */
 export async function getShipmentPacking(shipment, oturum = {}) {
-  if (MOCK.get_shipment_packing)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_shipment_packing)
     return viaMock(() => packagingMock.getShipmentPacking(shipment, oturum));
   return logisticsGet(`${PACKAGING}.get_shipment_packing`, { shipment });
 }
@@ -146,7 +147,7 @@ export async function getShipmentPacking(shipment, oturum = {}) {
  * hesaplanıyor. Çağıran yerel taslağı yamamaz, dönen yükü kullanır.
  */
 export async function saveShipmentPackages(shipment, packages, modified, oturum = {}) {
-  if (MOCK.save_shipment_packages)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.save_shipment_packages)
     return viaMock(() => packagingMock.saveShipmentPackages(shipment, packages, modified, oturum));
   return logisticsPost(`${PACKAGING}.save_shipment_packages`, {
     shipment,
@@ -163,7 +164,7 @@ export async function saveShipmentPackages(shipment, packages, modified, oturum 
  * Sevkiyat durumu burada değişmiyor — o `markReady`'nin işi.
  */
 export async function completePacking(shipment, modified, oturum = {}) {
-  if (MOCK.complete_packing)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.complete_packing)
     return viaMock(() => packagingMock.completePacking(shipment, modified, oturum));
   return logisticsPost(`${PACKAGING}.complete_packing`, { shipment, modified });
 }
@@ -180,7 +181,7 @@ export async function markReady(shipment, carrierAccount = null, oturum = {}) {
   // `Shipment`'ta 20-BE'de açılacak (20-FE veri sözleşmesi §1.3); uç onu
   // görene kadar mock saklıyor. Parametre OPSİYONEL: taşıyıcı seçimi olmayan
   // eski akışlar (E2E dahil) aynen çalışıyor.
-  if (MOCK.mark_shipment_ready)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.mark_shipment_ready)
     return viaMock(() => packagingMock.markReady(shipment, carrierAccount, oturum));
   return logisticsPost(`${PACKAGING}.mark_shipment_ready`, {
     shipment,
@@ -198,7 +199,7 @@ export async function generateLabels(
   format = "thermal_100x150",
   oturum = {}
 ) {
-  if (MOCK.generate_shipment_labels)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.generate_shipment_labels)
     return viaMock(() => packagingMock.generateLabels(shipment, packageCodes, format, oturum));
   return logisticsPost(`${PACKAGING}.generate_shipment_labels`, {
     shipment,
@@ -221,7 +222,7 @@ export async function reprintLabels(
   reasonNote = null,
   oturum = {}
 ) {
-  if (MOCK.reprint_shipment_labels)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.reprint_shipment_labels)
     return viaMock(() =>
       packagingMock.reprintLabels(shipment, packageCodes, reason, reasonNote, oturum)
     );
@@ -234,7 +235,7 @@ export async function reprintLabels(
 }
 
 export async function voidLabel(shipment, packageCode, reason = null, oturum = {}) {
-  if (MOCK.void_shipment_label)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.void_shipment_label)
     return viaMock(() => packagingMock.voidLabel(shipment, packageCode, reason, oturum));
   return logisticsPost(`${PACKAGING}.void_shipment_label`, {
     shipment,
@@ -248,12 +249,13 @@ export async function voidLabel(shipment, packageCode, reason = null, oturum = {
 // ---------------------------------------------------------------------------
 
 export async function getPalletPlan(shipment, oturum = {}) {
-  if (MOCK.get_pallet_plan) return viaMock(() => packagingMock.getPalletPlan(shipment, oturum));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_pallet_plan)
+    return viaMock(() => packagingMock.getPalletPlan(shipment, oturum));
   return logisticsGet(`${PACKAGING}.get_pallet_plan`, { shipment });
 }
 
 export async function savePalletPlan(shipment, pallets, modified, oturum = {}) {
-  if (MOCK.save_pallet_plan)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.save_pallet_plan)
     return viaMock(() => packagingMock.savePalletPlan(shipment, pallets, modified, oturum));
   return logisticsPost(`${PACKAGING}.save_pallet_plan`, {
     shipment,
@@ -264,7 +266,7 @@ export async function savePalletPlan(shipment, pallets, modified, oturum = {}) {
 
 /** İrsaliye (paket listesi) — etiketten ayrı belge. */
 export async function getPackingSlip(shipment, packageCodes = null, oturum = {}) {
-  if (MOCK.get_packing_slip)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_packing_slip)
     return viaMock(() => packagingMock.getPackingSlip(shipment, packageCodes, oturum));
   return logisticsPost(`${PACKAGING}.get_packing_slip`, {
     shipment,

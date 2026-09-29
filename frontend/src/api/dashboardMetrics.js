@@ -39,6 +39,7 @@
 
 import { exceptionsMock } from "./exceptionsMock.js";
 import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 import { defaultReportRange, reportsMock } from "./reportsMock.js";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
@@ -92,9 +93,10 @@ function mockPayload() {
 
 /** Pano metrikleri — camelCase'e burada çevrilir, ekran sözleşme bilmez. */
 export async function getDashboardMetrics() {
-  const data = MOCK.get_dashboard_metrics
-    ? mockPayload()
-    : await logisticsGet(`${LOGISTICS_METHOD.OPS}.get_dashboard_metrics`);
+  const data =
+    __LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_dashboard_metrics
+      ? mockPayload()
+      : await logisticsGet(`${LOGISTICS_METHOD.OPS}.get_dashboard_metrics`);
 
   return {
     metrics: {

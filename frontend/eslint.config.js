@@ -30,6 +30,9 @@ export default [
         fetch: "readonly",
         localStorage: "readonly",
         sessionStorage: "readonly",
+        // vite.config `define` — lojistik mock derleme anahtarı (MOGEM-685 F-03).
+        __LOJISTIK_MOCK__: "readonly",
+        __LOJISTIK_MOCK_BEKLEYEN__: "readonly",
       },
     },
     rules: {
