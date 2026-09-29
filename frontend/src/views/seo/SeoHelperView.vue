@@ -22,12 +22,43 @@
     rotateKey,
     disableClient,
   } from "@/api/seoHelper";
+  import SeoCrawlTab from "@/components/seo/SeoCrawlTab.vue";
+  import SeoBotLogTab from "@/components/seo/SeoBotLogTab.vue";
+  import SeoBoardTab from "@/components/seo/SeoBoardTab.vue";
+  import SeoAuditTab from "@/components/seo/SeoAuditTab.vue";
+  import SeoGscTab from "@/components/seo/SeoGscTab.vue";
+  import SeoExperimentsTab from "@/components/seo/SeoExperimentsTab.vue";
 
   const { t } = useI18n();
   const toast = useToast();
 
-  const TABS = ["drafts", "pages", "ops"];
+  // MOGEM-663 sekmeleri + MOGEM-662: crawl (13.1) · botlog (13.2) · board (13.3) · audit (13.4) · gsc (13.5) · experiments (13.6)
+  const TABS = [
+    "drafts",
+    "pages",
+    "ops",
+    "board",
+    "crawl",
+    "botlog",
+    "audit",
+    "gsc",
+    "experiments",
+  ];
+  const TAB662 = {
+    board: SeoBoardTab,
+    crawl: SeoCrawlTab,
+    botlog: SeoBotLogTab,
+    audit: SeoAuditTab,
+    gsc: SeoGscTab,
+    experiments: SeoExperimentsTab,
+  };
   const tab = ref("drafts");
+  // 662 §2: Tarama sekmesinden "Bulgular" → Denetim sekmesi aynı koşum kimliğiyle açılır
+  const auditRun = ref("");
+  function showFindings(run) {
+    auditRun.value = run || "";
+    tab.value = "audit";
+  }
   const summary = ref(null);
   const busy = ref(false);
 
@@ -270,7 +301,8 @@
   function loadTab() {
     if (tab.value === "drafts") loadDrafts();
     else if (tab.value === "pages") loadPages();
-    else loadOps();
+    else if (tab.value === "ops") loadOps();
+    // 662 sekmeleri kendi verisini yükler
   }
 
   watch(tab, loadTab);
@@ -801,7 +833,7 @@
     </div>
 
     <!-- ── Sekme 3: Kuyruk & MCP -->
-    <div v-else class="space-y-4">
+    <div v-else-if="tab === 'ops'" class="space-y-4">
       <div class="bg-white rounded-lg border border-gray-200 p-4" data-testid="sh-queue">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="text-sm font-semibold text-gray-900">
@@ -1084,5 +1116,13 @@
         </div>
       </div>
     </div>
+    <!-- ── MOGEM-662 sekmeleri -->
+    <component
+      :is="TAB662[tab]"
+      v-else-if="TAB662[tab]"
+      :key="tab"
+      :run="tab === 'audit' ? auditRun : undefined"
+      @show-findings="showFindings"
+    />
   </div>
 </template>
