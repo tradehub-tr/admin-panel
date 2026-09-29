@@ -1,11 +1,11 @@
-// SEO Helper (MOGEM-663) süper admin ekranı — backend: seo_helper_cms.api.panel (+ mcp.api / mcp.ops).
+// SEO Helper (MOGEM-663) süper admin ekranı — backend: tradehub_core.seo_helper.api.panel (+ mcp.api / mcp.ops).
 // utils/api.js callMethod/callMethodGET (CSRF + auth + hata) üzerinden.
 
 import api from "@/utils/api";
 
-const P = "seo_helper_cms.api.panel";
-const MCP = "seo_helper_cms.mcp.api";
-const OPS = "seo_helper_cms.mcp.ops";
+const P = "tradehub_core.seo_helper.api.panel";
+const MCP = "tradehub_core.seo_helper.mcp.api";
+const OPS = "tradehub_core.seo_helper.mcp.ops";
 
 const unwrap = (res) => res?.message ?? res;
 
