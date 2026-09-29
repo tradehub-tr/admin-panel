@@ -15,7 +15,7 @@ export default {
 					"height": 64,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.33
@@ -26,7 +26,7 @@ export default {
 					"height": 128,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.23
@@ -37,7 +37,7 @@ export default {
 					"height": 256,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.19
@@ -48,7 +48,7 @@ export default {
 					"height": 384,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.37
@@ -59,7 +59,7 @@ export default {
 					"height": 512,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.64
@@ -70,7 +70,7 @@ export default {
 					"height": 630,
 					"fit": "pad",
 					"formats": [
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": "1200:630",
 					"maxOvershoot": null
@@ -89,8 +89,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "2:1",
 					"maxOvershoot": 1.23
@@ -101,8 +100,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "2:1",
 					"maxOvershoot": 1.11
@@ -113,8 +111,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "2:1",
 					"maxOvershoot": 1.09
@@ -133,8 +130,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "24:5",
 					"maxOvershoot": 1.2
@@ -145,8 +141,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "24:5",
 					"maxOvershoot": 1
@@ -157,8 +152,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "24:5",
 					"maxOvershoot": 1
@@ -169,8 +163,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "24:5",
 					"maxOvershoot": 1
@@ -181,8 +174,7 @@ export default {
 					"height": 563,
 					"fit": "cover",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "16:9",
 					"maxOvershoot": 1
@@ -201,7 +193,7 @@ export default {
 					"height": 720,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "16:9",
 					"maxOvershoot": 1.28
@@ -212,7 +204,7 @@ export default {
 					"height": 480,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "16:9",
 					"maxOvershoot": 1.44
@@ -223,7 +215,7 @@ export default {
 					"height": 144,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "4:3",
 					"maxOvershoot": 1
@@ -242,10 +234,73 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "3:2",
 					"maxOvershoot": 1.07
+				}
+			]
+		},
+		{
+			"slotKey": "library.image",
+			"title": "Medya kütüphanesi görseli",
+			"minShortEdge": 1,
+			"maxMegapixelsHard": 80,
+			"profiles": [
+				{
+					"name": "w96",
+					"width": 96,
+					"height": null,
+					"fit": "contain",
+					"formats": [
+						"avif"
+					],
+					"ratioLabel": null,
+					"maxOvershoot": null
+				},
+				{
+					"name": "w384",
+					"width": 384,
+					"height": null,
+					"fit": "contain",
+					"formats": [
+						"avif"
+					],
+					"ratioLabel": null,
+					"maxOvershoot": null
+				},
+				{
+					"name": "w768",
+					"width": 768,
+					"height": null,
+					"fit": "contain",
+					"formats": [
+						"avif"
+					],
+					"ratioLabel": null,
+					"maxOvershoot": null
+				},
+				{
+					"name": "w1280",
+					"width": 1280,
+					"height": null,
+					"fit": "contain",
+					"formats": [
+						"avif"
+					],
+					"ratioLabel": null,
+					"maxOvershoot": null
+				},
+				{
+					"name": "w1920",
+					"width": 1920,
+					"height": null,
+					"fit": "contain",
+					"formats": [
+						"avif"
+					],
+					"ratioLabel": null,
+					"maxOvershoot": null
 				}
 			]
 		},
@@ -261,8 +316,7 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"webp",
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.85
@@ -273,8 +327,7 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"webp",
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.85
@@ -285,9 +338,7 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"avif",
-						"webp",
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.83
@@ -298,9 +349,7 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"avif",
-						"webp",
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.66
@@ -311,9 +360,7 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"avif",
-						"webp",
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.16
@@ -324,9 +371,7 @@ export default {
 					"height": null,
 					"fit": "contain",
 					"formats": [
-						"avif",
-						"webp",
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": null,
 					"maxOvershoot": 1.59
@@ -337,9 +382,7 @@ export default {
 					"height": null,
 					"fit": "contain",
 					"formats": [
-						"avif",
-						"webp",
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": null,
 					"maxOvershoot": 1.49
@@ -358,7 +401,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.26
@@ -369,8 +412,7 @@ export default {
 					"height": null,
 					"fit": "contain",
 					"formats": [
-						"avif",
-						"webp"
+						"avif"
 					],
 					"ratioLabel": null,
 					"maxOvershoot": 1.02
@@ -389,7 +431,7 @@ export default {
 					"height": 64,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.33
@@ -400,7 +442,7 @@ export default {
 					"height": 128,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.07
@@ -411,7 +453,7 @@ export default {
 					"height": 256,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.6
@@ -422,7 +464,7 @@ export default {
 					"height": 384,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.37
@@ -433,7 +475,7 @@ export default {
 					"height": 512,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.83
@@ -444,7 +486,7 @@ export default {
 					"height": 630,
 					"fit": "pad",
 					"formats": [
-						"jpeg"
+						"avif"
 					],
 					"ratioLabel": "1200:630",
 					"maxOvershoot": null
@@ -463,7 +505,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.14
@@ -474,7 +516,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.11
@@ -485,7 +527,7 @@ export default {
 					"height": null,
 					"fit": "cover",
 					"formats": [
-						"webp"
+						"avif"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.19

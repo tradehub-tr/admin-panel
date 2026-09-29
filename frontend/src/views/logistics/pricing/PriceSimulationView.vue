@@ -33,16 +33,21 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, ref } from "vue";
+  import { computed, defineAsyncComponent, onMounted, ref } from "vue";
   import { useRouter } from "vue-router";
 
   import { USE_MOCK } from "@/api/logisticsPricing";
   import PriceSimulationScreen from "@/components/logistics/PriceSimulationScreen.vue";
-  import PricingDevPanel from "@/components/logistics/PricingDevPanel.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useLogisticsStore } from "@/stores/logistics";
   import { usePricingStore } from "@/stores/pricing";
   import { buildCsv, csvNumber } from "@/utils/csv";
+
+  // Mock geliştirici paneli yalnız anahtar AÇIK derlemede var (MOGEM-685 F-03): statik
+  // içe aktarım mock modülünü ve tohumunu PROD derlemesine taşıyordu (ölçüldü).
+  const PricingDevPanel = __LOJISTIK_MOCK__
+    ? defineAsyncComponent(() => import("@/components/logistics/PricingDevPanel.vue"))
+    : null;
 
   /**
    * **K3 container** — simülasyonu gerçek veriye bağlar.

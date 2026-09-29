@@ -15,6 +15,7 @@
 
 import { LogisticsApiError } from "./logisticsEnvelope";
 import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 import { pricingMock } from "./pricingMock.js";
 
 // Demo verisi ve hata tetikleyicisi — yalnız mock modunda anlamlı.
@@ -54,7 +55,7 @@ export const MOCK = {
 };
 
 /** Hâlâ mock'ta olan uç var mı — DEMO paneli buna bakıyor. */
-export const USE_MOCK = Object.values(MOCK).some(Boolean);
+export const USE_MOCK = __LOJISTIK_MOCK__ && mockCalisiyor() && Object.values(MOCK).some(Boolean);
 
 /** Mock hatalarını sözleşmedeki tipli hataya çevirir — `fields` korunur. */
 async function viaMock(fn) {
@@ -93,7 +94,7 @@ export async function listPricingRules({
   asSeller = false,
   sellerName = null,
 } = {}) {
-  if (MOCK.list_pricing_rules)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_pricing_rules)
     return viaMock(() =>
       pricingMock.listPricingRules({
         q: search,
@@ -122,7 +123,7 @@ export async function listPricingRules({
 
 /** Tek kuralın detayı — alt tablolar (kademe, ek ücret) burada geliyor. */
 export async function getPricingRule(name, { asSeller = false, sellerName = null } = {}) {
-  if (MOCK.get_pricing_rule)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_pricing_rule)
     return viaMock(() =>
       pricingMock.getPricingRule(name, { asSeller, ...(sellerName ? { sellerName } : {}) })
     );
@@ -147,7 +148,7 @@ export async function savePricingRule({
   asSeller = false,
   sellerName = null,
 } = {}) {
-  if (MOCK.save_pricing_rule)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.save_pricing_rule)
     return viaMock(() =>
       pricingMock.savePricingRule({ name, values, asSeller, ...(sellerName ? { sellerName } : {}) })
     );
@@ -170,7 +171,7 @@ export async function reorderPricingRules({
   asSeller = false,
   sellerName = null,
 } = {}) {
-  if (MOCK.reorder_pricing_rules)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.reorder_pricing_rules)
     return viaMock(() =>
       pricingMock.reorderPricingRules({
         layer,
@@ -185,7 +186,7 @@ export async function reorderPricingRules({
 
 /** Kural sil — kullanımdaysa `RULE_IN_USE`. */
 export async function deletePricingRule(name, { asSeller = false, sellerName = null } = {}) {
-  if (MOCK.delete_pricing_rule)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.delete_pricing_rule)
     return viaMock(() =>
       pricingMock.deletePricingRule(name, { asSeller, ...(sellerName ? { sellerName } : {}) })
     );
@@ -205,7 +206,7 @@ export async function deletePricingRule(name, { asSeller = false, sellerName = n
  * biçimde değerleri sunucu dolduruyor ve `input` alanında geri veriyor.
  */
 export async function simulatePrice(input = {}, { asSeller = false, sellerName = null } = {}) {
-  if (MOCK.simulate_price)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.simulate_price)
     return viaMock(() =>
       pricingMock.simulatePrice(input, { asSeller, ...(sellerName ? { sellerName } : {}) })
     );
@@ -224,7 +225,8 @@ export async function simulatePrice(input = {}, { asSeller = false, sellerName =
  * jenerik katalog ucuna devredecek — YENİ UÇ YAZILMIYOR (sözleşme §2.6).
  */
 export async function listShippingZones() {
-  if (MOCK.list_shipping_zones) return viaMock(() => pricingMock.listShippingZones());
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_shipping_zones)
+    return viaMock(() => pricingMock.listShippingZones());
 
   return logisticsGet(`${LOGISTICS_METHOD.CATALOG}.list_catalog`, {
     catalog: "shipping_zone",
@@ -234,7 +236,7 @@ export async function listShippingZones() {
 
 /** Taşıyıcı hesapları — kural formunun ve simülasyonun seçicisi. */
 export async function listCarrierAccounts({ asSeller = false, sellerName = null } = {}) {
-  if (MOCK.list_carrier_accounts)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_carrier_accounts)
     return viaMock(() =>
       pricingMock.listCarrierAccounts({ asSeller, ...(sellerName ? { sellerName } : {}) })
     );
@@ -250,7 +252,7 @@ export async function listCarrierAccounts({ asSeller = false, sellerName = null 
  * uygun (desi/bölge/tutar taşıyan) kayıtlar sınırlı.
  */
 export async function listSimulatableShipments({ asSeller = false, sellerName = null } = {}) {
-  if (MOCK.list_simulatable_shipments)
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_simulatable_shipments)
     return viaMock(() =>
       pricingMock.listSimulatableShipments({ asSeller, ...(sellerName ? { sellerName } : {}) })
     );

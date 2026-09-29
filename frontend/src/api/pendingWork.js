@@ -23,6 +23,7 @@
 //     (Logistics Operator+). Satıcıya bu uç hiç açılmaz.
 
 import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
 export const MOCK = {
@@ -123,7 +124,7 @@ function mockList(bucket) {
 
 /** Aktif kovanın işleri + tüm kova sayaçları (tek yanıt — sözleşme kuralı). */
 export async function listPendingWork({ bucket = "awaiting_label", page = 1, pageSize = 50 } = {}) {
-  if (MOCK.list_pending_work) return mockList(bucket);
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_pending_work) return mockList(bucket);
 
   return logisticsGet(`${LOGISTICS_METHOD.OPS}.list_pending_work`, {
     bucket,

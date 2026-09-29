@@ -3,6 +3,8 @@ import { fileURLToPath } from "url";
 
 import tailwindcss from "@tailwindcss/vite";
 
+import { bekleyenModuller } from "../scripts/lojistik-mock-haritasi.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(__dirname, "../src");
 
@@ -50,6 +52,14 @@ const config = {
     // Tailwind v4 eklentisi: uygulamada `@tailwindcss/vite` ile derleniyor,
     // CDN DEĞİL. Buraya eklenmezse utility sınıfları hiç üretilmez.
     viteConfig.plugins = [...(viteConfig.plugins ?? []), tailwindcss()];
+
+    // Lojistik mock anahtarı AÇIK (MOGEM-685 F-03): ekran story'leri gerçek
+    // mock zinciriyle koşuyor. vite.config okunmadığı için `define` burada.
+    viteConfig.define = {
+      ...(viteConfig.define ?? {}),
+      __LOJISTIK_MOCK__: "true",
+      __LOJISTIK_MOCK_BEKLEYEN__: JSON.stringify(bekleyenModuller(path.join(SRC, "api"))),
+    };
 
     viteConfig.resolve = {
       ...viteConfig.resolve,

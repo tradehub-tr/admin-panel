@@ -33,8 +33,11 @@ import {
  * `pricingSeed.SELLER_ME` ile aynı; buradan okumak yerine sabit yazıldı ki
  * store mock modülüne bağımlı olmasın — uç canlıya alınınca yalnız bu satır
  * ve `sellerName` computed'ı silinecek.
+ *
+ * Önizleme anahtarına bağlı (MOGEM-685 bulgu 19): PROD derlemesinde `null` — kimlik değeri
+ * yayın paketine girmez ve satıcı rolünde gerçek uca sabit mağaza kodu gitmez.
  */
-const MOCK_SELLER_PROFILE = "SEL-00001";
+const MOCK_SELLER_PROFILE = __LOJISTIK_MOCK__ ? "SEL-00001" : null;
 
 /** Katman sırası — ekranlar üç bölümü bu sırayla çiziyor (sözleşme §5.2). */
 export const LAYERS = Object.freeze(["platform_mandatory", "seller", "platform"]);

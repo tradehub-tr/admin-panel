@@ -794,6 +794,7 @@ export default {
     noRecords: "Kayıt yok",
   },
   logistics: {
+    screenNotOpenHere: "Bu ekran bu ortamda henüz açık değil.",
     bulk: {
       clear: "Seçimi temizle",
       region: "Toplu işlem çubuğu",
@@ -1827,6 +1828,8 @@ export default {
       auto_tracking_enabled: "Takip durumları taşıyıcıdan otomatik sorgulanır.",
       buyer_pickup_enabled: "Alıcı siparişini mağazadan/depodan teslim alabilir.",
       carrier_api_enabled: "Taşıyıcı API'leri üzerinden gönderi ve etiket oluşturulur.",
+      carrier_webhook_enabled:
+        "Taşıyıcılardan gelen imzalı takip bildirimleri kabul edilir ve sevkiyat olaylarına işlenir.",
       cost_estimation_enabled: "Sevkiyat öncesi maliyet tahmini hesaplanır.",
       multi_carrier_enabled: "Aynı sipariş birden fazla taşıyıcıya dağıtılabilir.",
       multi_leg_enabled: "Sevkiyat birden çok bacağa (aktarma) bölünebilir.",
@@ -1835,7 +1838,8 @@ export default {
       shipping_zone_pricing_enabled: "Fiyatlandırma teslimat bölgesine göre değişir.",
       split_shipment_enabled: "Bir sipariş birden fazla sevkiyata bölünebilir.",
       warehouse_transfer_enabled: "Depolar arası transfer sevkiyatları oluşturulur.",
-      webhook_notifications_enabled: "Taşıyıcı webhook'ları olay akışına işlenir.",
+      webhook_notifications_enabled:
+        "Giden webhook bildirimleri — henüz bir işleve bağlı değil; taşıyıcıdan gelen bildirimler için “Taşıyıcı webhook alımı” anahtarını kullanın.",
     },
     // Bayrağın OKUNUR adı. `flagHint` ne işe yaradığını anlatıyor; ekranda
     // şu an teknik anahtar (`carrier_api_enabled`) başlık yerine geçiyor.
@@ -1843,6 +1847,7 @@ export default {
       auto_tracking_enabled: "Otomatik takip",
       buyer_pickup_enabled: "Alıcı teslim alma",
       carrier_api_enabled: "Taşıyıcı API",
+      carrier_webhook_enabled: "Taşıyıcı webhook alımı",
       cost_estimation_enabled: "Maliyet tahmini",
       multi_carrier_enabled: "Çoklu taşıyıcı",
       multi_leg_enabled: "Çok bacaklı sevkiyat",

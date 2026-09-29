@@ -321,7 +321,10 @@ test("her mock çağrısı KENDİ ucunun bayrağına bağlı", () => {
   // Kopyala-yapıştır hatası: iki uç aynı bayrağa bakarsa, biri canlıya
   // alındığında diğeri de sessizce gerçek uca gider ve 404 döner.
   const kaynak = packagingKaynagi();
-  const kullanilan = [...kaynak.matchAll(/if \(MOCK\.(\w+)\)/g)].map((m) => m[1]);
+  // Dal biçimi MOGEM-685 F-03'ten beri iki kapılı (`logisticsMockGate.js`).
+  const kullanilan = [
+    ...kaynak.matchAll(/if \(__LOJISTIK_MOCK__ && mockCalisiyor\(\) && MOCK\.(\w+)\)/g),
+  ].map((m) => m[1]);
 
   assert.equal(kullanilan.length, 11, "11 uç da bayrak kontrolü yapmalı");
   assert.equal(new Set(kullanilan).size, 11, "aynı bayrak birden çok uçta kullanılmış");

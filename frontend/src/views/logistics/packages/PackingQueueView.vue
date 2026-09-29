@@ -174,7 +174,7 @@
     <!-- DEMO paneli bir GELİŞTİRİCİ aracı: satıcıya gösterilmez.
          Gösterilirse satıcı "Yetki hatası" senaryosunu seçip kendi ekranını
          kilitleyebiliyor ve nedenini anlayamıyor (ölçüldü). -->
-    <MockDevPanel v-if="auth.isAdmin" @changed="load" />
+    <MockDevPanel v-if="auth.isAdmin && USE_MOCK" @changed="load" />
 
     <ErrorState v-if="store.error" :error="store.error" @retry="load" />
 
@@ -454,10 +454,11 @@
 </template>
 
 <script setup>
-  import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+  import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
 
+  import { USE_MOCK } from "@/api/packaging";
   import AppIcon from "@/components/common/AppIcon.vue";
   import AppSelect from "@/components/common/AppSelect.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
@@ -466,11 +467,16 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import EmptyState from "@/components/logistics/EmptyState.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
-  import MockDevPanel from "./components/MockDevPanel.vue";
   import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode";
   import { useAuthStore } from "@/stores/auth";
   import { useLogisticsStore } from "@/stores/logistics";
   import { usePackagingStore } from "@/stores/packaging";
+
+  // Mock geliştirici paneli yalnız anahtar AÇIK derlemede var (MOGEM-685 F-03): statik
+  // içe aktarım mock modülünü ve tohumunu PROD derlemesine taşıyordu (ölçüldü).
+  const MockDevPanel = __LOJISTIK_MOCK__
+    ? defineAsyncComponent(() => import("./components/MockDevPanel.vue"))
+    : null;
 
   /**
    * **P1 · Paketleme kuyruğu.**

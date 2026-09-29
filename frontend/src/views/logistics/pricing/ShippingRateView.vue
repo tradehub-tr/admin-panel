@@ -30,17 +30,22 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, reactive, watch } from "vue";
+  import { computed, defineAsyncComponent, onMounted, reactive, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
 
   import { USE_MOCK } from "@/api/logisticsPricing";
-  import PricingDevPanel from "@/components/logistics/PricingDevPanel.vue";
   import ShippingRateScreen from "@/components/logistics/ShippingRateScreen.vue";
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
   import { useLogisticsStore } from "@/stores/logistics";
   import { usePricingStore } from "@/stores/pricing";
+
+  // Mock geliştirici paneli yalnız anahtar AÇIK derlemede var (MOGEM-685 F-03): statik
+  // içe aktarım mock modülünü ve tohumunu PROD derlemesine taşıyordu (ölçüldü).
+  const PricingDevPanel = __LOJISTIK_MOCK__
+    ? defineAsyncComponent(() => import("@/components/logistics/PricingDevPanel.vue"))
+    : null;
 
   /**
    * **K1 container** — tarifeleri gerçek veriye bağlar.

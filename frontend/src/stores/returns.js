@@ -33,8 +33,11 @@ import { useLogisticsStore } from "@/stores/logistics";
  * store mock modülüne bağımlı olmasın — uç canlıya alınınca yalnız bu satır
  * ve `asSeller` geçirimi silinecek (gerçek uçta tenant süzgeci oturumdan
  * okunuyor, sözleşme §6.1).
+ *
+ * Önizleme anahtarına bağlı (MOGEM-685 bulgu 19): PROD derlemesinde `null` — kimlik değeri
+ * yayın paketine girmez ve satıcı rolünde gerçek uca sabit mağaza kodu gitmez.
  */
-const MOCK_SELLER_PROFILE = "SEL-00001";
+const MOCK_SELLER_PROFILE = __LOJISTIK_MOCK__ ? "SEL-00001" : null;
 
 /** Kuyruk süzgeci — sözleşme §1.1 durum kümesiyle birebir. */
 export const RETURN_STATUSES = Object.freeze([

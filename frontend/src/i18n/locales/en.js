@@ -792,6 +792,7 @@ export default {
     noRecords: "No records",
   },
   logistics: {
+    screenNotOpenHere: "This screen is not available in this environment yet.",
     bulk: {
       clear: "Clear selection",
       region: "Bulk action bar",
@@ -1823,6 +1824,8 @@ export default {
       auto_tracking_enabled: "Tracking statuses are polled from the carrier automatically.",
       buyer_pickup_enabled: "Buyers can collect their order from a store or warehouse.",
       carrier_api_enabled: "Shipments and labels are created through carrier APIs.",
+      carrier_webhook_enabled:
+        "Signed tracking callbacks from carriers are accepted and written to shipment events.",
       cost_estimation_enabled: "Cost is estimated before the shipment is created.",
       multi_carrier_enabled: "A single order can be split across multiple carriers.",
       multi_leg_enabled: "A shipment can be split into multiple legs (transfers).",
@@ -1831,13 +1834,15 @@ export default {
       shipping_zone_pricing_enabled: "Pricing varies by delivery zone.",
       split_shipment_enabled: "An order can be split into multiple shipments.",
       warehouse_transfer_enabled: "Warehouse-to-warehouse transfer shipments are created.",
-      webhook_notifications_enabled: "Carrier webhooks are written to the event stream.",
+      webhook_notifications_enabled:
+        "Outgoing webhook notifications — not wired to any function yet; use “Carrier webhook intake” for callbacks from carriers.",
     },
     // Readable flag name; `flagHint` explains what it does.
     flagName: {
       auto_tracking_enabled: "Auto tracking",
       buyer_pickup_enabled: "Buyer pickup",
       carrier_api_enabled: "Carrier API",
+      carrier_webhook_enabled: "Carrier webhook intake",
       cost_estimation_enabled: "Cost estimation",
       multi_carrier_enabled: "Multi-carrier",
       multi_leg_enabled: "Multi-leg shipment",

@@ -27,6 +27,7 @@
 //   KAYIT DEFTERİNİN KENDİSİ: derleme anında sabit, kullanıcı girdisi
 //   hiçbir noktada bileşen seçimine karışmıyor.
 
+import { mockBekliyor } from "../../../api/logisticsMockGate.js";
 import { OWNERS, VIEW_ROOT, ownerOfViewPath } from "./ownership.js";
 
 /** Sekme anahtarı: kararlı, URL/analitik dostu. */
@@ -94,6 +95,9 @@ function assertOptionalFn(spec, field) {
  *   Hassas alan BACKEND'de maskelenmeli/yetkilendirilmelidir; kanonik örnek
  *   `mask_shipment_cost_fields` (maliyet sekmesi gizlenmiyor, içerik null'lanıyor).
  * @property {string|null} blockedBy  Veri henüz taşınmıyorsa SEBEP; taşınıyorsa `null`.
+ * @property {string[]} [mockApi] Sekmenin ulaştığı, `MOCK` haritası taşıyan api modülleri
+ *   (MOGEM-685 F-03). Mock çalışmayan derlemede (PROD) bunlardan biri hâlâ mock
+ *   bekliyorsa sekme listeden DÜŞER — ekran manifestindeki `mockApi` ile aynı kural.
  */
 
 /**
@@ -149,6 +153,12 @@ export function defineShipmentTab(spec) {
   assertOptionalFn(spec, "count");
   assertOptionalFn(spec, "alert");
   assertOptionalFn(spec, "visibleWhen");
+  if (
+    spec.mockApi !== undefined &&
+    !(Array.isArray(spec.mockApi) && spec.mockApi.every((m) => typeof m === "string"))
+  ) {
+    fail(key, "mockApi verilecekse api modül adlarından oluşan dizi olmalı (örn. ['pod'])");
+  }
 
   // "Ya besleniyor ya sebebi yazılı" — `logisticsScreens.js`'teki `blockedBy`
   // kuralının sekme karşılığı. Boş sekme çizmek operasyona "kayıt yok" der;
@@ -231,6 +241,8 @@ export function resolveShipmentTabs(registry, ctx) {
 
   const resolved = registry
     .filter((tab) => {
+      // PROD'da mock yok: ucu yazılmamış sekme boş/hatalı açılmasın (MOGEM-685 F-03).
+      if (mockBekliyor(tab.mockApi)) return false;
       if (!tab.visibleWhen) return true;
       // Görünürlük hatasında sekme GİZLENİYOR (fail-closed): belirsizken
       // göstermek, rol matrisinin kapatmak istediği şeyi açık bırakabilir.

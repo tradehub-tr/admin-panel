@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { BIG_SOURCE_MP, SEVERITY, cropWarnings, hasBlocker } from "../cropWarnings.js";
 import { CONFIDENCE_THRESHOLD, METHOD, suggestFocal, toGray } from "../focusSuggest.js";
 import { rect } from "../geometry.js";
+import { jpegProfilliyken } from "./jpegProfil.js";
 import {
   isCroppable,
   profileTargetAR,
@@ -162,16 +163,20 @@ test("CMYK ve alfa uyarıları YALNIZ sonda varsa üretilir — uydurulmaz", () 
   assert.equal(bul(sonda_yok, "cmyk").length, 0);
   assert.equal(bul(sonda_yok, "alphaToJpeg").length, 0);
 
-  const sonda = cropWarnings({
+  const sondaArgs = {
     sourceW: 2000,
     sourceH: 1500,
     win: null,
     slotKey: "brand.logo",
     probe: { mode: "CMYK", hasAlpha: true },
-  });
+  };
+  const sonda = cropWarnings(sondaArgs);
   assert.equal(bul(sonda, "cmyk")[0].severity, SEVERITY.WARN);
-  // brand.logo · og1200x630 JPEG üretiyor → alfa düşecek.
-  assert.equal(bul(sonda, "alphaToJpeg")[0].params.profiles, 1);
+  // Bugün tüm profiller AVIF (saydamlığı taşır) → alfa kaybı yok, uyarı UYDURULMAZ.
+  assert.equal(bul(sonda, "alphaToJpeg").length, 0);
+  // Bir profil JPEG'e dönerse (og1200x630 eskiden öyleydi) alfa düşecek → uyarı gelir.
+  const jpegli = jpegProfilliyken("brand.logo", "og1200x630", () => cropWarnings(sondaArgs));
+  assert.equal(bul(jpegli, "alphaToJpeg")[0].params.profiles, 1);
 });
 
 test("kırpılmayan profiller BİLGİ olarak sayılır", () => {
@@ -213,13 +218,16 @@ test("[FR-023] uyarı türlerinin her biri en az bir fixture'da üretiliyor", ()
         slotMismatch: true,
       }),
       ...cropWarnings({ sourceW: 8000, sourceH: 6000, win: rect(0, 0, 1200, 300), slotKey: COVER }),
-      ...cropWarnings({
-        sourceW: 2000,
-        sourceH: 1500,
-        win: null,
-        slotKey: "brand.logo",
-        probe: { hasAlpha: true },
-      }),
+      // Saydam kaynak + JPEG profil → alphaToJpeg (bugün katalog AVIF; bkz. jpegProfil.js).
+      ...jpegProfilliyken("brand.logo", "og1200x630", () =>
+        cropWarnings({
+          sourceW: 2000,
+          sourceH: 1500,
+          win: null,
+          slotKey: "brand.logo",
+          probe: { hasAlpha: true },
+        })
+      ),
       // Odak kadrajın sol kenarında → güvenli alanın dışında.
       ...cropWarnings({
         sourceW: 4000,
