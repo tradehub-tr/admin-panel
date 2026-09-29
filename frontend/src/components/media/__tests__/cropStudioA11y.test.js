@@ -15,6 +15,7 @@ import ar from "../../../i18n/locales/ar.js";
 import { rect } from "../../../lib/media/crop/geometry.js";
 import { slotProfiles } from "../../../lib/media/crop/slotProfiles.js";
 import { cropWarnings } from "../../../lib/media/crop/cropWarnings.js";
+import { jpegProfilliyken } from "../../../lib/media/crop/__tests__/jpegProfil.js";
 
 /**
  * Crop Studio erişilebilirliği.
@@ -287,13 +288,16 @@ function tumUyarilar() {
       win: rect(0, 0, 1200, 300),
       slotKey: "company.cover_image",
     }),
-    ...cropWarnings({
-      sourceW: 2000,
-      sourceH: 1500,
-      win: null,
-      slotKey: "brand.logo",
-      probe: { hasAlpha: true },
-    }),
+    // alphaToJpeg: bugün katalog AVIF — JPEG profil geçici kurulur (bkz. jpegProfil.js).
+    ...jpegProfilliyken("brand.logo", "og1200x630", () =>
+      cropWarnings({
+        sourceW: 2000,
+        sourceH: 1500,
+        win: null,
+        slotKey: "brand.logo",
+        probe: { hasAlpha: true },
+      })
+    ),
     ...cropWarnings({
       sourceW: 4000,
       sourceH: 3000,
