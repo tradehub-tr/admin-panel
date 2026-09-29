@@ -9785,6 +9785,7 @@ export default {
     },
   },
   logistics: {
+    screenNotOpenHere: "هذه الشاشة غير متاحة في هذه البيئة بعد.",
     bulk: {
       clear: "مسح التحديد",
       region: "شريط الإجراءات الجماعية",
@@ -10801,6 +10802,8 @@ export default {
       auto_tracking_enabled: "تُستقصى حالات التتبع من شركة الشحن تلقائيًا.",
       buyer_pickup_enabled: "يمكن للمشتري استلام طلبه من المتجر أو المستودع.",
       carrier_api_enabled: "تُنشأ الشحنات والملصقات عبر واجهات شركات الشحن.",
+      carrier_webhook_enabled:
+        "تُقبَل إشعارات التتبع الموقّعة من شركات الشحن وتُسجَّل في أحداث الشحنة.",
       cost_estimation_enabled: "تُقدَّر التكلفة قبل إنشاء الشحنة.",
       multi_carrier_enabled: "يمكن توزيع الطلب الواحد على أكثر من شركة شحن.",
       multi_leg_enabled: "يمكن تقسيم الشحنة إلى عدة مراحل (تحويلات).",
@@ -10809,12 +10812,14 @@ export default {
       shipping_zone_pricing_enabled: "يتغير التسعير حسب منطقة التسليم.",
       split_shipment_enabled: "يمكن تقسيم الطلب إلى عدة شحنات.",
       warehouse_transfer_enabled: "تُنشأ شحنات تحويل بين المستودعات.",
-      webhook_notifications_enabled: "تُسجَّل Webhooks شركة الشحن في تدفق الأحداث.",
+      webhook_notifications_enabled:
+        "إشعارات Webhook الصادرة — غير مرتبطة بأي وظيفة بعد؛ لإشعارات شركات الشحن استخدم «استقبال Webhook من شركة الشحن».",
     },
     flagName: {
       auto_tracking_enabled: "التتبع التلقائي",
       buyer_pickup_enabled: "استلام المشتري",
       carrier_api_enabled: "API شركة الشحن",
+      carrier_webhook_enabled: "استقبال Webhook من شركة الشحن",
       cost_estimation_enabled: "تقدير التكلفة",
       multi_carrier_enabled: "شركات شحن متعددة",
       multi_leg_enabled: "شحنة متعددة المراحل",

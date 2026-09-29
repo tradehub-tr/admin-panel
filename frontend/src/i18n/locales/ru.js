@@ -9951,6 +9951,7 @@ export default {
     },
   },
   logistics: {
+    screenNotOpenHere: "Этот экран пока недоступен в этой среде.",
     bulk: {
       clear: "Снять выделение",
       region: "Панель массовых действий",
@@ -10976,6 +10977,8 @@ export default {
       auto_tracking_enabled: "Статусы отслеживания опрашиваются у перевозчика автоматически.",
       buyer_pickup_enabled: "Покупатель может забрать заказ из магазина или со склада.",
       carrier_api_enabled: "Отправления и этикетки создаются через API перевозчиков.",
+      carrier_webhook_enabled:
+        "Подписанные уведомления отслеживания от перевозчиков принимаются и записываются в события отправки.",
       cost_estimation_enabled: "Стоимость оценивается до создания отправления.",
       multi_carrier_enabled: "Один заказ можно распределить между несколькими перевозчиками.",
       multi_leg_enabled: "Отправление можно разбить на несколько плеч (перегрузок).",
@@ -10984,12 +10987,14 @@ export default {
       shipping_zone_pricing_enabled: "Тариф зависит от зоны доставки.",
       split_shipment_enabled: "Заказ можно разделить на несколько отправлений.",
       warehouse_transfer_enabled: "Создаются отправления для перемещений между складами.",
-      webhook_notifications_enabled: "Webhook'и перевозчика записываются в поток событий.",
+      webhook_notifications_enabled:
+        "Исходящие webhook-уведомления — пока не подключены; для уведомлений от перевозчиков используйте «Приём webhook от перевозчика».",
     },
     flagName: {
       auto_tracking_enabled: "Автоотслеживание",
       buyer_pickup_enabled: "Самовывоз покупателем",
       carrier_api_enabled: "API перевозчика",
+      carrier_webhook_enabled: "Приём webhook от перевозчика",
       cost_estimation_enabled: "Оценка стоимости",
       multi_carrier_enabled: "Несколько перевозчиков",
       multi_leg_enabled: "Многоплечевое отправление",
