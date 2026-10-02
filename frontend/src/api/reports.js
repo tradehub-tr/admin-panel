@@ -65,6 +65,7 @@
 //      alanı eklenir (bugünkü operasyon tek para birimi).
 
 import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 import { defaultReportRange, reportsMock } from "./reportsMock.js";
 
 // View açılış aralığını da sözleşme varsayılanından alır — tek kaynak.
@@ -86,7 +87,8 @@ function normalizeRange(dateFrom, dateTo) {
 /** Operasyon raporu — kaç sevkiyat çıktı, ne durumdalar (L1 paneli). */
 export async function getOperationsReport({ dateFrom, dateTo } = {}) {
   const { from, to } = normalizeRange(dateFrom, dateTo);
-  if (MOCK.get_operations_report) return reportsMock.operations(from, to);
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_operations_report)
+    return reportsMock.operations(from, to);
   return logisticsGet(`${LOGISTICS_METHOD.REPORTS}.get_operations_report`, {
     date_from: from,
     date_to: to,
@@ -96,7 +98,8 @@ export async function getOperationsReport({ dateFrom, dateTo } = {}) {
 /** Performans raporu — hız ve SLA (L2 paneli). */
 export async function getPerformanceReport({ dateFrom, dateTo } = {}) {
   const { from, to } = normalizeRange(dateFrom, dateTo);
-  if (MOCK.get_performance_report) return reportsMock.performance(from, to);
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_performance_report)
+    return reportsMock.performance(from, to);
   return logisticsGet(`${LOGISTICS_METHOD.REPORTS}.get_performance_report`, {
     date_from: from,
     date_to: to,
@@ -106,7 +109,8 @@ export async function getPerformanceReport({ dateFrom, dateTo } = {}) {
 /** Maliyet raporu — `view.logistics_cost` İSTER (L3 paneli, sözleşme yukarıda). */
 export async function getCostReport({ dateFrom, dateTo } = {}) {
   const { from, to } = normalizeRange(dateFrom, dateTo);
-  if (MOCK.get_cost_report) return reportsMock.cost(from, to);
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_cost_report)
+    return reportsMock.cost(from, to);
   return logisticsGet(`${LOGISTICS_METHOD.REPORTS}.get_cost_report`, {
     date_from: from,
     date_to: to,

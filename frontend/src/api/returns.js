@@ -15,6 +15,7 @@
 
 import { LogisticsApiError } from "./logisticsEnvelope";
 import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 import { returnsMock } from "./returnsMock.js";
 
 // Demo verisi ve hata tetikleyicisi — yalnız mock modunda anlamlı.
@@ -42,7 +43,7 @@ export const MOCK = {
 };
 
 /** Hâlâ mock'ta olan uç var mı — DEMO paneli buna bakıyor. */
-export const USE_MOCK = Object.values(MOCK).some(Boolean);
+export const USE_MOCK = __LOJISTIK_MOCK__ && mockCalisiyor() && Object.values(MOCK).some(Boolean);
 
 /** Mock hatalarını sözleşmedeki tipli hataya çevirir — ek alanlar korunur. */
 async function viaMock(fn) {
@@ -81,7 +82,7 @@ export async function listReturnRequests({
   pageSize = 50,
   asSeller = false,
 } = {}) {
-  if (MOCK.list_return_requests) {
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_return_requests) {
     return viaMock(() => returnsMock.listReturnRequests({ status, page, pageSize, asSeller }));
   }
   return logisticsGet(`${RETURNS}.list_return_requests`, {
@@ -93,7 +94,7 @@ export async function listReturnRequests({
 
 /** Tek iade talebi — LIST + DETAIL + kalemler (I2/I3/I4'ün girdisi). */
 export async function getReturnRequest(name, { asSeller = false } = {}) {
-  if (MOCK.get_return_request) {
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.get_return_request) {
     return viaMock(() => returnsMock.getReturnRequest(name, { asSeller }));
   }
   return logisticsGet(`${RETURNS}.get_return_request`, { name });
@@ -121,7 +122,8 @@ export async function decideReturnRequest({
     decision_note: decisionNote,
     create_return_shipment: createReturnShipment,
   };
-  if (MOCK.decide_return_request) return viaMock(() => returnsMock.decideReturnRequest(payload));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.decide_return_request)
+    return viaMock(() => returnsMock.decideReturnRequest(payload));
   return logisticsPost(`${RETURNS}.decide_return_request`, payload);
 }
 
@@ -133,7 +135,7 @@ export async function decideReturnRequest({
  * tutarsız kalırdı.
  */
 export async function saveReturnInspection({ name, items }) {
-  if (MOCK.save_return_inspection) {
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.save_return_inspection) {
     return viaMock(() => returnsMock.saveReturnInspection({ name, items }));
   }
   return logisticsPost(`${RETURNS}.save_return_inspection`, { name, items });
@@ -148,6 +150,7 @@ export async function saveReturnInspection({ name, items }) {
  */
 export async function closeReturnRequest({ name, triggerRefund = true }) {
   const payload = { name, trigger_refund: triggerRefund };
-  if (MOCK.close_return_request) return viaMock(() => returnsMock.closeReturnRequest(payload));
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.close_return_request)
+    return viaMock(() => returnsMock.closeReturnRequest(payload));
   return logisticsPost(`${RETURNS}.close_return_request`, payload);
 }

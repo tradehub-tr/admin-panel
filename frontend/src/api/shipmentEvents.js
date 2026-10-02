@@ -42,6 +42,7 @@
 //     get_all YASAK (query_conditions'ı atlar, IDOR kapısı).
 
 import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
 export const MOCK = {
@@ -115,7 +116,7 @@ const MOCK_EVENTS = [
 
 /** Sevkiyatın olay akışı + takip linki (tek yanıt — sözleşme). */
 export async function listShipmentEvents(shipment) {
-  if (MOCK.list_shipment_events) {
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_shipment_events) {
     return {
       items: MOCK_EVENTS,
       // null çünkü gerçek URL ancak 11-BE takip şablonu üretince gelir;

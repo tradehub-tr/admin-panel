@@ -132,3 +132,49 @@ test("gizli doctype/rota kümeleri yanıttan dolar", async () => {
   await nav.loadDbSections();
   assert.equal(nav.isDoctypeHidden?.("Gizli DT") ?? nav.hiddenDoctypes.admin.has("Gizli DT"), true);
 });
+
+// MOGEM-685 bulgu 18 — veritabanı menüsü derlemede gizli lojistik ekranını göstermez.
+// Ölçüldü (L3, PROD eşdeğeri): satıcı menüsünde "Manuel Sevkiyat" duruyordu.
+function lojistikMenusu() {
+  return {
+    sections: [
+      {
+        section_key: "logistics",
+        items: [
+          {
+            label: "Sevkiyatlar",
+            module_key: "lojistik",
+            items: [
+              { label: "Sevkiyatlar", route: "/lojistik/sevkiyatlar" },
+              { label: "Manuel Sevkiyat", route: "/lojistik/sevkiyatlar/yeni" },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function mockKapaliyken(fn) {
+  const eski = globalThis.__LOJISTIK_MOCK__;
+  globalThis.__LOJISTIK_MOCK__ = false;
+  try {
+    return fn();
+  } finally {
+    globalThis.__LOJISTIK_MOCK__ = eski;
+  }
+}
+
+const rotalar = (sonuc) => sonuc.logistics[0].items.map((it) => it.route);
+
+test("mock KAPALI (PROD): veritabanı menüsünden gizli lojistik ekranı düşer", () => {
+  const sonuc = mockKapaliyken(() => navModule.transformBackendNav(lojistikMenusu()));
+  assert.deepEqual(rotalar(sonuc), ["/lojistik/sevkiyatlar"]);
+});
+
+test("mock AÇIK (önizleme): veritabanı menüsü aynen kalır (karşı kanıt)", () => {
+  assert.deepEqual(rotalar(navModule.transformBackendNav(lojistikMenusu())), [
+    "/lojistik/sevkiyatlar",
+    "/lojistik/sevkiyatlar/yeni",
+  ]);
+});

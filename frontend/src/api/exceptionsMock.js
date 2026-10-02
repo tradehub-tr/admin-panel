@@ -80,7 +80,9 @@ const MOCK_ITEMS = [
 // kaybolmaz, soluklaşır" — üstteki not); her çağrıda taze kopya o davranışı
 // silerdi. Tohum dokunulmaz, çalışma kümesi derin kopyadan başlar.
 const seedCopy = () => MOCK_ITEMS.map((item) => ({ ...item }));
-let mockItems = seedCopy();
+// PURE işareti: kullanan yoksa (mock anahtarı KAPALI derleme, MOGEM-685 F-03) tohum
+// derleme çıktısına girmesin — işaretsiz çağrı modülü PROD derlemesinde tutuyordu.
+let mockItems = /* @__PURE__ */ seedCopy();
 
 /** Mock durumunu tohuma döndürür (packagingMock.resetMockData deseni). */
 export function resetMockData() {

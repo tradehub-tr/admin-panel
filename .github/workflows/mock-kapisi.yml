@@ -1,0 +1,68 @@
+# Sahte veri kapısı — MOGEM-685 F-03 (29 Eyl 2026, kullanıcı kararı: KIRMIZIYA DÜŞER).
+#
+# NEDEN VAR: ürün kararı — Alpha/Beta/RC'de sahte veri OLABİLİR, PROD'da HİÇ olmamalı.
+# PROD panel imajı sunucudaki ayrı Dockerfile ile, repo kodundan `VITE_LOGISTICS_MOCK` verilmeden derleniyor; bu iş
+# aynı varsayılan derlemeyi tarar. Ölçüldü: kapıdan önce varsayılan derlemede yedi
+# dosyada sahte kayıt vardı (`podSeed`, `exceptionsMock`, `reportsMock` parçaları ve
+# `pricing`/`returns`/`packaging`/`PendingQueueView` içine gömülü tohumlar).
+#
+# NE ENGELLEMEZ: kırmızı iş merge'ü ya da deploy'u durdurmaz — dalda koruma kuralı yok,
+# Jenkins ve `deploy.yml` bu işe bakmıyor. Görünür uyarıdır.
+#
+# NE DEĞİL: birim testleri burada koşmuyor (panelde test kapısı yok; açılacaksa önce
+# mevcut kırmızılar temizlenir — kök `.claude/rules/ci.md` §3).
+name: Sahte veri kapisi
+
+on:
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".worklog/**"
+  push:
+    branches: [master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".worklog/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sahte-veri-yok:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+
+      # PROD ile aynı: anahtar verilmeden. Günlükte "Gizli lojistik ekranları" listesi çıkar.
+      - name: Üretim derlemesi (npm run build)
+        run: npm run build
+
+      - name: Varsayılan derlemede sahte veri izi yok
+        run: npm run check:no-mock
+
+      # Tarayıcının kör olmadığının kanıtı: mock AÇIK derlemede aynı betik iz BULMALI.
+      - name: Tarayıcı öz-denetimi (önizleme derlemesinde iz bulunmalı)
+        run: |
+          VITE_LOGISTICS_MOCK=1 npx vite build --outDir "$RUNNER_TEMP/dist-onizleme" --emptyOutDir > /dev/null
+          if node scripts/check-no-mock-in-build.mjs "$RUNNER_TEMP/dist-onizleme" > /dev/null 2>&1; then
+            echo "::error title=Sahte veri tarayıcısı kör::Önizleme derlemesinde hiç iz bulunamadı — scripts/check-no-mock-in-build.mjs işaretlerini güncelleyin."
+            exit 1
+          fi
+          echo "✓ Tarayıcı önizleme derlemesinde izleri buluyor."

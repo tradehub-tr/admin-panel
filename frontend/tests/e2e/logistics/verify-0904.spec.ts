@@ -9,8 +9,8 @@ import { test, expect, request as pwRequest, type Page } from "@playwright/test"
  * göre karar verilecek.
  *
  * Beklentilerin kaynağı (kod, belge değil):
- *  - LogisticsSettingsScreen.vue + BaseSwitch.vue → 13 switch (1 ana +
- *    12 bayrak; canlı get_logistics_settings 12 bayrak döndürüyor, ölçüldü),
+ *  - LogisticsSettingsScreen.vue + BaseSwitch.vue → 1 ana + her bayrak için bir
+ *    switch; bayrak sayısı ekranın get_logistics_settings yanıtından okunur (sabit değil),
  *    aria-label BaseSwitch label'ından (denetim 2026-09-04 düzeltmesi).
  *  - CatalogListScreen/CatalogFormScreen metaError guard'ı → bilinmeyen
  *    anahtarda i18n "Katalog bulunamadı", console.warn (error DEĞİL);
@@ -166,13 +166,22 @@ function expectedAvgDays(from: string, to: string) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════
-// 1 · M3 Ayarlar — 13 switch'in erişilebilir adı + görsel düzen (toggle YOK)
+// 1 · M3 Ayarlar — her bayrağın switch'i, erişilebilir adı + görsel düzen (toggle YOK)
 // ═════════════════════════════════════════════════════════════════════════
+//
+// Switch sayısı SABİT DEĞİL, ekranın çizdiği yanıttan türetilir (29 Eyl 2026,
+// MOGEM-685): test "12 bayrak + ana anahtar = 13" diye yazılmıştı; 16 Eyl'de
+// `carrier_webhook_enabled` eklenince bayatladı ve 13 gün kırmızı kaldı. Aynı
+// koşuda asıl kusuru da gizliyordu: yeni bayrağın çevirisi yoktu, ekranda ham
+// anahtar adıyla ve açıklamasız çiziliyordu. Artık yanıttaki HER bayrak için
+// okunur ad + açıklama aranıyor — çevirisiz eklenen bir sonraki bayrak da burada
+// yakalanır. `FLAG_LABELS` yalnız bilinen bayrakların TR metnini sabitler.
 
 const FLAG_LABELS: Record<string, string> = {
   auto_tracking_enabled: "Otomatik takip",
   buyer_pickup_enabled: "Alıcı teslim alma",
   carrier_api_enabled: "Taşıyıcı API",
+  carrier_webhook_enabled: "Taşıyıcı webhook alımı",
   cost_estimation_enabled: "Maliyet tahmini",
   multi_carrier_enabled: "Çoklu taşıyıcı",
   multi_leg_enabled: "Çok bacaklı sevkiyat",
@@ -184,35 +193,57 @@ const FLAG_LABELS: Record<string, string> = {
   webhook_notifications_enabled: "Webhook bildirimleri",
 };
 
-test("M3 · 13 switch: her birinin erişilebilir adı dolu, etiket+açıklama görünür", async ({
+/** Ekranın kendi `get_logistics_settings` yanıtındaki bayraklar — switch sayısının tek kaynağı. */
+async function ayarlarAc(page: Page): Promise<string[]> {
+  const yanit = page.waitForResponse(
+    (r) => r.url().includes("logistics_admin.get_logistics_settings") && r.ok(),
+    { timeout: 15000 }
+  );
+  await page.goto("/panel/lojistik/ayarlar");
+  const govde = await (await yanit).json();
+  const bayraklar = Object.keys(govde?.message?.data?.feature_flags ?? {});
+  // Alt sınır: boş/yarım yanıt "0 switch bekleniyor" diye sessizce geçmesin.
+  expect(bayraklar.length, "ayarlar yanıtında bayrak yok").toBeGreaterThanOrEqual(12);
+  return bayraklar;
+}
+
+test("M3 · her bayrağın switch'i var; erişilebilir adı dolu, etiket+açıklama görünür", async ({
   page,
 }) => {
   const errors = collectErrors(page);
-  await page.goto("/panel/lojistik/ayarlar");
+  const bayraklar = await ayarlarAc(page);
   await expect(page.getByRole("heading", { level: 1, name: "Lojistik ayarları" })).toBeVisible({
     timeout: 15000,
   });
 
-  // Canlı yanıt: 12 bayrak + ana anahtar = 13 switch (ölçüldü 2026-09-04).
+  // Yanıttaki bayraklar + ana anahtar.
   const switches = page.getByRole("switch");
-  await expect(switches).toHaveCount(13, { timeout: 15000 });
+  const beklenen = bayraklar.length + 1;
+  await expect(switches).toHaveCount(beklenen, { timeout: 15000 });
 
   // Her switch'in aria-label'ı DOLU ve ham bayrak anahtarı DEĞİL
   // (düzeltme: ad BaseSwitch label'ından geliyor; eskiden 13'ü adsızdı).
-  for (let i = 0; i < 13; i++) {
+  for (let i = 0; i < beklenen; i++) {
     const label = await switches.nth(i).getAttribute("aria-label");
     expect(label?.trim(), `switch #${i} erişilebilir ad taşımalı`).toBeTruthy();
     expect(label, `switch #${i} adı ham anahtar olmamalı: ${label}`).not.toMatch(/_enabled$/);
   }
 
-  // Bayrak satırları: ham anahtar yalnız title'da; görünür ad + açıklama
-  // aynı satırda (görsel düzen bozulmamış — etiket okunur, açıklama çizili).
-  for (const [flag, trLabel] of Object.entries(FLAG_LABELS)) {
+  // Yanıttaki HER bayrak: satır var, okunur ad (ham anahtar değil) + açıklama çizili,
+  // switch adı görünür adla aynı. Bilinen bayraklarda TR metin birebir.
+  for (const flag of bayraklar) {
     const row = page.locator(`div[title="${flag}"]`);
     await expect(row, `bayrak satırı eksik: ${flag}`).toHaveCount(1);
-    await expect(row.locator(".switch-title"), `${flag} görünür adı`).toHaveText(trLabel);
+    const baslik = ((await row.locator(".switch-title").textContent()) ?? "").trim();
+    expect(baslik, `${flag} görünür adı çevrilmemiş (ham anahtar)`).not.toBe(flag);
+    expect(baslik, `${flag} görünür adı boş`).toBeTruthy();
     await expect(row.locator(".switch-desc"), `${flag} açıklaması görünmeli`).not.toBeEmpty();
-    await expect(row.getByRole("switch")).toHaveAttribute("aria-label", trLabel);
+    await expect(row.getByRole("switch")).toHaveAttribute("aria-label", baslik);
+    if (FLAG_LABELS[flag]) expect(baslik, `${flag} TR adı`).toBe(FLAG_LABELS[flag]);
+  }
+  // Harita bayatlamasın: yanıtta olmayan bir bayrak burada kalmamalı.
+  for (const flag of Object.keys(FLAG_LABELS)) {
+    expect(bayraklar, `FLAG_LABELS'taki ${flag} yanıtta yok`).toContain(flag);
   }
 
   // Ana anahtar kendi kartında, adıyla.
@@ -223,9 +254,9 @@ test("M3 · 13 switch: her birinin erişilebilir adı dolu, etiket+açıklama g�
 });
 
 test("M3 · klavye: Tab ile switch'ler gezilir, odak görünür halka taşır", async ({ page }) => {
-  await page.goto("/panel/lojistik/ayarlar");
+  const bayraklar = await ayarlarAc(page);
   const switches = page.getByRole("switch");
-  await expect(switches).toHaveCount(13, { timeout: 15000 });
+  await expect(switches).toHaveCount(bayraklar.length + 1, { timeout: 15000 });
 
   // ETKİN anahtarlar üzerinden gezilir. Bayrak anahtarları ana "Lojistik
   // modülü" anahtarı KAPALIYKEN `disabled` oluyor (doğru davranış: bağımlı
@@ -548,7 +579,9 @@ test("M1 · 9 hızlı pill geçişi: son kataloğun başlığı ve satırları t
   await expect(
     page.getByRole("button", { name: "Lojistik Sağlayıcıları", exact: true })
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("heading", { level: 1, name: "Lojistik Sağlayıcıları" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Lojistik Sağlayıcıları" })
+  ).toBeVisible();
   await expect(page.getByText("Aras Kargo").first()).toBeVisible({ timeout: 15000 });
 
   // Başlık-satır tutarlılığı: "N kayıt" sayacı ile tablo satır sayısı aynı
@@ -719,7 +752,10 @@ test.describe("satıcı oturumu", () => {
     const bosDurum = page.getByText("Henüz sevkiyat kaydı yok");
     await expect(page.locator("tbody tr").first().or(bosDurum)).toBeVisible({ timeout: 15000 });
 
-    const sayacMetni = await page.getByText(/\d+ kayıt/).first().innerText();
+    const sayacMetni = await page
+      .getByText(/\d+ kayıt/)
+      .first()
+      .innerText();
     const kayitSayisi = Number(sayacMetni.match(/\d+/)?.[0] ?? "0");
 
     if (kayitSayisi === 0) {

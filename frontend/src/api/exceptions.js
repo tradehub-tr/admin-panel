@@ -39,6 +39,7 @@
 
 import { exceptionsMock } from "./exceptionsMock";
 import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 
 // Mock verisi/davranışı `exceptionsMock.js`'e taşındı (tam denetim Tur-3,
 // 2026-08-20): bu dosya tek geçit üzerinden `@/utils/api`'ye bağlanıyor ve
@@ -55,7 +56,8 @@ export const MOCK = {
 
 /** Aktif önem filtresine göre istisnalar + tüm sayaçlar (tek yanıt). */
 export async function listShipmentExceptions({ severity = "", page = 1, pageSize = 50 } = {}) {
-  if (MOCK.list_shipment_exceptions) return exceptionsMock.list(severity);
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.list_shipment_exceptions)
+    return exceptionsMock.list(severity);
 
   return logisticsGet(`${LOGISTICS_METHOD.OPS}.list_shipment_exceptions`, {
     ...(severity ? { severity } : {}),
@@ -66,7 +68,8 @@ export async function listShipmentExceptions({ severity = "", page = 1, pageSize
 
 /** İstisnayı çözüm notuyla kapatır — not zorunlu (TUR-113). */
 export async function resolveShipmentException(name, resolutionNote) {
-  if (MOCK.resolve_shipment_exception) return exceptionsMock.resolve(name, resolutionNote);
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.resolve_shipment_exception)
+    return exceptionsMock.resolve(name, resolutionNote);
 
   return logisticsPost(`${LOGISTICS_METHOD.OPS}.resolve_shipment_exception`, {
     name,

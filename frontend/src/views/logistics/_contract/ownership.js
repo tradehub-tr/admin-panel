@@ -214,6 +214,7 @@ export const API_FILE_OWNERS = Object.freeze({
   "returns.js": "ali", // 15-FE — I1–I4 iade akışı (v1.returns, karar K-1)
   "returnsMock.js": "ali", // 15-FE mock — saf modül, node:test tüketiyor
   "podSeed.js": "ali",
+  "logisticsMockGate.js": "ali", // MOGEM-685 F-03 — mock kapısı (derleme anahtarı + sunucu adı)
 });
 
 /** `src/stores/` lojistik store'ları → sahip (API haritasıyla aynı gerekçe). */

@@ -10,16 +10,26 @@ import { useSidebarStore } from "@/stores/sidebar";
 import { useAuthStore } from "@/stores/auth";
 import { useEntitlement } from "@/composables/useEntitlement";
 import { resolveNavItemRoute } from "@/utils/navItemRoute";
+import { mockHiddenScreens } from "@/router/logisticsScreens";
 import api from "@/utils/api";
 
 const STORAGE_KEY = "th_nav_state";
 const NAV_ENDPOINT = "tradehub_core.api.v1.navigation.get_navigation";
 
+/**
+ * Bu derlemede gizlenen lojistik ekranlarının yolları (MOGEM-685 F-03 / bulgu 18).
+ * Menü veritabanından (TH Module Registry) geliyor ve derlemeyi bilmiyor: PROD'da satıcı
+ * menüsünde "Manuel Sevkiyat" duruyordu (L3 ölçüldü) — tıklayınca kayıtlı olmayan ekrana
+ * gidiyordu. Kod tarafındaki yedek menü zaten `menuScreens()` ile filtreli.
+ */
+const gizliLojistikYollari = () => new Set(mockHiddenScreens().map((s) => `/${s.path}`));
+
 // Backend response'unu mevcut frontend formatına (section_key → groups[])
-// adapte eder. Hidden modüller backend tarafından zaten filtrelendiği için
-// burada ekstra filtre yok.
-function transformBackendNav(payload) {
+// adapte eder. Hidden modüller backend tarafından zaten filtreleniyor; burada
+// yalnız bu DERLEMEDE gizli lojistik ekranları düşülür.
+export function transformBackendNav(payload) {
   if (!payload?.sections) return {};
+  const gizli = gizliLojistikYollari();
   const result = {};
   for (const section of payload.sections) {
     const groups = (section.items || []).map((g) => ({
@@ -27,15 +37,17 @@ function transformBackendNav(payload) {
       color: g.color || "",
       mode: g.mode || "visible",
       moduleKey: g.module_key,
-      items: (g.items || []).map((it) => ({
-        label: it.label,
-        icon: it.icon || "",
-        route: it.route || undefined,
-        doctype: it.doctype || undefined,
-        sellerOwned: !!it.seller_owned,
-        moduleKey: it.module_key,
-        mode: it.mode || "visible",
-      })),
+      items: (g.items || [])
+        .filter((it) => !gizli.has(it.route))
+        .map((it) => ({
+          label: it.label,
+          icon: it.icon || "",
+          route: it.route || undefined,
+          doctype: it.doctype || undefined,
+          sellerOwned: !!it.seller_owned,
+          moduleKey: it.module_key,
+          mode: it.mode || "visible",
+        })),
     }));
     result[section.section_key] = groups;
   }

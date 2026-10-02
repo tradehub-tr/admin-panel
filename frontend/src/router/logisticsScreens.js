@@ -57,6 +57,16 @@
 //     URL çalışır" idi; matris kararıyla route da kapatıldı. Veri sınırı yine
 //     backend'de — bu kapı yalnız ekran VARLIĞININ sızmasını önler.
 //
+// MOCK'A BAĞLI EKRANLAR — `mockApi` (MOGEM-685 F-03, 29 Eyl 2026):
+//   Ürün kararı: Alpha/Beta/RC'de sahte veri olabilir, PROD'da HİÇ olmamalı. PROD
+//   derlemesinde mock kodu yok; ucu yazılmamış ekran orada boş/hatalı açılırdı. Bu
+//   yüzden `mockApi` ekranın (statik içe aktarımla) ulaştığı, `MOCK` haritası taşıyan
+//   api modüllerini listeler. Mock çalışmıyorsa ve bu modüllerden biri hâlâ mock
+//   bekliyorsa ekran route'tan, menüden ve `isScreenReady`'den DÜŞER.
+//   Uç yazılıp `MOCK` satırı `false` olunca ekran KENDİLİĞİNDEN görünür — bu dosyaya
+//   dokunmak gerekmez. Liste elle bayatlamasın diye `__tests__/logisticsScreens.test.js`
+//   onu içe aktarım ağacından yeniden hesaplayıp karşılaştırıyor.
+//
 // BİR EKRAN NASIL AÇILIR:
 //   1. Ucu yaz (tradehub_core/api/v1/logistics*.py)
 //   2. Container view'ı KENDİ dizininde aç (`viewPath`in gösterdiği yer)
@@ -72,6 +82,7 @@
 // eager yüklüyor, yani defter + sözleşme + altı kaydın doğrulaması lojistiğe
 // hiç girmeyen kullanıcının açılış chunk'ına düşerdi. Sekme envanteri
 // defterin kendi işi; sayımı yapan test onu doğrudan import ediyor.
+import { mockBekliyor } from "../api/logisticsMockGate.js";
 import { ownerOfViewPath } from "../views/logistics/_contract/ownership.js";
 
 /**
@@ -182,6 +193,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsDashboard",
     icon: "gauge",
     viewPath: "@/views/logistics/dashboard/DashboardView.vue",
+    mockApi: ["dashboardMetrics"],
     component: () => import("@/views/logistics/dashboard/DashboardView.vue"),
     ready: true,
     // Uç yok; `api/dashboardMetrics.js` mock adaptörüyle çalışıyor (13-FE
@@ -198,6 +210,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPendingQueue",
     icon: "list-todo",
     viewPath: "@/views/logistics/dashboard/PendingQueueView.vue",
+    mockApi: ["pendingWork"],
     component: () => import("@/views/logistics/dashboard/PendingQueueView.vue"),
     ready: true,
     // Uç yok; `api/pendingWork.js` mock adaptörüyle çalışıyor (13-FE
@@ -213,6 +226,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsExceptionQueue",
     icon: "triangle-alert",
     viewPath: "@/views/logistics/exceptions/ExceptionQueueView.vue",
+    mockApi: ["exceptions"],
     component: () => import("@/views/logistics/exceptions/ExceptionQueueView.vue"),
     ready: true,
     // Uç yok; `api/exceptions.js` mock adaptörüyle çalışıyor (13-FE deseni) —
@@ -272,6 +286,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsManualShipment",
     icon: "file-plus",
     viewPath: "@/views/logistics/shipments/create/ManualShipmentView.vue",
+    mockApi: ["shipmentCreate"],
     component: () => import("@/views/logistics/shipments/create/ManualShipmentView.vue"),
     // G0/K4: satıcı kendi siparişine manuel/offline sevkiyat açabilir.
     sellerVisible: true,
@@ -318,6 +333,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsSellerDelivery",
     icon: "car",
     viewPath: "@/views/logistics/delivery-locations/SellerDeliveryView.vue",
+    mockApi: ["pod", "shipmentEvents"],
     component: () => import("@/views/logistics/delivery-locations/SellerDeliveryView.vue"),
     // G0 matrisi: kendi aracıyla teslim satıcının fiziksel işi (D5 deseni —
     // satıcı-lojistiği modu). Kendi kayıtları, backend tenant filtreli.
@@ -334,6 +350,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsBuyerPickup",
     icon: "package-check",
     viewPath: "@/views/logistics/delivery-locations/BuyerPickupView.vue",
+    mockApi: ["pod", "shipmentEvents"],
     component: () => import("@/views/logistics/delivery-locations/BuyerPickupView.vue"),
     // G0 matrisi: alıcının teslim alacağı paketi hazır eden satıcıdır;
     // pickup kodu doğrulama satıcı tarafında da çalışır.
@@ -383,6 +400,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPacking",
     icon: "package",
     viewPath: "@/views/logistics/packages/PackingQueueView.vue",
+    mockApi: ["packaging"],
     component: () => import("@/views/logistics/packages/PackingQueueView.vue"),
     ready: true,
     // Satıcı kendi sevkiyatını kendisi paketliyor — bu ekran onun günlük
@@ -403,6 +421,7 @@ export const LOGISTICS_SCREENS = [
     // G0 kuyruğu satıcıya açık (sellerVisible) — çalışma alanı da öyle.
     sellerRoute: true,
     viewPath: "@/views/logistics/packages/PackingWorkspaceView.vue",
+    mockApi: ["packaging"],
     component: () => import("@/views/logistics/packages/PackingWorkspaceView.vue"),
     ready: true,
     blockedBy: null,
@@ -417,6 +436,7 @@ export const LOGISTICS_SCREENS = [
     // Etiket basımı FBM/Trendyol'da satıcının işi (ortak barkod deseni).
     sellerRoute: true,
     viewPath: "@/views/logistics/labels/LabelPrintView.vue",
+    mockApi: ["logisticsPricing", "packaging"],
     component: () => import("@/views/logistics/labels/LabelPrintView.vue"),
     ready: true,
     blockedBy: null,
@@ -430,6 +450,7 @@ export const LOGISTICS_SCREENS = [
     titleKey: "nav.item.logisticsPalletPlan",
     title: "Palet Planı",
     viewPath: "@/views/logistics/packages/PalletPlanView.vue",
+    mockApi: ["packaging"],
     component: () => import("@/views/logistics/packages/PalletPlanView.vue"),
     ready: true,
     // Uç ve Pallet DocType 19-BE'de yazılacak; ekran o güne kadar
@@ -448,6 +469,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPod",
     icon: "clipboard-check",
     viewPath: "@/views/logistics/pod/PodQueueView.vue",
+    mockApi: ["pod", "shipmentEvents"],
     component: () => import("@/views/logistics/pod/PodQueueView.vue"),
     ready: true,
     // Satıcı kendi teslimatının kanıtını kaydedebiliyor (K-B); kuyruk onun
@@ -468,6 +490,7 @@ export const LOGISTICS_SCREENS = [
     // Kendi sevkiyatının nerede olduğunu görmek satıcının hakkı (D1 katmanı).
     sellerRoute: true,
     viewPath: "@/views/logistics/pod/StationTimelineView.vue",
+    mockApi: ["pod", "shipmentEvents"],
     component: () => import("@/views/logistics/pod/StationTimelineView.vue"),
     ready: true,
     // Uç 11-BE'de (Bora) ve `Shipment Event.location` alanı DocType'ta YOK
@@ -484,6 +507,7 @@ export const LOGISTICS_SCREENS = [
     titleKey: "nav.item.logisticsProofOfDelivery",
     title: "Teslim Kanıtı Kaydı",
     viewPath: "@/views/logistics/pod/ProofOfDeliveryView.vue",
+    mockApi: ["pod", "shipmentEvents"],
     component: () => import("@/views/logistics/pod/ProofOfDeliveryView.vue"),
     ready: true,
     // Uç yok; `api/pod.js` mock adaptörüyle çalışıyor (USE_MOCK).
@@ -533,6 +557,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsReturns",
     icon: "undo-2",
     viewPath: "@/views/logistics/returns/ReturnQueueView.vue",
+    mockApi: ["returns"],
     component: () => import("@/views/logistics/returns/ReturnQueueView.vue"),
     // G0 matrisi: satıcı KENDİ iadelerini görür ve karar verir (Trendyol
     // deseni: satıcı onay/red, platform hakem). I3 kontrol + I4 kapanış
@@ -555,6 +580,7 @@ export const LOGISTICS_SCREENS = [
     title: "İade Kararı",
     sellerRoute: true,
     viewPath: "@/views/logistics/returns/ReturnDecisionView.vue",
+    mockApi: ["returns"],
     component: () => import("@/views/logistics/returns/ReturnDecisionView.vue"),
     ready: true,
     blockedBy: null,
@@ -567,6 +593,7 @@ export const LOGISTICS_SCREENS = [
     titleKey: "nav.item.logisticsReturnInspection",
     title: "İade Depo Kontrolü",
     viewPath: "@/views/logistics/returns/ReturnInspectionView.vue",
+    mockApi: ["returns"],
     component: () => import("@/views/logistics/returns/ReturnInspectionView.vue"),
     ready: true,
     blockedBy: null,
@@ -579,6 +606,7 @@ export const LOGISTICS_SCREENS = [
     titleKey: "nav.item.logisticsReturnClosure",
     title: "İade Kapanışı",
     viewPath: "@/views/logistics/returns/ReturnClosureView.vue",
+    mockApi: ["returns"],
     component: () => import("@/views/logistics/returns/ReturnClosureView.vue"),
     ready: true,
     blockedBy: null,
@@ -592,6 +620,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsRates",
     icon: "coins",
     viewPath: "@/views/logistics/pricing/ShippingRateView.vue",
+    mockApi: ["logisticsPricing"],
     component: () => import("@/views/logistics/pricing/ShippingRateView.vue"),
     // G0 matrisi + 20-FE K2: satıcı KENDİ tarifelerini ve kendisine uygulanan
     // platform tarifelerini görür; platformun ALIŞ maliyetini görmez (maskeleme
@@ -609,6 +638,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPricingRules",
     icon: "list-ordered",
     viewPath: "@/views/logistics/pricing/PricingRuleView.vue",
+    mockApi: ["logisticsPricing"],
     component: () => import("@/views/logistics/pricing/PricingRuleView.vue"),
     // Satıcı KENDİ kurallarını yazar; platform kuralları salt-okunur (K1 kararı).
     sellerVisible: true,
@@ -632,6 +662,7 @@ export const LOGISTICS_SCREENS = [
     title: "Fiyat Kuralı Formu",
     sellerRoute: true,
     viewPath: "@/views/logistics/pricing/PricingRuleFormView.vue",
+    mockApi: ["logisticsPricing"],
     component: () => import("@/views/logistics/pricing/PricingRuleFormView.vue"),
     ready: true,
     blockedBy: null,
@@ -643,6 +674,7 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPriceSimulation",
     icon: "calculator",
     viewPath: "@/views/logistics/pricing/PriceSimulationView.vue",
+    mockApi: ["logisticsPricing"],
     component: () => import("@/views/logistics/pricing/PriceSimulationView.vue"),
     // Satıcı kendi yükü için hesaplatır — "kargom neden 360 ₺" sorusunu
     // destek hattına düşmeden kendi cevaplayabilsin.
@@ -661,6 +693,7 @@ export const LOGISTICS_SCREENS = [
     // kayıtlı "bar-chart-2" kullanılıyor.
     icon: "bar-chart-2",
     viewPath: "@/views/logistics/reports/ReportCenterView.vue",
+    mockApi: ["reports"],
     component: () => import("@/views/logistics/reports/ReportCenterView.vue"),
     ready: true,
     // Uç yok; `api/reports.js` mock adaptörüyle çalışıyor (13-FE deseni) —
@@ -697,12 +730,20 @@ export const ownerOfScreen = (screen) => ownerOfViewPath(screen?.viewPath);
 export const screensOwnedBy = (owner) =>
   LOGISTICS_SCREENS.filter((s) => ownerOfScreen(s) === owner);
 
-/** Router'a kaydedilecek olanlar. */
-export const readyScreens = () => LOGISTICS_SCREENS.filter((s) => s.ready);
+/**
+ * Ekran bu derlemede/sunucuda açık mı? Hazır VE mock beklemiyor.
+ *
+ * `ready` "kodu yazıldı", bu ise "burada çalışır" demek: PROD'da mock
+ * yok, ucu yazılmamış (`mockApi`) ekran gizlenir. Ayrıntı dosya başında.
+ */
+const isOpen = (s) => s.ready && !mockBekliyor(s.mockApi);
 
-/** Admin menüsünde görünecekler — hazır VE parametresiz olanlar. */
+/** Router'a kaydedilecek olanlar. */
+export const readyScreens = () => LOGISTICS_SCREENS.filter(isOpen);
+
+/** Admin menüsünde görünecekler — açık VE parametresiz olanlar. */
 export const menuScreens = () =>
-  LOGISTICS_SCREENS.filter((s) => s.ready && !s.hidden && s.labelKey);
+  LOGISTICS_SCREENS.filter((s) => isOpen(s) && !s.hidden && s.labelKey);
 
 /**
  * Satıcı menüsünde görünecekler.
@@ -715,6 +756,26 @@ export const sellerMenuScreens = () => menuScreens().filter((s) => s.sellerVisib
 /** Henüz açılmamış ekranlar — "ne kaldı" sorusunun tek cevabı. */
 export const pendingScreens = () => LOGISTICS_SCREENS.filter((s) => !s.ready);
 
+/** Hazır ama bu derlemede mock beklediği için gizlenen ekranlar (MOGEM-685 F-03). */
+export const mockHiddenScreens = () =>
+  LOGISTICS_SCREENS.filter((s) => s.ready && mockBekliyor(s.mockApi));
+
+/**
+ * Gizli ekranın adresine gelen kullanıcının gideceği yer: yolun başından geriye doğru ilk
+ * AÇIK ve parametresiz ekran (`lojistik/sevkiyatlar/yeni` → `lojistik/sevkiyatlar`); yoksa
+ * açık menü ekranlarının ilki, o da yoksa ana sayfa.
+ */
+export const kapaliEkranHedefi = (screen) => {
+  const acik = new Set(readyScreens().map((s) => s.path));
+  const parca = screen.path.split("/");
+  for (let n = parca.length - 1; n > 0; n -= 1) {
+    const aday = parca.slice(0, n).join("/");
+    if (!aday.includes(":") && acik.has(aday)) return `/${aday}`;
+  }
+  const menu = menuScreens()[0];
+  return menu ? `/${menu.path}` : "/";
+};
+
 /**
  * Bir ekran açık mı?
  *
@@ -725,4 +786,7 @@ export const pendingScreens = () => LOGISTICS_SCREENS.filter((s) => !s.ready);
  * İkinci bir "hangileri açık" listesi tutulmuyor — hedef ekran `ready: true`
  * olduğu an buton kendiliğinden belirir.
  */
-export const isScreenReady = (key) => Boolean(LOGISTICS_SCREENS.find((s) => s.key === key)?.ready);
+export const isScreenReady = (key) => {
+  const screen = LOGISTICS_SCREENS.find((s) => s.key === key);
+  return Boolean(screen && isOpen(screen));
+};

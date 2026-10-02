@@ -1,3 +1,170 @@
+## [v1.18.0] - 2026-10-01 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(seo): MOGEM-662 SEO Helper ekranına tarama, bot logu, pano, denetim, GSC ve deney sekmeleri (@Metin Bektemur)
+  - API yolları tradehub_core.seo_helper.* olarak güncellendi (seoHelper.js), yeni seoHelper662.js (31 uç)
+  - 6 yeni sekme bileşeni: SeoCrawlTab, SeoBotLogTab, SeoBoardTab, SeoAuditTab, SeoGscTab, SeoExperimentsTab
+  - i18n: seoHelper bloğu tr/en/ru/ar dört dilde 272 anahtar, birebir eşit
+
+### Duzeltildi
+- fix(media): retro rename önizleme, prova ve arşiv durumlarını düzelt (#230) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+  - Politika durumunu, izolasyon bilgisini ve temiz oranı görünür hale getir
+  - Mobilde karantina listesini kart düzenine taşıyarak tablo sıkışmasını azalt
+  - Serbest bırakma işlemi için yanlış pozitif uyarılı onay akışı ekle
+  - Yeni arayüz metinlerini TR/EN/RU/AR yerelleştirmelerine ekle
+  - Önizle düğmesinin tıklanabilirliğini ve yükleme durumunu netleştirerek plan isteğinin katlama davranışına takılmasını engelle
+  - Arşivdeki orijinalleri koşuda atlayıp onay sayısını gerçek taşınacak dosyalara göre göstererek geri alma akışını koru
+  - Dry-run sonuçlarını gelecek zamanlı sayaçlar ve açıklama notuyla göstererek dosya taşındığı izlenimini kaldır
+  - Çift nokta ve arşiv sayaçları ile yeni durum metinlerini dört dilde ekle
+- fix(rum): SEO görsel adreslerini original saymayı engelle (#231) (@ahmeetseker)
+  - Hash taşıyan okunur SEO görsel URL'lerini non-original kümesine al
+  - LCP profilinde kökeni kanıtlanamayan türevlerin yanlış original etiketlenmesini önle
+  - Eski shard türevleri ve hash'siz düz dosya adı ayrımı için test ekle
+- fix(lojistik): ayar testi anahtar sayısını API den alacak hâle getirildi (@aliiball)
+  - verify-0904 M3 ayar ekranında 13 anahtar bekliyordu; carrier_webhook_enabled 16 Eyl de eklenince 14 oldu. Sayı get_logistics_settings yanıtından türetiliyor, her bayrağın okunur adı ve açıklaması aranıyor.
+  - Yeni bayrağın 4 dilde adı ve açıklaması eklendi; ölü webhook_notifications_enabled açıklaması düzeltildi. Aynı dosyalarda gizli ekran uyarı metni (screenNotOpenHere) de var.
+- fix(lojistik): lojistik mock verisi PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 F-03: PROD panel JS inin 13 parçasında mock tohumu vardı, 43 mock ucunun 41 inin backend i yok, MockDevPanel PROD da admin e görünüyordu.
+  - İki kilit: derleme anahtarı VITE_LOGISTICS_MOCK (repo Dockerfile ında açık, PROD un birleşik Dockerfile ında yok) ve sunucu adı kapısı (yerel, alpha, beta, rc).
+  - Mock bekleyen ekranlar MOCK haritasından türetilip gizleniyor; uç yazılınca kendiliğinden açılır. CI da mock-kapisi işi varsayılan derlemede sahte veri izi arar.
+  - Veritabanından gelen menü de filtreleniyor (bulgu 18: PROD satıcı lojistik menüsünde 9 öğenin 8 i ölü bağlantıydı); gizli ekran adresi en yakın açık ekrana yönlenip uyarı gösteriyor.
+  - CLAUDE.md: build:onizleme kuralı ve panelde npm test koşan CI işi olmadığı (bulgu 21) yazıldı.
+- fix(lojistik): sabit mağaza kodu PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 bulgu 19: pricing ve returns store undaki SEL-00001 yayın paketinde duruyordu ve satıcı rolünde gerçek uca sabit mağaza kodu gidiyordu.
+  - Sabit derleme anahtarına bağlandı: PROD derlemesinde 2 -> 0 dosya, önizlemede mock bozulmadı.
+- fix(medya): kırpma politikası kopyası backend ile senkronlandı (@aliiball)
+  - MOGEM-685 bulgu 16: kopya 23 Ağu dan beri bayattı (9 slot biçimi webp/jpeg -> avif, yeni library.image slotu).
+  - AVIF saydamlığı taşıdığı için alphaToJpeg uyarısı artık doğru olarak üretilmiyor; 3 uyarı testi bugünkü gerçeğe ve geçici JPEG profilli uyarı yoluna bağlandı (jpegProfil).
+- fix(test): sahiplik testine SEO ve satış ekibi dosyaları eklendi (@aliiball)
+  - seoHelper.js (MOGEM-663) ve salesTeams.js lojistik değil; sahiplik testinin kapsam dışı listesine eklendi. Panel birim testleri 1807/0.
+
+### Degistirildi
+- refactor(deps): tiptap 3.31 ve undici 8.11 e güncellendi (@aliiball)
+  - MOGEM-685 F-01: npm audit fix ve tiptap 3.29 -> 3.31; A-3 bulgu 25: jsdom un undici paketi 8.11.2 (WebSocket DoS, yalnız test ortamı).
+  - CI a uyarı veren npm audit işi eklendi (derlemeyi kırmaz). Kilit npm 10 ile üretildi; node:22-alpine içinde npm ci sınandı.
+
+---
+## [v1.17.0-rc.1] - 2026-10-01 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(seo): MOGEM-662 SEO Helper ekranına tarama, bot logu, pano, denetim, GSC ve deney sekmeleri (@Metin Bektemur)
+  - API yolları tradehub_core.seo_helper.* olarak güncellendi (seoHelper.js), yeni seoHelper662.js (31 uç)
+  - 6 yeni sekme bileşeni: SeoCrawlTab, SeoBotLogTab, SeoBoardTab, SeoAuditTab, SeoGscTab, SeoExperimentsTab
+  - i18n: seoHelper bloğu tr/en/ru/ar dört dilde 272 anahtar, birebir eşit
+
+### Duzeltildi
+- fix(media): retro rename önizleme, prova ve arşiv durumlarını düzelt (#230) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+  - Politika durumunu, izolasyon bilgisini ve temiz oranı görünür hale getir
+  - Mobilde karantina listesini kart düzenine taşıyarak tablo sıkışmasını azalt
+  - Serbest bırakma işlemi için yanlış pozitif uyarılı onay akışı ekle
+  - Yeni arayüz metinlerini TR/EN/RU/AR yerelleştirmelerine ekle
+  - Önizle düğmesinin tıklanabilirliğini ve yükleme durumunu netleştirerek plan isteğinin katlama davranışına takılmasını engelle
+  - Arşivdeki orijinalleri koşuda atlayıp onay sayısını gerçek taşınacak dosyalara göre göstererek geri alma akışını koru
+  - Dry-run sonuçlarını gelecek zamanlı sayaçlar ve açıklama notuyla göstererek dosya taşındığı izlenimini kaldır
+  - Çift nokta ve arşiv sayaçları ile yeni durum metinlerini dört dilde ekle
+- fix(rum): SEO görsel adreslerini original saymayı engelle (#231) (@ahmeetseker)
+  - Hash taşıyan okunur SEO görsel URL'lerini non-original kümesine al
+  - LCP profilinde kökeni kanıtlanamayan türevlerin yanlış original etiketlenmesini önle
+  - Eski shard türevleri ve hash'siz düz dosya adı ayrımı için test ekle
+- fix(lojistik): ayar testi anahtar sayısını API den alacak hâle getirildi (@aliiball)
+  - verify-0904 M3 ayar ekranında 13 anahtar bekliyordu; carrier_webhook_enabled 16 Eyl de eklenince 14 oldu. Sayı get_logistics_settings yanıtından türetiliyor, her bayrağın okunur adı ve açıklaması aranıyor.
+  - Yeni bayrağın 4 dilde adı ve açıklaması eklendi; ölü webhook_notifications_enabled açıklaması düzeltildi. Aynı dosyalarda gizli ekran uyarı metni (screenNotOpenHere) de var.
+- fix(lojistik): lojistik mock verisi PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 F-03: PROD panel JS inin 13 parçasında mock tohumu vardı, 43 mock ucunun 41 inin backend i yok, MockDevPanel PROD da admin e görünüyordu.
+  - İki kilit: derleme anahtarı VITE_LOGISTICS_MOCK (repo Dockerfile ında açık, PROD un birleşik Dockerfile ında yok) ve sunucu adı kapısı (yerel, alpha, beta, rc).
+  - Mock bekleyen ekranlar MOCK haritasından türetilip gizleniyor; uç yazılınca kendiliğinden açılır. CI da mock-kapisi işi varsayılan derlemede sahte veri izi arar.
+  - Veritabanından gelen menü de filtreleniyor (bulgu 18: PROD satıcı lojistik menüsünde 9 öğenin 8 i ölü bağlantıydı); gizli ekran adresi en yakın açık ekrana yönlenip uyarı gösteriyor.
+  - CLAUDE.md: build:onizleme kuralı ve panelde npm test koşan CI işi olmadığı (bulgu 21) yazıldı.
+- fix(lojistik): sabit mağaza kodu PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 bulgu 19: pricing ve returns store undaki SEL-00001 yayın paketinde duruyordu ve satıcı rolünde gerçek uca sabit mağaza kodu gidiyordu.
+  - Sabit derleme anahtarına bağlandı: PROD derlemesinde 2 -> 0 dosya, önizlemede mock bozulmadı.
+- fix(medya): kırpma politikası kopyası backend ile senkronlandı (@aliiball)
+  - MOGEM-685 bulgu 16: kopya 23 Ağu dan beri bayattı (9 slot biçimi webp/jpeg -> avif, yeni library.image slotu).
+  - AVIF saydamlığı taşıdığı için alphaToJpeg uyarısı artık doğru olarak üretilmiyor; 3 uyarı testi bugünkü gerçeğe ve geçici JPEG profilli uyarı yoluna bağlandı (jpegProfil).
+- fix(test): sahiplik testine SEO ve satış ekibi dosyaları eklendi (@aliiball)
+  - seoHelper.js (MOGEM-663) ve salesTeams.js lojistik değil; sahiplik testinin kapsam dışı listesine eklendi. Panel birim testleri 1807/0.
+
+### Degistirildi
+- refactor(deps): tiptap 3.31 ve undici 8.11 e güncellendi (@aliiball)
+  - MOGEM-685 F-01: npm audit fix ve tiptap 3.29 -> 3.31; A-3 bulgu 25: jsdom un undici paketi 8.11.2 (WebSocket DoS, yalnız test ortamı).
+  - CI a uyarı veren npm audit işi eklendi (derlemeyi kırmaz). Kilit npm 10 ile üretildi; node:22-alpine içinde npm ci sınandı.
+
+---
+## [v1.17.0-alpha.4] - 2026-09-29 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): ayar testi anahtar sayısını API den alacak hâle getirildi (@aliiball)
+  - verify-0904 M3 ayar ekranında 13 anahtar bekliyordu; carrier_webhook_enabled 16 Eyl de eklenince 14 oldu. Sayı get_logistics_settings yanıtından türetiliyor, her bayrağın okunur adı ve açıklaması aranıyor.
+  - Yeni bayrağın 4 dilde adı ve açıklaması eklendi; ölü webhook_notifications_enabled açıklaması düzeltildi. Aynı dosyalarda gizli ekran uyarı metni (screenNotOpenHere) de var.
+- fix(lojistik): lojistik mock verisi PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 F-03: PROD panel JS inin 13 parçasında mock tohumu vardı, 43 mock ucunun 41 inin backend i yok, MockDevPanel PROD da admin e görünüyordu.
+  - İki kilit: derleme anahtarı VITE_LOGISTICS_MOCK (repo Dockerfile ında açık, PROD un birleşik Dockerfile ında yok) ve sunucu adı kapısı (yerel, alpha, beta, rc).
+  - Mock bekleyen ekranlar MOCK haritasından türetilip gizleniyor; uç yazılınca kendiliğinden açılır. CI da mock-kapisi işi varsayılan derlemede sahte veri izi arar.
+  - Veritabanından gelen menü de filtreleniyor (bulgu 18: PROD satıcı lojistik menüsünde 9 öğenin 8 i ölü bağlantıydı); gizli ekran adresi en yakın açık ekrana yönlenip uyarı gösteriyor.
+  - CLAUDE.md: build:onizleme kuralı ve panelde npm test koşan CI işi olmadığı (bulgu 21) yazıldı.
+- fix(lojistik): sabit mağaza kodu PROD derlemesinden çıkarıldı (@aliiball)
+  - MOGEM-685 bulgu 19: pricing ve returns store undaki SEL-00001 yayın paketinde duruyordu ve satıcı rolünde gerçek uca sabit mağaza kodu gidiyordu.
+  - Sabit derleme anahtarına bağlandı: PROD derlemesinde 2 -> 0 dosya, önizlemede mock bozulmadı.
+- fix(medya): kırpma politikası kopyası backend ile senkronlandı (@aliiball)
+  - MOGEM-685 bulgu 16: kopya 23 Ağu dan beri bayattı (9 slot biçimi webp/jpeg -> avif, yeni library.image slotu).
+  - AVIF saydamlığı taşıdığı için alphaToJpeg uyarısı artık doğru olarak üretilmiyor; 3 uyarı testi bugünkü gerçeğe ve geçici JPEG profilli uyarı yoluna bağlandı (jpegProfil).
+- fix(test): sahiplik testine SEO ve satış ekibi dosyaları eklendi (@aliiball)
+  - seoHelper.js (MOGEM-663) ve salesTeams.js lojistik değil; sahiplik testinin kapsam dışı listesine eklendi. Panel birim testleri 1807/0.
+
+### Degistirildi
+- refactor(deps): tiptap 3.31 ve undici 8.11 e güncellendi (@aliiball)
+  - MOGEM-685 F-01: npm audit fix ve tiptap 3.29 -> 3.31; A-3 bulgu 25: jsdom un undici paketi 8.11.2 (WebSocket DoS, yalnız test ortamı).
+  - CI a uyarı veren npm audit işi eklendi (derlemeyi kırmaz). Kilit npm 10 ile üretildi; node:22-alpine içinde npm ci sınandı.
+
+---
+## [v1.17.0-alpha.3] - 2026-09-29 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(seo): MOGEM-662 SEO Helper ekranına tarama, bot logu, pano, denetim, GSC ve deney sekmeleri (@Metin Bektemur)
+  - API yolları tradehub_core.seo_helper.* olarak güncellendi (seoHelper.js), yeni seoHelper662.js (31 uç)
+  - 6 yeni sekme bileşeni: SeoCrawlTab, SeoBotLogTab, SeoBoardTab, SeoAuditTab, SeoGscTab, SeoExperimentsTab
+  - i18n: seoHelper bloğu tr/en/ru/ar dört dilde 272 anahtar, birebir eşit
+
+---
+## [v1.17.0-alpha.2] - 2026-09-29 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(rum): SEO görsel adreslerini original saymayı engelle (#231) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+  - Politika durumunu, izolasyon bilgisini ve temiz oranı görünür hale getir
+  - Mobilde karantina listesini kart düzenine taşıyarak tablo sıkışmasını azalt
+  - Serbest bırakma işlemi için yanlış pozitif uyarılı onay akışı ekle
+  - Yeni arayüz metinlerini TR/EN/RU/AR yerelleştirmelerine ekle
+  - Önizle düğmesinin tıklanabilirliğini ve yükleme durumunu netleştirerek plan isteğinin katlama davranışına takılmasını engelle
+  - Arşivdeki orijinalleri koşuda atlayıp onay sayısını gerçek taşınacak dosyalara göre göstererek geri alma akışını koru
+  - Dry-run sonuçlarını gelecek zamanlı sayaçlar ve açıklama notuyla göstererek dosya taşındığı izlenimini kaldır
+  - Çift nokta ve arşiv sayaçları ile yeni durum metinlerini dört dilde ekle
+  - Hash taşıyan okunur SEO görsel URL'lerini non-original kümesine al
+  - LCP profilinde kökeni kanıtlanamayan türevlerin yanlış original etiketlenmesini önle
+  - Eski shard türevleri ve hash'siz düz dosya adı ayrımı için test ekle
+
+---
 ## [v1.17.0-alpha.1] - 2026-09-28 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

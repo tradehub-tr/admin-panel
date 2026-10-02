@@ -43,6 +43,7 @@
 //   (shipment.create) panel görünürlüğünü, dar yol yazma iznini verir.
 
 import { LOGISTICS_METHOD, logisticsPost } from "./logisticsClient";
+import { mockCalisiyor } from "./logisticsMockGate.js";
 import { LogisticsApiError } from "./logisticsEnvelope";
 
 /**
@@ -100,7 +101,8 @@ function mockCreate(payload) {
  * sahte bir kaydın 404 detayına götürmemek için).
  */
 export async function createManualShipment(payload) {
-  if (MOCK.create_manual_shipment) return mockCreate(payload);
+  if (__LOJISTIK_MOCK__ && mockCalisiyor() && MOCK.create_manual_shipment)
+    return mockCreate(payload);
 
   return logisticsPost(`${LOGISTICS_METHOD.SHIPMENT}.create_manual_shipment`, {
     payload: JSON.stringify(payload),
