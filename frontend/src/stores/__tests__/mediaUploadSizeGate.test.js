@@ -17,6 +17,14 @@ import { createPinia, setActivePinia } from "pinia";
  *     ilk testin kırmızıya dönmesi.
  *   • Kapı yalnız görsele bakar: küçük "görsel boyutlu" bir PDF gate'e takılmaz.
  *
+ * GÜNCELLENDİ 2026-09-29 (kare kuralı): `product.image` `require.min_short_edge`/
+ * `min_area` kaldırıldı — ürüne bağlanan görsel artık kare 1000–2000 px beyaz
+ * dolguya otomatik çevriliyor (media/kare.py), küçük girdiyi İSTEMCİDE elemenin
+ * gerekçesi kalmadı. 900×900 artık `product.image` slotuyla da kapıdan GEÇER
+ * ("SEÇİM ANINDA elenmiyor" testinden "kapıdan GEÇER" testine taşındı, aşağıya
+ * bakınız). Kapı mekanizmasının VACUOUS olmadığının kanıtı artık `product.image`
+ * değil, hâlâ asgari kısa kenar taşıyan bir slot (`seller.logo`, 256 px).
+ *
  * NE ÖLÇÜLMEZ:
  *   • Gerçek tarayıcı ölçüm işçisi (Node'da `Worker` kurulmaz; probe ANA İŞ
  *     PARÇACIĞI başlıktan-boyut yedeğinden koşar) ve GERÇEK SUNUCU (api sahte).
@@ -106,16 +114,35 @@ function uploadIstekSayisi() {
 
 // ── Kapı kapalı: küçük görsel elenir ─────────────────────────────────
 
-test("900×900, slot verilince İSTEMCİDE elenir — 0 upload isteği", async () => {
+test("900×900, product.image slotunda artık kapıdan GEÇER — 2026-09-29 kare kuralı: reddetme yok", async () => {
+  // ÖNCEDEN: 900×900 `product.image`'da SEÇİM ANINDA elenirdi
+  // (`short_edge_too_small`, asgari kısa kenar 1000). GÜNCELLENDİ 2026-09-29
+  // (kare kuralı): `require.min_short_edge` kaldırıldı — ürüne bağlanan
+  // görsel artık kare 1000–2000 px beyaz dolguya otomatik çevriliyor
+  // (media/kare.py). Vektör SİLİNMEDİ, yalnız beklenti KABUL'e (kapıdan
+  // geçip "uploading" durumuna) çevrildi.
   const store = yeniMagaza();
 
   await store.enqueueUploads([pngFile("kucuk.png", 900, 900)], { slotKey: "product.image" });
 
   const satir = sonSatir(store);
-  assert.equal(satir.status, "error", "küçük görsel kuyruğa hata olarak girmeli");
+  assert.equal(satir.errorCode, null, "product.image artık boyut kapısına takılmamalı");
+  assert.equal(satir.status, "uploading", "kapıdan geçen dosya yüklemeye başlamalı");
+});
+
+test("100×100, seller.logo slotunda hâlâ İSTEMCİDE elenir — kapı VACUOUS değil", async () => {
+  // Kapı mekanizmasının hâlâ çalıştığının kanıtı: `product.image` kare
+  // kuralıyla asgari kısa kenarını kaybetti ama `seller.logo` (256 px) gibi
+  // diğer slotlar bu göreve dokunulmadı, hâlâ elemeye devam ediyor.
+  const store = yeniMagaza();
+
+  await store.enqueueUploads([pngFile("kucuk-logo.png", 100, 100)], { slotKey: "seller.logo" });
+
+  const satir = sonSatir(store);
+  assert.equal(satir.status, "error", "küçük logo kuyruğa hata olarak girmeli");
   assert.equal(satir.errorCode, "short_edge_too_small", "sebep asgari kısa kenar olmalı");
-  assert.equal(satir.errorParams?.limit, 1000, "product.image asgari kısa kenarı 1000");
-  assert.equal(satir.errorParams?.measured, 900);
+  assert.equal(satir.errorParams?.limit, 256, "seller.logo asgari kısa kenarı 256");
+  assert.equal(satir.errorParams?.measured, 100);
   assert.equal(uploadIstekSayisi(), 0, "reddedilen dosya için tek bayt gitmemeli");
 });
 

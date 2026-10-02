@@ -132,10 +132,7 @@ describe("i18n — dört dilde eksik anahtar yok", () => {
   test("hiçbir dilde ham anahtar ekrana düşmüyor", async () => {
     for (const lang of Object.keys(DILLER)) {
       const html = await render(MODAL, { count: 5, sampleName: "a.png" }, lang);
-      assert.ok(
-        !html.includes("media.bulkFields."),
-        `${lang}: çözülmemiş i18n anahtarı ekranda`
-      );
+      assert.ok(!html.includes("media.bulkFields."), `${lang}: çözülmemiş i18n anahtarı ekranda`);
     }
   });
 });
@@ -200,13 +197,21 @@ describe("çubuk — toplu düzenle düğmesi", () => {
 
 describe("sunucu sözleşmesi — summarizeBulk `applied` sayacını okuyor", () => {
   test("tam başarı kısmi sayılmaz", () => {
-    const rapor = summarizeBulk("fields", { applied: 3, files: 3, skipped: 0, failed: [] }, "applied");
+    const rapor = summarizeBulk(
+      "fields",
+      { applied: 3, files: 3, skipped: 0, failed: [] },
+      "applied"
+    );
     assert.equal(rapor.ok, 3);
     assert.equal(rapor.partial, false);
   });
 
   test("atlanan dosya kısmi yapar", () => {
-    const rapor = summarizeBulk("fields", { applied: 2, files: 2, skipped: 1, failed: [] }, "applied");
+    const rapor = summarizeBulk(
+      "fields",
+      { applied: 2, files: 2, skipped: 1, failed: [] },
+      "applied"
+    );
     assert.equal(rapor.skipped, 1);
     assert.equal(rapor.partial, true);
   });
@@ -214,7 +219,12 @@ describe("sunucu sözleşmesi — summarizeBulk `applied` sayacını okuyor", ()
   test("başarısız dosya adresi ve sebebi taşınıyor", () => {
     const rapor = summarizeBulk(
       "rename",
-      { applied: 1, files: 1, skipped: 0, failed: [{ file_url: "/files/a.png", error: "Dosya kaydı yok" }] },
+      {
+        applied: 1,
+        files: 1,
+        skipped: 0,
+        failed: [{ file_url: "/files/a.png", error: "Dosya kaydı yok" }],
+      },
       "applied"
     );
     assert.equal(rapor.failed.length, 1);

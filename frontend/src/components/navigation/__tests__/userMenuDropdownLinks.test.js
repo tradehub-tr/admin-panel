@@ -13,10 +13,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const KOK = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const dropdown = readFileSync(
-  join(KOK, "src/components/navigation/UserMenuDropdown.vue"),
-  "utf8"
-);
+const dropdown = readFileSync(join(KOK, "src/components/navigation/UserMenuDropdown.vue"), "utf8");
 const router = readFileSync(join(KOK, "src/router/index.js"), "utf8");
 
 function navigateHedefleri(kaynak) {

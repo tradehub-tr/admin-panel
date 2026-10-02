@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+  import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useVirtualGrid } from "@/composables/useVirtualGrid";
@@ -24,7 +24,7 @@
    *    olması sayfayı klavyeyle kullanılamaz yapardı.
    */
   const props = defineProps({
-    /** `[{ id, label, icon, countText }]` */
+    /** `[{ id, label, icon, countText, hint? }]` — `hint`: adın altında bir satır açıklama. */
     items: { type: Array, required: true },
     emptyText: { type: String, default: "" },
     /** Izgaranın erişilebilir adı — ekran okuyucu listeyi bununla duyurur. */
@@ -59,6 +59,22 @@
       ? { paddingTop: `${vg.padTop.value}px`, paddingBottom: `${vg.padBottom.value}px` }
       : null
   );
+
+  // ── Giriş kademesi ───────────────────────────────────────────────
+  /**
+   * Kartlar yalnız ızgara İLK basıldığında kademeli belirir. Gezginler
+   * ızgarayı klasör değişiminde yeniden kurar (anahtarlı sarmalayıcı), yani
+   * bu tam olarak "klasör değişti" anıdır. Sınıf kademe bitince kalkar:
+   * pencerelemede kaydırmayla sonradan basılan kartlar ve sıradan yeniden
+   * çizimler animasyonu tekrar oynatmaz.
+   */
+  const entering = ref(true);
+  let enterTimer = 0;
+  onMounted(() => {
+    // 5 × 30ms gecikme + 150ms giriş ≈ 300ms; pay bırakılarak kaldırılır.
+    enterTimer = setTimeout(() => (entering.value = false), 400);
+  });
+  onBeforeUnmount(() => clearTimeout(enterTimer));
 
   // ── Klavye imleci ────────────────────────────────────────────────
   /** Tek Tab durağının hangi kalemde olduğu. */
@@ -121,7 +137,7 @@
     <ul
       ref="gridEl"
       class="mfgrid"
-      :class="{ 'mfgrid--windowed': windowed }"
+      :class="{ 'mfgrid--windowed': windowed, 'mfgrid--enter': entering }"
       role="list"
       :style="padStyle"
       :aria-label="ariaLabel || undefined"
@@ -149,6 +165,7 @@
         >
           <span class="mfgrid__icon"><AppIcon :name="item.icon || 'folder'" :size="22" /></span>
           <span class="mfgrid__name">{{ item.label }}</span>
+          <span v-if="item.hint" class="mfgrid__hint">{{ item.hint }}</span>
           <span class="mfgrid__count">{{ item.countText }}</span>
         </button>
       </li>
@@ -165,7 +182,8 @@
   // görünmeyen satırların yerine konan boşluk gerçeğinden sapar ve kaydırma
   // çubuğu her pencerede zıplar. Değer tek yerde — matematik onu DOM'dan
   // ölçüyor, burada değiştirmek yeterli.
-  $folder-row: 108px;
+  // 16+16 iç boşluk + 38 simge + iki satır ad (~40) + dosya sayısı (~16) + aralıklar.
+  $folder-row: 140px;
 
   .mfgrid {
     display: grid;
@@ -179,6 +197,40 @@
   .mfgrid__cell {
     display: flex;
     min-width: 0;
+  }
+
+  // Klasör değişiminde giriş: 6px yukarı + opacity, ilk 6 kart 30ms arayla,
+  // kalanlar gecikmesiz. Etkileşimi bekletmez — kart baştan tıklanabilir.
+  .mfgrid--enter .mfgrid__cell {
+    animation: mfgrid-in $d-fast $ease-out both;
+
+    @for $i from 2 through 6 {
+      &:nth-child(#{$i}) {
+        animation-delay: ($i - 1) * 30ms;
+      }
+    }
+  }
+
+  @keyframes mfgrid-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  // Azaltılmış hareket: kayma ve kademe yok, yalnız opacity (süreyi
+  // base.scss'teki global kural zaten neredeyse sıfıra indiriyor).
+  @media (prefers-reduced-motion: reduce) {
+    .mfgrid--enter .mfgrid__cell {
+      animation-name: mfgrid-fade;
+      animation-delay: 0ms !important;
+    }
+  }
+
+  @keyframes mfgrid-fade {
+    from {
+      opacity: 0;
+    }
   }
 
   .mfgrid__folder {
@@ -231,6 +283,11 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     overflow: hidden;
+  }
+
+  .mfgrid__hint {
+    @include media.text("xs");
+    @include media.muted(1);
   }
 
   .mfgrid__count {

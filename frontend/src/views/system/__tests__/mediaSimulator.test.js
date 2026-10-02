@@ -96,7 +96,9 @@ test("13 cihaz rafta, bölgeler sayfa haritasında listeleniyor", async () => {
   // cihazın tamamını radio yapar; harita yalnız AKTİF sayfanın bölgelerini —
   // diğer 4 sayfaya aria-pressed sekmelerden geçilir, 15 bölgenin tamamı
   // böylece erişilebilir kalır.
-  const { PAGES, PRIMARY_REGIONS } = await server.ssrLoadModule("/src/lib/media/simulator/index.js");
+  const { PAGES, PRIMARY_REGIONS } = await server.ssrLoadModule(
+    "/src/lib/media/simulator/index.js"
+  );
   const activePage = PAGES.find((p) => p.regions.some((r) => r.key === PRIMARY_REGIONS[0].key));
   const html = await renderView();
   assert.equal((html.match(/role="radio"/g) || []).length, 13 + activePage.regions.length);
@@ -145,10 +147,10 @@ test("boş Media Rendition tablosu arıza değil, beklenen durum", async () => {
 
 test("ölçülen üç sayı ekrandaki özet satırında", async () => {
   const html = await renderView();
-  // 65 kombinasyon: kaynak_yetersiz 0, aşırı servis 3, zoom yetersiz 6.
-  // (aşırı servis 2026-08-20'de 1→3; gerekçe srcsetParity.test.js'te.)
+  // 65 kombinasyon: kaynak_yetersiz 3, aşırı servis 15, zoom yetersiz 6.
+  // (2026-09-30 WebP merdiveni 192/384/768/1280; gerekçe srcsetParity.test.js'te.)
   assert.match(html, /65 kombinasyon koşturuldu/);
-  assert.match(html, /kaynak yetersiz 0/);
-  assert.match(html, /aşırı servis 3/);
+  assert.match(html, /kaynak yetersiz 3/);
+  assert.match(html, /aşırı servis 15/);
   assert.match(html, /zoom yetersiz 6/);
 });

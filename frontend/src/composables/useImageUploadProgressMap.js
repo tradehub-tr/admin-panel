@@ -26,13 +26,14 @@ import { reactive, onUnmounted } from "vue";
  *
  *   // Template: <bar v-if="states[key]?.status === 'uploading'" :style="{ width: states[key].progress + '%' }">
  */
-export function useImageUploadProgressMap() {
+export function useImageUploadProgressMap({ measured = false } = {}) {
   const states = reactive({}); // key → { status: 'uploading'|'success', progress: 0-100 }
   const intervals = {}; // key → interval id
   const successTimeouts = {}; // key → timeout id (cleanup için)
 
   function start(key) {
     states[key] = { status: "uploading", progress: 0 };
+    if (measured) return;
     const tick = () => {
       const s = states[key];
       if (!s || s.status !== "uploading") return false;
@@ -51,7 +52,7 @@ export function useImageUploadProgressMap() {
       delete intervals[key];
     }
     if (states[key]) states[key].progress = 100;
-    await new Promise((r) => window.setTimeout(r, 350));
+    if (!measured) await new Promise((r) => window.setTimeout(r, 350));
     if (states[key]) states[key].status = "success";
     successTimeouts[key] = window.setTimeout(() => {
       delete states[key];
@@ -76,5 +77,9 @@ export function useImageUploadProgressMap() {
     for (const id of Object.values(successTimeouts)) window.clearTimeout(id);
   });
 
-  return { states, start, finish, fail };
+  function progress(key, value) {
+    if (states[key]?.status === "uploading")
+      states[key].progress = Math.max(0, Math.min(100, value));
+  }
+  return { states, start, finish, fail, progress };
 }

@@ -41,10 +41,10 @@
     return (c.clean ?? 0) + (c.infected ?? 0) + (c.failed ?? 0);
   });
   const cleanRatio = computed(() =>
-    scanned.value ? ((s.counts.value.clean ?? 0) / scanned.value) * 100 : 0,
+    scanned.value ? ((s.counts.value.clean ?? 0) / scanned.value) * 100 : 0
   );
   const ratioLabel = computed(() =>
-    new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(cleanRatio.value),
+    new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(cleanRatio.value)
   );
   const fmtInt = (n) => new Intl.NumberFormat(locale.value).format(n ?? 0);
 
@@ -60,7 +60,7 @@
   });
 
   const quarantineCount = computed(
-    () => (s.counts.value.infected ?? 0) + (s.counts.value.failed ?? 0),
+    () => (s.counts.value.infected ?? 0) + (s.counts.value.failed ?? 0)
   );
   const holdCount = computed(() => s.counts.value.pending ?? 0);
 
@@ -118,7 +118,9 @@
             :class="s.scanningOff.value ? 'mq__status--off' : 'mq__status--on'"
           >
             <span class="mq__status-dot" aria-hidden="true"></span>
-            {{ s.scanningOff.value ? t("mediaQuarantine.policy.off") : t("mediaQuarantine.policy.on") }}
+            {{
+              s.scanningOff.value ? t("mediaQuarantine.policy.off") : t("mediaQuarantine.policy.on")
+            }}
           </span>
         </div>
         <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("mediaQuarantine.subtitle") }}</p>
@@ -141,11 +143,7 @@
             <AppIcon :name="policyOpen ? 'chevron-up' : 'chevron-down'" :size="14" />
           </button>
           <Transition name="mq-collapse">
-            <ul
-              v-show="policyOpen"
-              id="mq-policy-facts"
-              class="mq__facts"
-            >
+            <ul v-show="policyOpen" id="mq-policy-facts" class="mq__facts">
               <li class="mq__fact">
                 <AppIcon name="shield-check" :size="14" />
                 {{ t("mediaQuarantine.policy.scanner", { name: scannerName }) }}
@@ -355,7 +353,9 @@
                 </span>
               </div>
             </td>
-            <td class="mq__col-when">{{ formatDateTime(row.started_at || row.creation, locale) }}</td>
+            <td class="mq__col-when">
+              {{ formatDateTime(row.started_at || row.creation, locale) }}
+            </td>
             <td class="mq__col-actions">
               <template v-if="s.tab.value === 'quarantine'">
                 <!-- Onay adımı: çıkarma düğmesinin yerinde açılır, kaynağından
@@ -465,6 +465,7 @@
   }
 
   .mq {
+    container-type: inline-size;
     padding: media.$s-4;
     display: flex;
     flex-direction: column;
@@ -1103,7 +1104,7 @@
 
   // ── Dokunmatik (≤1023): tablo KART olur ──────────────────────────────
   // Markup TEK: `<table>` kalıyor, yalnız görüntüleme kutusu değişiyor.
-  @media (max-width: media.$m-bp-rail) {
+  @container (max-width: 1100px) {
     .mq__table {
       display: block;
     }
@@ -1173,8 +1174,10 @@
     .mq__confirm {
       display: flex;
       width: 100%;
-      flex-direction: column;
-      align-items: stretch;
+      flex-wrap: wrap;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
     }
     .mq__confirm {
       transform-origin: center top;
@@ -1189,8 +1192,7 @@
     }
     // Eylemler kartta gerçek düğme: 44px hedef, tam genişlik.
     .mq__btn--sm {
-      @include media.tap-target;
-      width: 100%;
+      width: auto;
       justify-content: center;
     }
     .mq__stats {
@@ -1287,6 +1289,96 @@
       @include dark {
         background: $d-bg-card;
       }
+    }
+  }
+
+  .mq__stat span {
+    white-space: normal;
+    text-overflow: clip;
+    overflow: visible;
+  }
+  .mq__badge {
+    white-space: normal;
+    line-height: 1.4;
+    font-weight: 500;
+    max-width: 100%;
+  }
+  .mq__file {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .mq__table .mq__btn--sm {
+    position: relative;
+    min-height: 30px;
+    height: auto;
+    width: auto;
+    padding: 5px 9px;
+    margin-block: 7px;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 500;
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .mq__table .mq__btn--sm::after {
+    content: "";
+    position: absolute;
+    inset: -7px 0;
+    min-height: 44px;
+  }
+  @container (max-width: 1100px) {
+    .mq__table tr {
+      flex-direction: row;
+      align-items: center;
+    }
+    .mq__table .mq__col-file,
+    .mq__table .mq__col-status {
+      flex-basis: 100%;
+    }
+    .mq__file-text {
+      flex: 1;
+    }
+    .mq__file {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .mq__status-cell {
+      flex-wrap: wrap;
+    }
+    .mq__table .mq__col-status,
+    .mq__table .mq__col-actions {
+      white-space: normal;
+    }
+    .mq__confirm {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .mq__confirm-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+  }
+  @media (max-width: 400px) {
+    .mq__tabs {
+      flex-wrap: wrap;
+    }
+    .mq__tab {
+      flex: 1 1 100%;
+      min-width: 0;
+      white-space: normal;
+    }
+    .mq__head-actions {
+      gap: 8px;
+    }
+    .mq__head-actions .mq__btn {
+      min-width: 0;
+      padding-inline: 8px;
+      white-space: normal;
+      font-size: 12px;
     }
   }
 </style>

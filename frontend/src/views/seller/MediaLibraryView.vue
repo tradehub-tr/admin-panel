@@ -347,12 +347,8 @@
 
         <MediaFilterChips :chips="dt.chips.value" @clear="clearChip" />
 
-        <MediaUploadQueue
-          :uploads="uploads"
-          @retry="store.retryUpload"
-          @cancel="store.cancelUpload"
-          @clear="store.clearFinishedUploads"
-        />
+        <!-- Yükleme kuyruğu artık kabuktaki yüzen tepsi (AppLayout →
+             MediaUploadTrayHost): sayfadan çıkınca da ilerleme görünür. -->
 
         <!-- Sürükle-bırak alanı yalnız imleçli/geniş ekranda. Telefonda
              sürükleme diye bir etkileşim yok; alan sadece dosya seçiciyi açan
@@ -373,6 +369,16 @@
             {{ t("media.upload.dropHint") }}
           </span>
         </label>
+
+        <MediaAttentionList
+          :items="statusItems"
+          @open="
+            openDetail(
+              $event.id,
+              paged.findIndex((item) => item.id === $event.id)
+            )
+          "
+        />
 
         <div class="mresults">
           <p class="mresults__count">
@@ -395,272 +401,292 @@
              detay açma hep mutlak indeksi kullanmak zorunda. `data-cell` de
              mutlak — imleci görünmeyen bir karta taşırken düğüm bununla
              bulunuyor (`revealCard`). -->
-        <ul
-          v-if="effectiveMode === 'grid' && paged.length"
-          ref="gridEl"
-          class="mgrid"
-          :style="[{ '--mgrid-cols': gridColumns }, gridPadStyle]"
-        >
-          <li
-            v-for="(item, i) in visibleCards"
-            :key="item.id"
-            :data-cell="cardOffset + i"
-            :aria-setsize="paged.length"
-            :aria-posinset="cardOffset + i + 1"
-          >
-            <MediaCard
-              :item="item"
-              :selected="store.isSelected(item.id)"
-              :active="item.id === activeId"
-              :focused="cardOffset + i === cursor"
-              :editable="store.canEdit(item)"
-              :density="gridColumns"
-              :detail-open="detailSutunuAcik"
-              :uniform="gridWindowed"
-              @open="openDetail(item.id, cardOffset + i)"
-              @toggle="onCardToggle(item.id, cardOffset + i, $event)"
-              @action="onAction(item, $event)"
-            />
-          </li>
-        </ul>
+        <!-- Kip / sütun / sayfa değişiminde sonuçlar yumuşakça belirir
+             (`resultsKey`). Filtre ve aramada anahtar değişmez; kart başına
+             animasyon ya da yer değiştirme (FLIP) yok — pencereleme ve seçim
+             olduğu gibi kalır. -->
+        <Transition name="mswap" @leave="leaveNow">
+          <div :key="resultsKey" class="mswap">
+            <ul
+              v-if="effectiveMode === 'grid' && paged.length"
+              ref="gridEl"
+              class="mgrid"
+              :style="[{ '--mgrid-cols': gridColumns }, gridPadStyle]"
+            >
+              <li
+                v-for="(item, i) in visibleCards"
+                :key="item.id"
+                :data-cell="cardOffset + i"
+                :aria-setsize="paged.length"
+                :aria-posinset="cardOffset + i + 1"
+              >
+                <MediaCard
+                  :item="withStatus(item)"
+                  :selected="store.isSelected(item.id)"
+                  :active="item.id === activeId"
+                  :focused="cardOffset + i === cursor"
+                  :editable="store.canEdit(item)"
+                  :density="gridColumns"
+                  :detail-open="detailSutunuAcik"
+                  :uniform="gridWindowed"
+                  @open="openDetail(item.id, cardOffset + i)"
+                  @toggle="onCardToggle(item.id, cardOffset + i, $event)"
+                  @action="onAction(item, $event)"
+                />
+              </li>
+            </ul>
 
-        <!-- Satır listesi — hem `list` modu hem de dar ekranda tablo/kanban'ın
+            <!-- Satır listesi — hem `list` modu hem de dar ekranda tablo/kanban'ın
              karşılığı. Tablo 6+ sütun × nowrap ≈ 740px istiyor; ray açıkken
              orta sütun 1024px viewport'ta ~700px'e düşüyor. Yatay kaydırma
              yerine projenin satır kalıbı (SellerListingsView `sl-mrow`). -->
-        <ul v-else-if="effectiveMode === 'rows' && paged.length" ref="gridEl" class="mrows">
-          <!-- `data-cell` ızgarayla aynı: imleç düğümü tek bir yoldan bulunuyor.
+            <ul v-else-if="effectiveMode === 'rows' && paged.length" ref="gridEl" class="mrows">
+              <!-- `data-cell` ızgarayla aynı: imleç düğümü tek bir yoldan bulunuyor.
                Satır listesi PENCERELENMİYOR (satır yüksekliği ada göre değişir),
                burada indeks zaten mutlak. -->
-          <li v-for="(item, i) in paged" :key="item.id" :data-cell="i">
-            <!-- Seçim kutusu yok: satır tek bir hedef, tıklamak detayı açar.
+              <li v-for="(item, i) in paged" :key="item.id" :data-cell="i">
+                <!-- Seçim kutusu yok: satır tek bir hedef, tıklamak detayı açar.
                  Toplu seçim ⋯ menüsündeki "Sayfadakileri seç" ve klavye
                  kısayollarıyla yapılır; kutu satırın 44px'ini yiyor ve tek
                  satırda iki farklı tıklama anlamı yaratıyordu. -->
-            <button
-              type="button"
-              class="mrow"
-              :class="{
-                'mrow--active': item.id === activeId,
-                'mrow--selected': store.isSelected(item.id),
-              }"
-              @click="openDetail(item.id, i)"
-            >
-              <MediaThumb :item="item" region="rowThumb" :icon-size="16" class="mrow__thumb" />
-
-              <span class="mrow__mid">
-                <span class="mrow__name">
-                  <span class="mrow__name-text">{{ item.fileName }}</span>
-                  <span v-if="item.owner === 'shared'" class="mrow__badge">
-                    {{ t("media.shared") }}
-                  </span>
-                  <span v-if="item.archived" class="mrow__badge">
-                    {{ t("media.filters.archive") }}
-                  </span>
-                </span>
-                <!-- İkinci satır telefonda yer kaplamasın diye ≥768px'te açılır. -->
-                <span class="mrow__desc">
-                  <span class="mrow__title">{{ item.title || "—" }}</span>
-                  <span v-for="tag in item.tags.slice(0, 3)" :key="tag" class="mrow__tag">
-                    {{ tag }}
-                  </span>
-                </span>
-              </span>
-
-              <!-- Meta ≥768px'te sabit genişlikli sütunlara, altında ise tek
-                   satırda "·" ile ayrılmış özete dönüşür — aynı DOM. -->
-              <span class="mrow__meta">
-                <span class="mrow__cell">{{ item.ext }}</span>
-                <span class="mrow__cell">{{ formatBytes(item.bytes) }}</span>
-                <span class="mrow__cell mrow__cell--dim">{{ formatDimensions(item) }}</span>
-                <span class="mrow__cell">{{ formatDate(item.uploadedAt, locale) }}</span>
-              </span>
-
-              <span :class="`mpill mpill--${item.liveUsage || 0 ? 'used' : 'unused'}`">
-                {{
-                  item.liveUsage || 0
-                    ? t("media.usedInCount", { count: item.liveUsage || 0 })
-                    : t("media.unused")
-                }}
-              </span>
-            </button>
-          </li>
-        </ul>
-
-        <!-- Tablo — panelin standart DataTable'ı: sıralanabilir başlık
-             (Shift+tık çoklu), sütun filtresi popover'ı, sayfalama. Sütun
-             görünürlüğü araç çubuğundaki "Sütunlar" menüsünden yönetilir. -->
-        <DataTable
-          v-else-if="effectiveMode === 'table' && paged.length"
-          :dt="dt"
-          :rows="paged"
-          :total="serverTotal"
-          :page-size-options="PAGE_SIZES"
-          row-key="id"
-          clickable
-          class="mtable-dt"
-          @row-click="openDetail($event.id, paged.indexOf($event))"
-        >
-          <template #head-select>
-            <button
-              type="button"
-              role="checkbox"
-              :aria-checked="allOnPageSelected"
-              :aria-label="t('media.selectPage', { count: paged.length })"
-              class="mcheck"
-              :class="{ 'mcheck--on': allOnPageSelected }"
-              @click.stop="toggleSelectPage"
-            >
-              <AppIcon name="check" :size="11" :stroke-width="3.5" />
-            </button>
-          </template>
-
-          <template #cell-select="{ row }">
-            <button
-              type="button"
-              role="checkbox"
-              :aria-checked="store.isSelected(row.id)"
-              :aria-label="t('media.card.selectAria', { name: row.fileName })"
-              class="mcheck"
-              :class="{ 'mcheck--on': store.isSelected(row.id) }"
-              @click.stop="onCardToggle(row.id, paged.indexOf(row), { range: $event.shiftKey })"
-            >
-              <AppIcon name="check" :size="11" :stroke-width="3.5" />
-            </button>
-          </template>
-
-          <template #cell-preview="{ row }">
-            <MediaThumb :item="row" region="cellThumb" :icon-size="14" class="mcell__thumb" />
-          </template>
-
-          <template #cell-fileName="{ row }">
-            <span class="mcell__name">
-              <AppIcon :name="iconForKind(row.kind)" :size="15" />
-              <span class="mcell__name-text">{{ row.fileName }}</span>
-              <span v-if="row.owner === 'shared'" class="mcell__tag">{{ t("media.shared") }}</span>
-              <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız
-                   gösterilir — "hazır" olağan durumdur, rozetlemek gürültü. -->
-              <span
-                v-if="row.videoStatus === 'processing' || row.videoStatus === 'failed'"
-                class="mvstatus"
-                :class="`mvstatus--${row.videoStatus}`"
-              >
-                <AppIcon
-                  :name="row.videoStatus === 'processing' ? 'loader' : 'alert-triangle'"
-                  :size="11"
-                  :class="{ 'animate-spin': row.videoStatus === 'processing' }"
-                />
-                {{ t(`media.videoStatus.${row.videoStatus}`) }}
-              </span>
-              <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. "temiz"
-                   ve "taranıyor" olağan durumlar, rozetlemek her satırı
-                   işaretlerdi. -->
-              <span
-                v-if="['infected', 'failed', 'pending'].includes(row.scanStatus)"
-                class="mvstatus"
-                :class="`mvstatus--scan-${row.scanStatus}`"
-              >
-                <AppIcon
-                  :name="SCAN_ICON[row.scanStatus]"
-                  :size="11"
-                  :class="{ 'animate-spin': row.scanStatus === 'pending' }"
-                />
-                {{ t(`media.scanStatus.${row.scanStatus}`) }}
-              </span>
-            </span>
-          </template>
-
-          <template #cell-ext="{ row }">{{ row.ext }}</template>
-          <template #cell-bytes="{ row }">{{ formatBytes(row.bytes) }}</template>
-          <template #cell-dimensions="{ row }">{{ formatDimensions(row) }}</template>
-          <template #cell-uploadedAt="{ row }">{{ formatDate(row.uploadedAt, locale) }}</template>
-
-          <template #cell-usageCount="{ row }">
-            <span :class="`mpill mpill--${row.liveUsage || 0 ? 'used' : 'unused'}`">
-              {{
-                row.liveUsage || 0
-                  ? t("media.usedInCount", { count: row.liveUsage || 0 })
-                  : t("media.unused")
-              }}
-            </span>
-          </template>
-
-          <template #cell-owner="{ row }">
-            {{ t(`media.owner.${row.owner}`) }}
-          </template>
-
-          <template #cell-tags="{ row }">
-            <span class="mcell__name-text">{{ row.tags.join(", ") || "—" }}</span>
-          </template>
-
-          <template #cell-categories="{ row }">
-            <span class="mcell__name-text">
-              {{
-                (row.categories || []).map((category) => category.categoryName).join(", ") || "—"
-              }}
-            </span>
-          </template>
-
-          <template #cell-action="{ row }">
-            <span class="mcell__actions">
-              <button
-                v-for="act in rowActions(row)"
-                :key="act.id"
-                type="button"
-                class="mcell__btn"
-                :title="act.title"
-                :aria-label="act.title"
-                :disabled="act.disabled"
-                @click.stop="onAction(row, act.id)"
-              >
-                <AppIcon :name="act.icon" :size="15" />
-              </button>
-            </span>
-          </template>
-        </DataTable>
-
-        <!-- Kanban — kullanım durumuna göre üç kova. Sürükle-bırak yok:
-             KanbanBoard'ın native HTML5 DnD'si dokunmatikte ölü
-             (ANIMATION_AUDIT §7.4.c); kart tıklaması detayı açar. -->
-        <div v-else-if="effectiveMode === 'kanban' && paged.length" class="mkanban">
-          <section v-for="col in kanbanColumns" :key="col.key" class="mkanban__col">
-            <h3 class="mkanban__head" :style="{ borderColor: col.color }">
-              <span>{{ col.label }}</span>
-              <span class="mkanban__count">{{ col.items.length }}</span>
-            </h3>
-            <ul class="mkanban__body">
-              <li v-for="item in col.items" :key="item.id">
                 <button
                   type="button"
-                  class="mkanban__card"
-                  :class="{ 'mkanban__card--active': item.id === activeId }"
-                  @click="openDetail(item.id, paged.indexOf(item))"
+                  class="mrow"
+                  :class="{
+                    'mrow--active': item.id === activeId,
+                    'mrow--selected': store.isSelected(item.id),
+                  }"
+                  @click="openDetail(item.id, i)"
                 >
-                  <MediaThumb
-                    :item="item"
-                    region="kanbanThumb"
-                    :icon-size="16"
-                    class="mkanban__thumb"
-                  />
-                  <span class="mkanban__name">{{ item.fileName }}</span>
-                  <span class="mkanban__meta">
-                    {{ item.ext }} · {{ formatBytes(item.bytes) }}
+                  <MediaThumb :item="item" region="rowThumb" :icon-size="16" class="mrow__thumb" />
+
+                  <span class="mrow__mid">
+                    <span class="mrow__name">
+                      <span class="mrow__name-text">{{ item.fileName }}</span>
+                      <span v-if="item.owner === 'shared'" class="mrow__badge">
+                        {{ t("media.shared") }}
+                      </span>
+                      <span v-if="item.archived" class="mrow__badge">
+                        {{ t("media.filters.archive") }}
+                      </span>
+                    </span>
+                    <!-- İkinci satır telefonda yer kaplamasın diye ≥768px'te açılır. -->
+                    <span class="mrow__desc">
+                      <span class="mrow__title">{{ item.title || "—" }}</span>
+                      <span v-for="tag in item.tags.slice(0, 3)" :key="tag" class="mrow__tag">
+                        {{ tag }}
+                      </span>
+                    </span>
+                  </span>
+
+                  <!-- Meta ≥768px'te sabit genişlikli sütunlara, altında ise tek
+                   satırda "·" ile ayrılmış özete dönüşür — aynı DOM. -->
+                  <span class="mrow__meta">
+                    <span class="mrow__cell">{{ item.ext }}</span>
+                    <span class="mrow__cell">{{ formatBytes(item.bytes) }}</span>
+                    <span class="mrow__cell mrow__cell--dim">{{ formatDimensions(item) }}</span>
+                    <span class="mrow__cell">{{ formatDate(item.uploadedAt, locale) }}</span>
+                  </span>
+
+                  <span :class="`mpill mpill--${item.liveUsage || 0 ? 'used' : 'unused'}`">
+                    {{
+                      item.liveUsage || 0
+                        ? t("media.usedInCount", { count: item.liveUsage || 0 })
+                        : t("media.unused")
+                    }}
                   </span>
                 </button>
               </li>
-              <li v-if="!col.items.length" class="mkanban__empty">{{ t("media.kanban.empty") }}</li>
             </ul>
-          </section>
-        </div>
 
-        <div v-else class="mempty">
-          <AppIcon name="image" :size="34" />
-          <p class="mempty__title">{{ t("media.empty.title") }}</p>
-          <p class="mempty__body">{{ t("media.empty.body") }}</p>
-          <button v-if="hasActiveFilter" type="button" class="mpage__btn" @click="dt.clearAll()">
-            {{ t("media.filters.reset") }}
-          </button>
-        </div>
+            <!-- Tablo — panelin standart DataTable'ı: sıralanabilir başlık
+             (Shift+tık çoklu), sütun filtresi popover'ı, sayfalama. Sütun
+             görünürlüğü araç çubuğundaki "Sütunlar" menüsünden yönetilir. -->
+            <DataTable
+              v-else-if="effectiveMode === 'table' && paged.length"
+              :dt="dt"
+              :rows="paged"
+              :total="serverTotal"
+              :page-size-options="PAGE_SIZES"
+              row-key="id"
+              clickable
+              class="mtable-dt"
+              @row-click="openDetail($event.id, paged.indexOf($event))"
+            >
+              <template #head-select>
+                <button
+                  type="button"
+                  role="checkbox"
+                  :aria-checked="allOnPageSelected"
+                  :aria-label="t('media.selectPage', { count: paged.length })"
+                  class="mcheck"
+                  :class="{ 'mcheck--on': allOnPageSelected }"
+                  @click.stop="toggleSelectPage"
+                >
+                  <AppIcon name="check" :size="11" :stroke-width="3.5" />
+                </button>
+              </template>
+
+              <template #cell-select="{ row }">
+                <button
+                  type="button"
+                  role="checkbox"
+                  :aria-checked="store.isSelected(row.id)"
+                  :aria-label="t('media.card.selectAria', { name: row.fileName })"
+                  class="mcheck"
+                  :class="{ 'mcheck--on': store.isSelected(row.id) }"
+                  @click.stop="onCardToggle(row.id, paged.indexOf(row), { range: $event.shiftKey })"
+                >
+                  <AppIcon name="check" :size="11" :stroke-width="3.5" />
+                </button>
+              </template>
+
+              <template #cell-preview="{ row }">
+                <MediaThumb :item="row" region="cellThumb" :icon-size="14" class="mcell__thumb" />
+              </template>
+
+              <template #cell-fileName="{ row }">
+                <span class="mcell__name">
+                  <AppIcon :name="iconForKind(row.kind)" :size="15" />
+                  <span class="mcell__name-text">{{ row.fileName }}</span>
+                  <span v-if="row.owner === 'shared'" class="mcell__tag">{{
+                    t("media.shared")
+                  }}</span>
+                  <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız
+                   gösterilir — "hazır" olağan durumdur, rozetlemek gürültü. -->
+                  <span
+                    v-if="row.videoStatus === 'processing' || row.videoStatus === 'failed'"
+                    class="mvstatus"
+                    :class="`mvstatus--${row.videoStatus}`"
+                  >
+                    <AppIcon
+                      :name="row.videoStatus === 'processing' ? 'loader' : 'alert-triangle'"
+                      :size="11"
+                      :class="{ 'animate-spin': row.videoStatus === 'processing' }"
+                    />
+                    {{ t(`media.videoStatus.${row.videoStatus}`) }}
+                  </span>
+                  <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. "temiz"
+                   ve "taranıyor" olağan durumlar, rozetlemek her satırı
+                   işaretlerdi. -->
+                  <span
+                    v-if="['infected', 'failed', 'pending'].includes(row.scanStatus)"
+                    class="mvstatus"
+                    :class="`mvstatus--scan-${row.scanStatus}`"
+                  >
+                    <AppIcon
+                      :name="SCAN_ICON[row.scanStatus]"
+                      :size="11"
+                      :class="{ 'animate-spin': row.scanStatus === 'pending' }"
+                    />
+                    {{ t(`media.scanStatus.${row.scanStatus}`) }}
+                  </span>
+                </span>
+              </template>
+
+              <template #cell-ext="{ row }">{{ row.ext }}</template>
+              <template #cell-bytes="{ row }">{{ formatBytes(row.bytes) }}</template>
+              <template #cell-dimensions="{ row }">{{ formatDimensions(row) }}</template>
+              <template #cell-uploadedAt="{ row }">{{
+                formatDate(row.uploadedAt, locale)
+              }}</template>
+
+              <template #cell-usageCount="{ row }">
+                <span :class="`mpill mpill--${row.liveUsage || 0 ? 'used' : 'unused'}`">
+                  {{
+                    row.liveUsage || 0
+                      ? t("media.usedInCount", { count: row.liveUsage || 0 })
+                      : t("media.unused")
+                  }}
+                </span>
+              </template>
+
+              <template #cell-owner="{ row }">
+                {{ t(`media.owner.${row.owner}`) }}
+              </template>
+
+              <template #cell-tags="{ row }">
+                <span class="mcell__name-text">{{ row.tags.join(", ") || "—" }}</span>
+              </template>
+
+              <template #cell-categories="{ row }">
+                <span class="mcell__name-text">
+                  {{
+                    (row.categories || []).map((category) => category.categoryName).join(", ") ||
+                    "—"
+                  }}
+                </span>
+              </template>
+
+              <template #cell-action="{ row }">
+                <span class="mcell__actions">
+                  <button
+                    v-for="act in rowActions(row)"
+                    :key="act.id"
+                    type="button"
+                    class="mcell__btn"
+                    :title="act.title"
+                    :aria-label="act.title"
+                    :disabled="act.disabled"
+                    @click.stop="onAction(row, act.id)"
+                  >
+                    <AppIcon :name="act.icon" :size="15" />
+                  </button>
+                </span>
+              </template>
+            </DataTable>
+
+            <!-- Kanban — kullanım durumuna göre üç kova. Sürükle-bırak yok:
+             KanbanBoard'ın native HTML5 DnD'si dokunmatikte ölü
+             (ANIMATION_AUDIT §7.4.c); kart tıklaması detayı açar. -->
+            <div v-else-if="effectiveMode === 'kanban' && paged.length" class="mkanban">
+              <section v-for="col in kanbanColumns" :key="col.key" class="mkanban__col">
+                <h3 class="mkanban__head" :style="{ borderColor: col.color }">
+                  <span>{{ col.label }}</span>
+                  <span class="mkanban__count">{{ col.items.length }}</span>
+                </h3>
+                <ul class="mkanban__body">
+                  <li v-for="item in col.items" :key="item.id">
+                    <button
+                      type="button"
+                      class="mkanban__card"
+                      :class="{ 'mkanban__card--active': item.id === activeId }"
+                      @click="openDetail(item.id, paged.indexOf(item))"
+                    >
+                      <MediaThumb
+                        :item="item"
+                        region="kanbanThumb"
+                        :icon-size="16"
+                        class="mkanban__thumb"
+                      />
+                      <span class="mkanban__name">{{ item.fileName }}</span>
+                      <span class="mkanban__meta">
+                        {{ item.ext }} · {{ formatBytes(item.bytes) }}
+                      </span>
+                    </button>
+                  </li>
+                  <li v-if="!col.items.length" class="mkanban__empty">
+                    {{ t("media.kanban.empty") }}
+                  </li>
+                </ul>
+              </section>
+            </div>
+
+            <div v-else class="mempty">
+              <AppIcon name="image" :size="34" />
+              <p class="mempty__title">{{ t("media.empty.title") }}</p>
+              <p class="mempty__body">{{ t("media.empty.body") }}</p>
+              <button
+                v-if="hasActiveFilter"
+                type="button"
+                class="mpage__btn"
+                @click="dt.clearAll()"
+              >
+                {{ t("media.filters.reset") }}
+              </button>
+            </div>
+          </div>
+        </Transition>
 
         <!-- Tablo kendi sayfalamasını içeriyor (DataTable); diğer modlarda burada. -->
         <ListPagination
@@ -697,7 +723,7 @@
           class="mpage__detail"
           @save="onSave"
           @replace="onReplaceFile"
-          @action="onAction(activeItem, $event)"
+          @action="onDetailAction"
           @close="store.setActive(null)"
         />
       </Transition>
@@ -760,8 +786,8 @@
 
     <MediaPreviewModal
       :item="previewItem"
-      :index="previewIndex"
-      :total="filtered.length"
+      :index="previewSingle ? 0 : previewIndex"
+      :total="previewSingle ? 1 : filtered.length"
       @close="previewItem = null"
       @navigate="navigatePreview"
       @edit="openFromPreview"
@@ -824,6 +850,7 @@
         :slot-key="uploadSlotKey"
         :show-header="false"
         @uploaded="onUploaderUploaded"
+        @close="uploaderOpen = false"
       />
     </MediaModal>
 
@@ -861,6 +888,8 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import MediaBulkBar from "@/components/media/MediaBulkBar.vue";
   import MediaBulkFieldsModal from "@/components/media/MediaBulkFieldsModal.vue";
+  import { useMediaStatus } from "@/composables/useMediaStatus.js";
+  import MediaAttentionList from "@/components/media/MediaAttentionList.vue";
   import MediaCard from "@/components/media/MediaCard.vue";
   import MediaCategoryManager from "@/components/media/MediaCategoryManager.vue";
   import MediaDetailPanel from "@/components/media/MediaDetailPanel.vue";
@@ -878,7 +907,6 @@
   import MediaModal from "@/components/media/MediaModal.vue";
   import MediaShortcutsModal from "@/components/media/MediaShortcutsModal.vue";
   import MediaThumb from "@/components/media/MediaThumb.vue";
-  import MediaUploadQueue from "@/components/media/MediaUploadQueue.vue";
   import { useCardGridWindow } from "@/components/media/useCardGridWindow";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useDataTable } from "@/composables/useDataTable";
@@ -974,7 +1002,6 @@
   const store = useMediaStore();
   const {
     items,
-    uploads,
     serverTotal,
     filtered,
     paged,
@@ -992,6 +1019,11 @@
     bulkReport,
     hasActiveFilter,
   } = storeToRefs(store);
+  const liveStatus = useMediaStatus(() => paged.value.map((item) => item.docName || item.fileUrl));
+  function withStatus(item) {
+    return { ...item, ...(liveStatus.facts.value[item.docName || item.fileUrl] || {}) };
+  }
+  const statusItems = computed(() => paged.value.map(withStatus));
 
   // ── Tablo denetleyicisi (panelin table list standardı) ─────────────
   //
@@ -1388,6 +1420,40 @@
    */
   const detailSutunuAcik = computed(() => Boolean(activeItem.value) && detailDocked.value);
 
+  // ── Sonuç alanı geçişi ─────────────────────────────────────────────
+  /**
+   * Yalnız SAYFA gezinmesinde artan sayaç. Sayfa sunucudan geldiği için
+   * anahtar veri gelince işlenir; filtre/arama değişimi de sayfayı 1'e
+   * çektiğinden, sorgu imzası değiştiyse bu bir sayfa geçişi sayılmaz —
+   * yazarken sonuçlar kaymaz.
+   */
+  const pageSwap = ref(0);
+  const listQuery = () =>
+    JSON.stringify([
+      dt.filters,
+      dt.search.value,
+      dt.sorting.value,
+      dt.pageSize.value,
+      store.showArchived,
+    ]);
+  let shownPage = store.page;
+  let shownQuery = listQuery();
+  watch(paged, () => {
+    const query = listQuery();
+    if (query === shownQuery && store.page !== shownPage) pageSwap.value += 1;
+    shownQuery = query;
+    shownPage = store.page;
+  });
+
+  /** Görünüm kipi, sütun sayısı ya da sayfa değişince sonuçlar yeniden belirir. */
+  const resultsKey = computed(
+    () =>
+      `${effectiveMode.value}:${effectiveMode.value === "grid" ? gridColumns.value : ""}:${pageSwap.value}`
+  );
+
+  /** Giden sonuçlar beklemeden kalkar; yalnız gelenler belirir. */
+  const leaveNow = (_el, done) => done();
+
   const columnsOpen = ref(false);
   watch(effectiveMode, (mode) => {
     if (mode !== "table") columnsOpen.value = false;
@@ -1597,6 +1663,8 @@
   const pickerOpen = ref(false);
   const categoryManagerOpen = ref(false);
   const previewItem = ref(null);
+  /** Detay panelinden açılan önizleme yalnız o dosyayı gösterir; ızgara gezinmesi kapalı. */
+  const previewSingle = ref(false);
 
   function openCategoryManager() {
     categoryManagerOpen.value = true;
@@ -2071,6 +2139,7 @@
     if (!item) return;
     const handlers = {
       preview: () => {
+        previewSingle.value = false;
         previewItem.value = item;
       },
       edit: () => store.setActive(item.id),
@@ -2166,7 +2235,18 @@
     previewItem.value ? filtered.value.findIndex((m) => m.id === previewItem.value.id) : 0
   );
 
+  /** Paneldeki görsele tıklama: önizleme panelin dosyasında sabit kalır, başka ürüne geçmez. */
+  function onDetailAction(action) {
+    if (action === "preview") {
+      previewSingle.value = true;
+      previewItem.value = activeItem.value;
+      return;
+    }
+    onAction(activeItem.value, action);
+  }
+
   function navigatePreview(step) {
+    if (previewSingle.value) return;
     const list = filtered.value;
     if (!list.length) return;
     const next = (previewIndex.value + step + list.length) % list.length;
@@ -2669,6 +2749,14 @@
     }
   }
 
+  // 768–1023: alt sekme çubuğu yok ama AppLayout'un "Mağaza" düğmesi
+  // (bottom 88px, ~32px yükseklik) var; FAB onun altında kalıp tıklanamıyordu.
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .mfab {
+      bottom: calc(136px + env(safe-area-inset-bottom));
+    }
+  }
+
   // ── Izgara yoğunluğu (2 / 3 / 6 sütun) ───────────────────────────
   // Ölçüler `hdr-btn-outlined` ile hizalı: 34px yükseklik, 8px köşe.
   .mdensity {
@@ -2807,6 +2895,27 @@
       :deep(.as-option) {
         font-size: 1rem;
       }
+    }
+  }
+
+  // ── Sonuç alanı geçişi ───────────────────────────────────────────
+  // Kip/sütun/sayfa değişiminde: 4px yukarıdan + opacity, 150ms ease-out.
+  // Çıkış yok (`leaveNow`) — yeni sonuçlar hiç beklemez.
+  .mswap-enter-active {
+    transition:
+      opacity $d-fast $ease-out,
+      transform $d-fast $ease-out;
+  }
+
+  .mswap-enter-from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  // Azaltılmış hareket: kayma yok, yalnız opacity.
+  @media (prefers-reduced-motion: reduce) {
+    .mswap-enter-from {
+      transform: none;
     }
   }
 

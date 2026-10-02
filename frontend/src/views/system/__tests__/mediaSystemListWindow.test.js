@@ -20,23 +20,38 @@ for (const [ad, src, ongek, items] of [
   ["MediaAuditView", audit, "ma", "a.items.value"],
 ]) {
   test(`${ad}: liste modu useCardGridWindow ile pencerelenir`, () => {
-    assert.match(src, /import \{ useCardGridWindow \} from "@\/components\/media\/useCardGridWindow"/);
-    assert.match(src, /useCardGridWindow\(listEl, \{\s*items: \(\) => [ma]\.items\.value,\s*enabled: \(\) => effectiveMode\.value === "list"/);
+    assert.match(
+      src,
+      /import \{ useCardGridWindow \} from "@\/components\/media\/useCardGridWindow"/
+    );
+    assert.match(
+      src,
+      /useCardGridWindow\(listEl, \{\s*items: \(\) => [ma]\.items\.value,\s*enabled: \(\) => effectiveMode\.value === "list"/
+    );
   });
 
   test(`${ad}: satırlar pencere dilimini gezer, dizin mutlak`, () => {
     // Liste bloğu kart ızgarasına kadar; ızgara/tablo tam diziyi gezmekte serbest.
-    const liste = src.slice(src.indexOf("effectiveMode === 'list'"), src.indexOf("effectiveMode === 'grid'"));
+    const liste = src.slice(
+      src.indexOf("effectiveMode === 'list'"),
+      src.indexOf("effectiveMode === 'grid'")
+    );
     assert.match(liste, /v-for="\((item|r), i\) in listVisible"/);
     assert.match(liste, /:data-cell="listOffset \+ i"/);
     assert.match(liste, new RegExp(`:aria-setsize="${items.replace(/\./g, "\\.")}\\.length"`));
     assert.match(liste, /:aria-posinset="listOffset \+ i \+ 1"/);
-    assert.doesNotMatch(liste, new RegExp(`v-for="\\(?(item|r)(, i)?\\)? in ${items.replace(/\./g, "\\.")}"`),
-      "liste modu hâlâ tam diziyi geziyor");
+    assert.doesNotMatch(
+      liste,
+      new RegExp(`v-for="\\(?(item|r)(, i)?\\)? in ${items.replace(/\./g, "\\.")}"`),
+      "liste modu hâlâ tam diziyi geziyor"
+    );
   });
 
   test(`${ad}: padding iç gövdede, kart padding'i korunur`, () => {
-    assert.match(src, new RegExp(`<div ref="listEl" class="${ongek}__list-body" :style="listPadStyle">`));
+    assert.match(
+      src,
+      new RegExp(`<div ref="listEl" class="${ongek}__list-body" :style="listPadStyle">`)
+    );
     assert.match(src, new RegExp(`'${ongek}__list--windowed': listWindowed`));
   });
 
@@ -55,5 +70,8 @@ for (const [ad, src, ongek, items] of [
 test("MediaAuditView: imleç mutlak dizinle çalışır ve reveal ile satırı getirir", () => {
   assert.match(audit, /'ma__row--cursor': cursor === listOffset \+ i/);
   assert.match(audit, /:data-row="listOffset \+ i"/);
-  assert.match(audit, /const cell =\s*\(await revealRow\(cursor\.value\)\) \|\| document\.querySelector\(`\[data-row="\$\{cursor\.value\}"\]`\)/);
+  assert.match(
+    audit,
+    /const cell =\s*\(await revealRow\(cursor\.value\)\) \|\| document\.querySelector\(`\[data-row="\$\{cursor\.value\}"\]`\)/
+  );
 });

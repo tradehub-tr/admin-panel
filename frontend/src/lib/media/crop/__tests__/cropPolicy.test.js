@@ -36,12 +36,18 @@ test("kırpma yalnız cover + yükseklik tanımlı profillerde gerçek", () => {
   assert.equal(isCroppable({ fit: "contain", width: 1920, height: null }), false);
 });
 
-test("9 slotta 36 profil var, yalnız 4'ü kırpılıyor — BUGÜN ölçüldü", () => {
-  // NOT: `faz10-crop-studio.md §1` "34 profil" ve "pad + height: 10" diyor.
-  // Politika dosyalarından 2026-08-19'da sayıldığında toplam **36**, pad+height
-  // **12** çıkıyor (brand.logo ve seller.logo altışar pad profili taşıyor,
-  // planda onar sayılmış). Kırpılan profil sayısı (4) ve hangileri olduğu
-  // DEĞİŞMİYOR — plandaki sapma yalnız kırpılmayanların toplamında.
+test("9 slotta 30 profil var, yalnız 3'ü kırpılıyor — BUGÜN ölçüldü", () => {
+  // 2026-09-30: product.image 7 profilden 4'e indi (w96/w640/w1920 kalktı,
+  // w1280 'contain' → 'pad').
+  // 2026-09-30 (mağaza görselleri oranı KORUR — kullanıcı kararı):
+  //   · company.cover_image: 24:5 `cover` profilleri (cover_768/1280/1920/2560)
+  //     ve kırpılan `cover_16x9_1000` KALKTI; yerine 5 `contain` basamağı
+  //     (cover_384/768/1280/1536/1920) geldi → slot artık HİÇ kırpılmıyor.
+  //   · seller.logo: 6 pad profili (w64…w512 + og1200x630) → 3 `contain`
+  //     kutusu (w64/w128/w256, yükseklik = genişlik).
+  //   Toplam 33 → 30; kırpılan 4 → 3 (yalnız company.cover_video posterleri).
+  // NOT: `faz10-crop-studio.md §1` "34 profil" ve "pad + height: 10" diyor;
+  // plan sayıları politika dosyalarıyla artık hiç örtüşmüyor, sayım burada.
   const slotlar = [
     "brand.logo",
     "category.banner",
@@ -66,20 +72,41 @@ test("9 slotta 36 profil var, yalnız 4'ü kırpılıyor — BUGÜN ölçüldü"
       else sayac.contain += 1;
     }
   }
-  assert.equal(toplam, 36);
-  assert.deepEqual(sayac, { coverH: 4, cover: 12, padH: 12, pad: 5, contain: 3 });
+  assert.equal(toplam, 30);
+  assert.deepEqual(sayac, { coverH: 3, cover: 8, padH: 6, pad: 4, contain: 9 });
   assert.deepEqual(kirpilan.sort(), [
-    "company.cover_image/cover_16x9_1000",
     "company.cover_video/poster_1280",
     "company.cover_video/poster_854",
     "company.cover_video/thumb_192",
   ]);
 });
 
+test("mağaza kapağı ve satıcı logosu oranı KORUR — kırpma yok (2026-09-30)", () => {
+  for (const k of ["company.cover_image", "seller.logo"]) {
+    assert.equal(slotIsCroppable(k), false, `${k} kırpılmamalı`);
+    assert.deepEqual(ratioOptions(k), [], `${k} oran kilidi sunmamalı`);
+    for (const p of slotProfiles(k)) {
+      assert.equal(p.fit, "contain", `${k}/${p.name}`);
+      assert.equal(p.targetAR, null, `${k}/${p.name} hedef oran taşımamalı`);
+    }
+  }
+  assert.deepEqual(
+    slotProfiles("company.cover_image").map((p) => p.name),
+    ["cover_384", "cover_768", "cover_1280", "cover_1536", "cover_1920"]
+  );
+  assert.deepEqual(
+    slotProfiles("seller.logo").map((p) => `${p.name}:${p.width}x${p.height}`),
+    ["w64:64x64", "w128:128x128", "w256:256x256"]
+  );
+});
+
 test("hedef oran ETİKETTEN değil boyuttan gelir — Bulgu 1", () => {
-  const p = slotProfiles("company.cover_image").find((x) => x.name === "cover_16x9_1000");
+  // Eski örnek company.cover_image/cover_16x9_1000 (1000×563) kalktı; aynı
+  // tuzak company.cover_video/poster_854'te yaşıyor: etiket "16:9", boyut
+  // 854×480 → 1,779166…; tam 16:9 = 1,777777….
+  const p = slotProfiles("company.cover_video").find((x) => x.name === "poster_854");
   assert.equal(p.ratioLabel, "16:9");
-  assert.equal(profileTargetAR(p), 1000 / 563);
+  assert.equal(profileTargetAR(p), 854 / 480);
   assert.notEqual(profileTargetAR(p), 16 / 9);
   assert.ok(Math.abs(profileTargetAR(p) - 16 / 9) > 1e-4);
   assert.equal(ratioLabelMisleading(p), true, "kullanıcıya 'etiket ≠ sayı' denmeli");
@@ -104,20 +131,25 @@ test("oran seçenekleri yalnız kırpılan profillerden türer", () => {
 
 // ── Uyarılar ──────────────────────────────────────────────────────
 
+/** Oranı koruyan (`contain`) slot — güvenli alan kuralı politikada DURUYOR. */
 const COVER = "company.cover_image";
+/** Kırpılan profilleri olan tek slot (16:9 + 4:3 posterler). */
+const KIRP = "company.cover_video";
 
 test("kadraj profilin istediği pikseli üretemiyorsa ENGELLER", () => {
-  // 1000×563 isteyen profil; kadraj 400×225.
+  // 1280×720 isteyen profil; kadraj 1000×563 → yalnız poster_1280 engeller
+  // (poster_854 854×480, thumb_192 192×144 karşılanıyor).
   const w = cropWarnings({
     sourceW: 4000,
     sourceH: 3000,
-    win: rect(0, 0, 400, 225.2),
-    slotKey: COVER,
+    win: rect(0, 0, 1000, 562.5),
+    slotKey: KIRP,
   });
   const b = bul(w, "tooSmallForProfile");
   assert.equal(b.length, 1);
   assert.equal(b[0].severity, SEVERITY.BLOCK);
-  assert.equal(b[0].params.need, "1000×563");
+  assert.equal(b[0].params.profile, "poster_1280");
+  assert.equal(b[0].params.need, "1280×720");
   assert.equal(hasBlocker(w), true);
 });
 
@@ -126,8 +158,9 @@ test("yeterli kadrajda engel YOK", () => {
     sourceW: 4000,
     sourceH: 3000,
     win: rect(0, 0, 2000, 1126),
-    slotKey: COVER,
+    slotKey: KIRP,
   });
+  assert.equal(bul(w, "tooSmallForProfile").length, 0);
   assert.equal(hasBlocker(w), false);
 });
 
@@ -180,19 +213,27 @@ test("CMYK ve alfa uyarıları YALNIZ sonda varsa üretilir — uydurulmaz", () 
 });
 
 test("kırpılmayan profiller BİLGİ olarak sayılır", () => {
+  // company.cover_image 2026-09-30'dan beri tamamen `contain`: 5 profilin
+  // hiçbiri kırpılmıyor.
   const w = cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: COVER });
   const i = bul(w, "notCropped")[0];
   assert.equal(i.severity, SEVERITY.INFO);
-  assert.equal(i.params.count, 4);
+  assert.equal(i.params.count, 5);
   assert.equal(i.params.total, 5);
+  // Hepsi kırpılan slotta bu bilgi ÜRETİLMEZ.
+  const k = cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: KIRP });
+  assert.equal(bul(k, "notCropped").length, 0);
 });
 
 test("etiket ≠ sayı bilgisi kullanıcıya ulaşır", () => {
-  const w = cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: COVER });
-  const i = bul(w, "ratioFromSize")[0];
+  const w = cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: KIRP });
+  const r = bul(w, "ratioFromSize");
+  assert.equal(r.length, 1, "poster_1280 tam 16:9 — yalnız poster_854 işaretlenir");
+  const i = r[0];
   assert.equal(i.severity, SEVERITY.INFO);
+  assert.equal(i.params.profile, "poster_854");
   assert.equal(i.params.label, "16:9");
-  assert.equal(i.params.real, "1.77620");
+  assert.equal(i.params.real, "1.77917");
 });
 
 test("slot uyumsuzluğu uyarır", () => {
@@ -213,7 +254,7 @@ test("[FR-023] uyarı türlerinin her biri en az bir fixture'da üretiliyor", ()
         sourceW: 8000,
         sourceH: 6000,
         win: rect(0, 0, 400, 225),
-        slotKey: COVER,
+        slotKey: KIRP,
         probe: { mode: "CMYK", hasAlpha: true },
         slotMismatch: true,
       }),

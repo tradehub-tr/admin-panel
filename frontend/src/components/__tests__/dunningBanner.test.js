@@ -32,7 +32,8 @@ const stripComments = (html) => html.replace(/<!--[\s\S]*?-->/g, "");
 
 // Zaman-bombası denetimi gereği gelecek tarih SABİT yazılamaz; koşuma göre
 // ileri tarihler hesaplanır (assertion tarih metnini aynı formülle üretir).
-const gunSonra = (n) => `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
+const gunSonra = (n) =>
+  `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
 
 const SELLER = { is_seller: 1, is_admin: 0, full_name: "Test Satıcı" };
 

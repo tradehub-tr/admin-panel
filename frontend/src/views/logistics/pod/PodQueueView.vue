@@ -148,8 +148,8 @@
                      testi görünümden bağımsız kılar. -->
               <RouterLink
                 v-for="row in col.rows"
-                data-testid="kuyruk-satiri"
                 :key="row.shipment"
+                data-testid="kuyruk-satiri"
                 :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
                 class="kanban-card block w-full text-start"
               >
@@ -186,8 +186,8 @@
       <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
         <RouterLink
           v-for="row in queue.rows"
-          data-testid="kuyruk-satiri"
           :key="row.shipment"
+          data-testid="kuyruk-satiri"
           :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
           class="list-grid-card block"
         >
@@ -235,8 +235,8 @@
       <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
         <RouterLink
           v-for="row in queue.rows"
-          data-testid="kuyruk-satiri"
           :key="row.shipment"
+          data-testid="kuyruk-satiri"
           :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
           class="flex items-start justify-between gap-3 border-b border-gray-100 p-3 last:border-b-0 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"
         >
@@ -281,8 +281,8 @@
           <tbody>
             <tr
               v-for="row in queue.rows"
-              data-testid="kuyruk-satiri"
               :key="row.shipment"
+              data-testid="kuyruk-satiri"
               class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
             >
               <td class="tbl-td font-mono text-[12px]">{{ row.shipment }}</td>

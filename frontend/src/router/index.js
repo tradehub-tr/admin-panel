@@ -47,6 +47,7 @@ const MediaExplorerView = () => import("@/views/system/MediaExplorerView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
 const MediaSimulatorView = () => import("@/views/system/MediaSimulatorView.vue");
 const MediaQuarantineView = () => import("@/views/system/MediaQuarantineView.vue");
+const MediaOrphanAvifView = () => import("@/views/system/MediaOrphanAvifView.vue");
 const MediaSeoView = () => import("@/views/system/MediaSeoView.vue");
 const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
 const MediaStorageSettingsView = () => import("@/views/system/MediaStorageSettingsView.vue");
@@ -1105,6 +1106,18 @@ const routes = [
         meta: {
           title: "Medya SEO",
           breadcrumb: "Medya SEO",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        // 2026-09-30: eski AVIF türevleri önce görülür; silme varsayılan kuru koşu.
+        path: "media-orphan-avif",
+        name: "MediaOrphanAvif",
+        component: MediaOrphanAvifView,
+        meta: {
+          title: "Eski AVIF Dosyaları",
+          breadcrumb: "Eski AVIF Dosyaları",
           section: "system",
           requiresSuperAdmin: true,
         },

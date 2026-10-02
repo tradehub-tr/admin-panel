@@ -137,8 +137,8 @@
     <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
       <div
         v-for="row in surface.rows"
-        data-testid="kuyruk-satiri"
         :key="row.shipment"
+        data-testid="kuyruk-satiri"
         class="border-b border-gray-100 p-3 last:border-b-0 dark:border-white/10"
         :class="rowTone(row)"
       >
@@ -180,8 +180,8 @@
     <div v-else class="space-y-3">
       <article
         v-for="row in surface.rows"
-        data-testid="kuyruk-satiri"
         :key="row.shipment"
+        data-testid="kuyruk-satiri"
         class="card !p-4"
         :class="rowTone(row)"
       >

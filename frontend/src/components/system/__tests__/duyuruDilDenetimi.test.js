@@ -51,7 +51,10 @@ test("yalnız kaynak dil zorunlu — diğerleri boş bırakılabilir", () => {
   // kullanılmaz hâle gelirdi. Eksik dil ön yüzde TR'ye düşüyor.
   const s = oku("components/system/NoticeEditModal.vue");
   assert.ok(/KAYNAK_DIL = "tr"/.test(s), "kaynak dil tanımlı değil");
-  assert.ok(/:required="d\.kod === KAYNAK_DIL"/.test(s), "zorunluluk tüm dillere uygulanmış olabilir");
+  assert.ok(
+    /:required="d\.kod === KAYNAK_DIL"/.test(s),
+    "zorunluluk tüm dillere uygulanmış olabilir"
+  );
 });
 
 test("panel her dilin alanını backend'den OKUYOR", () => {

@@ -154,15 +154,48 @@ test("iki gezgin de klasör değişimini canlı bölgeden duyurur", () => {
 test("yükleme ilerlemesi ve hataları canlı bölgelerden duyurulur", () => {
   const modern = read("src/components/media/upload/MediaUploader.vue");
   const row = read("src/components/media/upload/UploadQueueRow.vue");
+  const transfer = read("src/components/media/MediaTransferRow.vue");
   const legacy = read("src/components/media/MediaUploadQueue.vue");
   const library = read("src/views/seller/MediaLibraryView.vue");
 
+  // Yerel kuyruk kipi (`shared-queue=false`): satır içi özet canlı bölge.
   assert.match(modern, /up__summary" role="status" aria-live="polite"/);
-  assert.match(row, /up-row__status" role="status" aria-live="polite"/);
-  assert.match(row, /up-row__error" role="alert"/);
-  assert.match(legacy, /upload-queue__count"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
-  assert.match(legacy, /upload-row__error" role="alert"/);
+  // Ortak kuyruk kipi (kütüphane): "yükleme tepside sürüyor" satırı canlı bölge.
+  assert.match(modern, /up__handoff-text" role="status" aria-live="polite"/);
+  assert.match(row, /<MediaTransferRow/);
+  // Kütüphane kuyruğu artık yüzen tepsi (C · Yüzen tepsi): satır listesi canlı bölge.
+  assert.match(legacy, /class="utray__list" aria-live="polite"/);
+  assert.match(transfer, /media-transfer__announce"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(transfer, /:role="error \? 'alert' : 'status'"/);
+  assert.match(legacy, /role="status" aria-live="polite"/);
   assert.match(library, /class="mundo" role="status" aria-live="polite"/);
+});
+
+test("aktarım satırı tepsi satırıyla aynı erişilebilirlik sözleşmesini kurar", () => {
+  const transfer = read("src/components/media/MediaTransferRow.vue");
+  const attention = read("src/components/media/MediaAttentionList.vue");
+  const thumb = read("src/components/media/MediaPhaseThumb.vue");
+  const shared = read("src/assets/scss/upload-row.scss");
+  // Ayrıntı satırın kendi açılır düğmesinde, varsayılan kapalı.
+  assert.match(transfer, /const open = ref\(false\)/);
+  assert.match(
+    transfer,
+    /class="utray-row__info[^"]*"[\s\S]*:aria-expanded="open"[\s\S]*:aria-controls=/
+  );
+  // Faz katmanı bezeme; durum her zaman metin etiketiyle (renk tek başına değil).
+  assert.match(thumb, /class="utray-row__thumb" aria-hidden="true"/);
+  assert.match(transfer, /<strong class="utray-row__label">/);
+  // Dikkat listesi: görünen kısa metin + dosya adlı erişilebilir ad; bölge başlıklı.
+  assert.match(attention, /t\("mediaFlow\.detailsShort"\)/);
+  assert.match(attention, /:aria-label="t\('mediaFlow\.details', \{ name: item\.fileName \}\)"/);
+  assert.doesNotMatch(attention, /name: ""/);
+  assert.match(attention, /<section[^>]*:aria-labelledby="titleId"/);
+  // 44 px hedef, 3 px odak halkası, kısaltma (sarma yok), azaltılmış hareket.
+  assert.match(shared, /height: 44px/);
+  assert.match(shared, /outline: 3px solid/);
+  assert.match(shared, /text-overflow: ellipsis/);
+  assert.match(shared, /prefers-reduced-motion: reduce/);
+  assert.match(thumb, /prefers-reduced-motion: reduce[\s\S]*animation: none/);
 });
 
 test("türev listesi açılır bölüm sözleşmesini kurar", () => {

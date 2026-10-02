@@ -36,9 +36,14 @@ after(async () => {
   await server?.close();
 });
 
-const COVER = "company.cover_image";
-/** 1000/563 — profil boyutundan, etiketten değil. */
-const AR = 1000 / 563;
+/**
+ * Kırpılan profilleri olan slot. `company.cover_image` 2026-09-30'dan beri
+ * oranı koruyor (`contain`, kırpılan profil yok); oran zorlaması kırpılan tek
+ * slotta, kapak videosu posterlerinde ölçülüyor.
+ */
+const COVER = "company.cover_video";
+/** 1280/720 — poster_1280'in boyutundan, etiketten değil. */
+const AR = 1280 / 720;
 const make = (over = {}) =>
   useCropStudio({
     source: { width: 4000, height: 3000, url: "/files/x.jpg" },
@@ -80,6 +85,18 @@ test("effectiveTargetAR serbest kipte ilk kırpılabilir profilin oranı", () =>
   const s = make();
   s.setRatio(null);
   assert.ok(Math.abs(s.effectiveTargetAR.value - AR) < 1e-9);
+});
+
+test("oranı KORUYAN slotta (company.cover_image) oran zorlaması yok — önce = sonra", () => {
+  // 2026-09-30: mağaza kapağı 5 `contain` basamağı; kırpılan profil yok.
+  // Stüdyo oran kilidi sunmaz, sunucu da kadrajı bir orana zorlamaz.
+  const s = make({ slotKey: "company.cover_image" });
+  assert.deepEqual(s.options, [], "kırpılan profil yokken oran seçeneği yok");
+  assert.equal(s.lockedAR.value, null);
+  assert.equal(s.effectiveTargetAR.value, null);
+  assert.equal(s.ratioForced.value, false);
+  assert.deepEqual(s.afterPixelBox.value, s.pixelBox.value, "sonra = önce");
+  assert.deepEqual(s.pixelBox.value, [0, 0, 4000, 3000], "kaynağın tamamı korunur");
 });
 
 // ── Otomatik / Manuel kip ─────────────────────────────────────────

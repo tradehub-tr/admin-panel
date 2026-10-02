@@ -3,17 +3,26 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import InfoTip from "@/components/media/InfoTip.vue";
   import { useMediaRenditions } from "@/composables/useMediaRenditions";
   import { formatBytes } from "@/utils/mediaFormat";
+
+  import { factRows, renditionFacts, sourceFacts } from "./qualityFacts.js";
 
   /**
    * Detay çekmecesinin KALİTE sekmesi — kaynak ile normalize sonuç yan yana.
    *
    * Faz 9 kabul kriteri kaynak künyesini (ölçü, MP, DPI, format, renk uzayı,
-   * alfa) normalize sonuçla karşılaştırmayı istiyor. Bugün ARKA TARAFTAN
-   * gelenler yalnız ölçü, bayt ve biçim: DPI, renk uzayı ve alfa hiçbir uçta
-   * yok. Bu satırlar tablodan ÇIKARILMADI, "—" ile duruyor ve altına neden
-   * yazıldı — eksik ölçümü gizlemek, ölçüm yapılmış izlenimi verir.
+   * alfa) normalize sonuçla karşılaştırmayı istiyor. DPI / renk uzayı / alfa
+   * iki DOSYANIN kendisinden ölçülür (`media/image_facts.py`):
+   *   - Kaynak → `manifest_batch` yanıtının `source` anahtarı (File alanları).
+   *     `version.dpi/colorspace` KULLANILMAZ: onlar normalize politikasının
+   *     kararıdır (sabit 72 / sRGB), dosyanın söylediği değil.
+   *   - Sonuç → en büyük türevin `output_dpi / output_colorspace /
+   *     output_has_alpha` alanları.
+   * DPI 0 "dosyada DPI kaydı yok" demektir (ölçüm sonucu) ve öyle yazılır;
+   * "—" yalnız dosya okunamadığında / diskte olmadığında ya da henüz
+   * ölçülmemişken çıkar.
    *
    * SSIM `Media Rendition.ssim` alanından geliyor ve ölçülmemişse 0 dönüyor;
    * ekran onu "0,000" diye DEĞİL "—" diye gösterir. "0,000 benzerlik" yazmak,
@@ -34,7 +43,7 @@
   });
 
   const { t } = useI18n();
-  const { rows, loading, emptyReason, error, denied, load } = useMediaRenditions();
+  const { rows, loading, emptyReason, error, denied, source, load } = useMediaRenditions();
 
   watch(
     () => props.fileName,
@@ -92,11 +101,8 @@
         source: props.item?.ext || DASH,
         result: l ? l.format || DASH : DASH,
       },
-      // Aşağıdaki üçünün arka tarafta karşılığı YOK. Satır duruyor ki
-      // "ölçülmedi" ile "sorunsuz" karıştırılmasın.
-      { key: "dpi", source: DASH, result: DASH },
-      { key: "colorSpace", source: DASH, result: DASH },
-      { key: "alpha", source: DASH, result: DASH },
+      // DPI / renk uzayı / şeffaflık — iki dosyadan da ÖLÇÜLÜR (qualityFacts.js).
+      ...factRows(sourceFacts(source.value, t), renditionFacts(l, t), t),
     ];
   });
 
@@ -150,28 +156,32 @@
     </h3>
 
     <!-- Kaynak ↔ normalize sonuç. Sonuç sütunu türev yokken tamamen "—":
-         boş sütun, "hiç işlenmedi" bilgisinin kendisidir. -->
-    <table class="mqual__table">
-      <caption class="mqual__caption">
-        {{
-          t("media.quality.caption")
-        }}
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t("media.quality.col.attribute") }}</th>
-          <th scope="col">{{ t("media.quality.col.source") }}</th>
-          <th scope="col">{{ t("media.quality.col.result") }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="f in facts" :key="f.key">
-          <th scope="row">{{ t(`media.quality.attr.${f.key}`) }}</th>
-          <td class="mqual__num">{{ f.source }}</td>
-          <td class="mqual__num">{{ f.result }}</td>
-        </tr>
-      </tbody>
-    </table>
+         boş sütun, "hiç işlenmedi" bilgisinin kendisidir.
+         Sarmalayıcı: uzun bir öznitelik/değer varsa yalnız TABLO kayar,
+         panelin kendisi yatayda kaymaz (bkz. MediaRenditionList aynı desen). -->
+    <div class="mqual__scroll">
+      <table class="mqual__table">
+        <caption class="mqual__caption">
+          {{
+            t("media.quality.caption")
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t("media.quality.col.attribute") }}</th>
+            <th scope="col">{{ t("media.quality.col.source") }}</th>
+            <th scope="col">{{ t("media.quality.col.result") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="f in facts" :key="f.key">
+            <th scope="row">{{ t(`media.quality.attr.${f.key}`) }}</th>
+            <td class="mqual__num" :title="f.sourceTitle || undefined">{{ f.source }}</td>
+            <td class="mqual__num" :title="f.resultTitle || undefined">{{ f.result }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <p v-if="savings" class="mqual__savings" data-test="quality-savings">
       <AppIcon name="sparkles" :size="14" />
@@ -187,22 +197,28 @@
       <AppIcon name="info" :size="14" />
       <!-- Ölçülmemiş SSIM 0 gelir; "0,000" yazmak ölçüm eksikliğini kalite
            sorunu gibi gösterirdi — ölçülmediyse ölçülmedi yazar. -->
-      {{
-        worstSsim === null
-          ? t("media.quality.ssimNone")
-          : t("media.quality.ssimWorst", {
-              value: worstSsim.toFixed(3),
-              n: measured.length,
-              total: rows.length,
-            })
-      }}
+      <span>
+        {{
+          worstSsim === null
+            ? t("media.quality.ssimNone")
+            : t("media.quality.ssimWorst", {
+                value: worstSsim.toFixed(3),
+                n: measured.length,
+                total: rows.length,
+              })
+        }}
+      </span>
+      <InfoTip
+        :text="t('media.ssimInfo.text')"
+        :title="t('media.ssimInfo.title')"
+        :label="t('media.ssimInfo.label')"
+      />
     </p>
 
     <!--
-      SINIR NOTU. İki ayrı eksik var ve ikisi de gizlenmiyor:
-        1. DPI / renk uzayı / alfa hiçbir uçtan gelmiyor.
-        2. `Media Quality Report` DocType'ı kurulu değil — "uygulanan işleme
-           kararları" listesi bu yüzden gösterilemiyor.
+      SINIR NOTU. `Media Quality Report` DocType'ı kurulu değil — "uygulanan
+      işleme kararları" listesi bu yüzden gösterilemiyor. SSIM yalnız
+      türevlerde ölçülür; DPI / renk uzayı / alfa iki dosyadan da okunur.
     -->
     <p class="mqual__scope" data-test="quality-scope">
       <AppIcon name="info" :size="13" />
@@ -228,6 +244,13 @@
     @include media.text("sm");
     font-weight: 700;
     @include media.heading;
+  }
+
+  // Yatay taşma varsa (uzun format zinciri/renk uzayı değeri) yalnız TABLO
+  // kayar — panelin kendisi değil (bkz. MediaRenditionList aynı desen).
+  .mqual__scroll {
+    overflow-x: auto;
+    max-width: 100%;
   }
 
   .mqual__table {
@@ -289,6 +312,16 @@
     @include dark {
       color: $d-text;
       background: $d-bg-elevated;
+    }
+  }
+
+  // SSIM satırı üç çocuklu (bilgi ikonu + metin + InfoTip): metin taşarsa
+  // sarmalasın, InfoTip düğmesi asla kırpılmasın.
+  .mqual__ssim {
+    span {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-wrap: anywhere;
     }
   }
 

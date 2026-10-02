@@ -141,7 +141,7 @@ function labelText(html, barSelector) {
 
 test("kuyruktaki her çubuk kendi dosya adına bağlanıyor", async () => {
   const html = await render(QUEUE, queueProps);
-  const names = labelText(html, '.upload-row__bar[role="progressbar"]');
+  const names = labelText(html, '.utray-row__bar[role="progressbar"]');
 
   // İki satırdan yalnız 'uploading' olan çubuk çiziyor; 'retrying' satırı
   // yerine metin gösteriyor. Yani tek çubuk, tek ad.

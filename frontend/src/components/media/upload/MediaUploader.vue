@@ -23,7 +23,37 @@
       @files="onFiles"
     />
 
-    <div v-if="items.length" class="up__queue">
+    <!-- Ortak kuyruk (kütüphane): ilerleme yüzen tepsinin işi. Burada yalnız
+         KARAR isteyen satırlar (ön kontrol engeli, kopya uyarısı) ve "yükleme
+         tepside sürüyor, kapatabilirsiniz" satırı kalır. -->
+    <template v-if="sharedQueue">
+      <ul v-if="decisionItems.length" class="up__list up__queue">
+        <UploadQueueRow
+          v-for="item in decisionItems"
+          :key="item.id"
+          :item="item"
+          :slot-policy="getSlotPolicy(item.slotKey)"
+          @retry="retry"
+          @abort="abort"
+          @remove="remove"
+          @proceed="proceed"
+        />
+      </ul>
+      <!-- Canlı bölge önceden DOM'da: içerik sonradan gelince duyurulsun. -->
+      <div class="up__handoff" :class="{ 'up__handoff--on': handedOff }">
+        <p class="up__handoff-text" role="status" aria-live="polite">
+          {{ handedOff ? handoffText : "" }}
+        </p>
+        <button v-if="handedOff" type="button" class="up__btn" @click="emit('close')">
+          {{ t("mediaFlow.tray.handoffClose") }}
+        </button>
+      </div>
+      <p v-if="handedOff && workerActive === false" class="up__note">
+        {{ t("media.uploader.workerFallback") }}
+      </p>
+    </template>
+
+    <div v-else-if="items.length" class="up__queue">
       <div class="up__bar-row">
         <div
           class="up__bar"
@@ -64,6 +94,7 @@
           :key="item.id"
           :item="item"
           :slot-policy="activeSlot"
+          :facts="facts[uploadedKey(item)]"
           @retry="retry"
           @abort="abort"
           @remove="remove"
@@ -106,12 +137,18 @@
    *
    *     <MediaUploader slot-key="product.image" @uploaded="onUploaded" />
    */
-  import { computed, watch } from "vue";
+  import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import UploadDropzone from "./UploadDropzone.vue";
   import UploadQueueRow from "./UploadQueueRow.vue";
-  import { ITEM_STATUS, useMediaUpload } from "@/composables/useMediaUpload.js";
+  import { useMediaStatus } from "@/composables/useMediaStatus.js";
+  import { uploadedKey } from "@/lib/media/status.js";
+  import {
+    ITEM_STATUS,
+    useMediaUpload,
+    useSharedMediaUpload,
+  } from "@/composables/useMediaUpload.js";
   import { getSlotPolicy } from "@/lib/media/upload/preflight.js";
 
   const props = defineProps({
@@ -125,9 +162,16 @@
     autoStart: { type: Boolean, default: true },
     /** Cihazda küçültme denensin mi (başarısızsa sunucuya devrediliyor). */
     compress: { type: Boolean, default: true },
+    /**
+     * Uygulama ömürlü ortak kuyruk (varsayılan). Modal kapanınca yüklemeler
+     * sürer ve kabuktaki yüzen tepsi gösterir. `false`: bileşene ait yerel
+     * kuyruk ve satır içi liste (eski davranış) — `autoStart`/`compress`
+     * yalnız bu kipte etkili; ortak kuyruk ikisini de açık koşar.
+     */
+    sharedQueue: { type: Boolean, default: true },
   });
 
-  const emit = defineEmits(["uploaded", "blocked", "queue-empty"]);
+  const emit = defineEmits(["uploaded", "blocked", "queue-empty", "close"]);
   const { t } = useI18n();
 
   const activeSlot = computed(() => getSlotPolicy(props.slotKey));
@@ -135,23 +179,76 @@
   // Composable REF'ler döndürüyor; ref destructure etmek reaktiviteyi
   // kırmaz (kırılan `reactive()` nesnesini parçalamaktır) ve şablonda
   // otomatik açılım sağlar.
+  const queue = props.sharedQueue
+    ? useSharedMediaUpload()
+    : useMediaUpload({
+        slotKey: () => props.slotKey,
+        autoStart: props.autoStart,
+        compress: props.compress,
+      });
   const {
     items,
     stats,
     overallPercent,
     workerActive,
-    add,
     retry,
     proceed,
     abort,
     remove,
     abortAll,
     clearFinished,
-  } = useMediaUpload({
-    slotKey: () => props.slotKey,
-    autoStart: props.autoStart,
-    compress: props.compress,
+  } = queue;
+
+  // Bu açılışın kimliği: ortak kuyrukta `max_count` sayımı ve "bu pencereden
+  // eklenenler" ayrımı bununla yapılır.
+  const session = `uploader-${useId()}-${Date.now()}`;
+  const accepted = ref(new Set());
+
+  function add(files) {
+    if (!props.sharedQueue) return queue.add(files);
+    const yeni = queue.add(files, { slotKey: props.slotKey || "", session });
+    if (yeni.length) accepted.value = new Set([...accepted.value, ...yeni.map((i) => i.id)]);
+    return yeni;
+  }
+
+  /** Karar isteyen satırlar modalda kalır; gerisi tepside. */
+  const decisionItems = computed(() =>
+    items.value.filter(
+      (i) => i.status === ITEM_STATUS.BLOCKED || i.status === ITEM_STATUS.DUPLICATE
+    )
+  );
+  /** Bu pencereden eklenip kabul edilen (engel/karar beklemeyen) en az bir dosya var. */
+  const handedOff = computed(() =>
+    items.value.some(
+      (i) =>
+        accepted.value.has(i.id) &&
+        i.status !== ITEM_STATUS.BLOCKED &&
+        i.status !== ITEM_STATUS.DUPLICATE
+    )
+  );
+
+  // Telefonda tepsi alttaki tam genişlik çubuk; masaüstü/tablette sağ altta.
+  const PHONE_QUERY = "(max-width: 767px)";
+  const isPhone = ref(
+    typeof window !== "undefined" && Boolean(window.matchMedia?.(PHONE_QUERY).matches)
+  );
+  let phoneQuery = null;
+  const onPhoneChange = (e) => (isPhone.value = e.matches);
+  onMounted(() => {
+    phoneQuery = window.matchMedia?.(PHONE_QUERY) || null;
+    phoneQuery?.addEventListener?.("change", onPhoneChange);
   });
+  onBeforeUnmount(() => phoneQuery?.removeEventListener?.("change", onPhoneChange));
+  const handoffText = computed(() =>
+    t(isPhone.value ? "mediaFlow.tray.handoffPhone" : "mediaFlow.tray.handoff")
+  );
+
+  // Ortak kipte sunucu kanıtını tepsi soruyor; burada ikinci yoklama açılmaz.
+  const { facts } = useMediaStatus(() =>
+    props.sharedQueue
+      ? []
+      : items.value.filter((i) => i.status === ITEM_STATUS.DONE).map(uploadedKey)
+  );
 
   /**
    * `accept` niteliği — dosya seçicisini daraltmak için.
@@ -184,9 +281,13 @@
     (liste) => {
       for (const it of liste) {
         if (bildirilen.has(it.id)) continue;
+        // Ortak kuyrukta yalnız bu açılışın satırları bildirilir.
+        if (props.sharedQueue && it.session !== session) continue;
         if (it.status === ITEM_STATUS.DONE && it.result) {
           bildirilen.add(it.id);
-          emit("uploaded", it.result);
+          // Kabuktaki tepsi sahibi de aynı satırı görüp listeyi tazeliyor:
+          // tazeleme ikisinden birinde koşsun (`claimDone`).
+          if (!queue.claimDone || queue.claimDone(it.id)) emit("uploaded", it.result);
         } else if (it.status === ITEM_STATUS.BLOCKED) {
           bildirilen.add(it.id);
           emit("blocked", { name: it.name, findings: it.findings });
@@ -205,6 +306,7 @@
   @use "@/assets/scss/media" as media;
 
   .up {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: media.$s-3;
@@ -275,6 +377,36 @@
     justify-content: flex-end;
     gap: media.$s-2;
     padding: media.$s-3;
+  }
+
+  .up__handoff {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: media.$s-2 media.$s-3;
+  }
+
+  .up__handoff--on {
+    padding: media.$s-3;
+    @include media.surface;
+  }
+
+  .up__handoff-text {
+    flex: 1 1 14rem;
+    margin: 0;
+    @include media.text("sm");
+  }
+
+  // Boşken akıştan çıkar (bölümün `gap`'i boş satır açmasın) ama erişilebilirlik
+  // ağacında kalır: canlı bölge `display: none` olsaydı ilk duyuru kaçardı.
+  .up__handoff:not(.up__handoff--on) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .up__btn {

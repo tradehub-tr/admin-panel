@@ -67,3 +67,35 @@ export async function suggestCropFocal(asset) {
 export async function getCropIntent(asset) {
   return typedApi.getCropIntent({ asset });
 }
+
+/**
+ * Yalnız odak noktasını kaydeder — önizleme penceresi (2026-10-01).
+ *
+ * `saveCropIntent` HER ZAMAN `safe_area` gönderir ve uç `{}` değerini
+ * "güvenli alanı SİL" diye okur; bu yüzden pencere onu KULLANMAZ. Burada
+ * `safe_area`, `zoom`, `center_*`, `overrides` HİÇ gönderilmez: uç `None`ı
+ * "dokunma" diye okur ve Crop Studio'da çizilmiş her şey korunur.
+ * Onay, önizleme kanıtıyla birlikte gider (T-114 sunucu kapısı).
+ */
+export async function saveFocalOnly({
+  asset,
+  focalX,
+  focalY,
+  ifMatch = "",
+  previewed = [],
+  method = "manual",
+  algorithm = "",
+  algorithmVersion = "",
+}) {
+  return typedApi.saveCropIntent({
+    asset,
+    focal_x: focalX,
+    focal_y: focalY,
+    if_match: ifMatch,
+    approved_by_user: previewed.length ? 1 : 0,
+    previewed_placements: JSON.stringify(previewed),
+    method,
+    algorithm,
+    algorithm_version: algorithmVersion,
+  });
+}

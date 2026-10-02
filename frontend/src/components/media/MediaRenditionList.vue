@@ -3,6 +3,7 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import InfoTip from "@/components/media/InfoTip.vue";
   import { useMediaRenditions } from "@/composables/useMediaRenditions";
   import { formatBytes } from "@/utils/mediaFormat";
 
@@ -81,35 +82,53 @@
       {{ notice.text }}
     </p>
 
-    <table v-else class="mrend__table">
-      <caption class="mrend__caption">
-        {{
-          t("media.renditions.caption", { bytes: formatBytes(totalBytes) })
-        }}
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t("media.renditions.col.profile") }}</th>
-          <th scope="col">{{ t("media.renditions.col.format") }}</th>
-          <th scope="col" class="mrend__num">{{ t("media.renditions.col.bytes") }}</th>
-          <th scope="col" class="mrend__num">{{ t("media.renditions.col.ssim") }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in rows" :key="row.id">
-          <th scope="row" class="mrend__profile" :title="dims(row)">{{ row.profile || "—" }}</th>
-          <td>
-            <span class="mrend__fmt" :class="`mrend__fmt--${formatTone(row.format)}`">
-              {{ row.format || "—" }}
-            </span>
-          </td>
-          <td class="mrend__num">{{ formatBytes(row.bytes) }}</td>
-          <!-- SSIM ölçülmemişse 0 gelir; "0,00" yazmak ölçüm eksikliğini
-               kalite sorunu gibi gösterirdi. -->
-          <td class="mrend__num mrend__ssim">{{ row.ssim ? row.ssim.toFixed(3) : "—" }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <!--
+      Yatay kaydırma bu SARMALAYICIYA hapsedilir, panelin kendisine değil.
+      İçerik hücreleri `white-space: nowrap` (tasarım kasıtlı, T-093 yorumu)
+      olduğu için tablo teorik olarak dar bir cihazda kendi genişliğinden
+      taşabilir; sınır burada kırılırsa çevresindeki panel yine dikeyde
+      kayar, yatayda kaymaz.
+    -->
+    <div v-else class="mrend__scroll">
+      <table class="mrend__table">
+        <caption class="mrend__caption">
+          {{
+            t("media.renditions.caption", { bytes: formatBytes(totalBytes) })
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t("media.renditions.col.profile") }}</th>
+            <th scope="col">{{ t("media.renditions.col.format") }}</th>
+            <th scope="col" class="mrend__num">{{ t("media.renditions.col.bytes") }}</th>
+            <th scope="col" class="mrend__num">
+              <span class="mrend__ssim-head">
+                {{ t("media.renditions.col.ssim") }}
+                <InfoTip
+                  :text="t('media.ssimInfo.text')"
+                  :title="t('media.ssimInfo.title')"
+                  :label="t('media.ssimInfo.label')"
+                />
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in rows" :key="row.id">
+            <th scope="row" class="mrend__profile" :title="dims(row)">{{ row.profile || "—" }}</th>
+            <td>
+              <span class="mrend__fmt" :class="`mrend__fmt--${formatTone(row.format)}`">
+                {{ row.format || "—" }}
+              </span>
+            </td>
+            <td class="mrend__num">{{ formatBytes(row.bytes) }}</td>
+            <!-- SSIM ölçülmemişse 0 gelir; "0,00" yazmak ölçüm eksikliğini
+                 kalite sorunu gibi gösterirdi. -->
+            <td class="mrend__num mrend__ssim">{{ row.ssim ? row.ssim.toFixed(3) : "—" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </template>
 
@@ -157,12 +176,26 @@
     }
   }
 
+  // Yatay taşma varsa (uzun profil/biçim adı) yalnız TABLO kayar — panelin
+  // kendisi değil. bkz. şablondaki gerekçe yorumu.
+  .mrend__scroll {
+    overflow-x: auto;
+    // dikey kaymayı bloke etmemesi için — yalnız yatay eksen bu sarmalayıcıya ait.
+    max-width: 100%;
+  }
+
   // Kompakt tek satır dili: dar denetçide (≈260px) 4 sütun kırılmadan sığar.
   // Ölçü sütunu kalktı — profil adı taşıyor, tam ölçü satır tooltip'inde.
   .mrend__table {
     width: 100%;
     border-collapse: collapse;
     @include media.text("xs");
+  }
+
+  .mrend__ssim-head {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
   }
 
   .mrend__caption {

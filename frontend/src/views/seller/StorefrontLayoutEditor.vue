@@ -300,6 +300,13 @@
                     >
                       {{ t("storefrontLayoutEditor.remove") }}
                     </button>
+                    <ImagePlacementButton
+                      v-if="storeHeader.logo"
+                      :file-url="storeHeader.logo"
+                      slot-key="seller.logo"
+                      class="mt-2"
+                      @open="openPlacement"
+                    />
                     <p class="text-[10px] text-gray-400 mt-1">
                       {{ t("storefrontLayoutEditor.logoHint") }}
                     </p>
@@ -423,11 +430,22 @@
         }}</span>
       </button>
     </div>
+
+    <!-- Görsel önizleme penceresi — tek örnek; düğmeler ve tek-dosya yüklemesi açar. -->
+    <ImagePlacementModal
+      v-if="placement.state.open"
+      v-model:open="placement.state.open"
+      :file-url="placement.state.fileUrl"
+      :slot-key="placement.state.slotKey"
+      :file-name="placement.state.fileName"
+      :context="placement.state.context"
+      :return-focus="placement.state.returnFocus"
+    />
   </div>
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, onMounted, defineAsyncComponent } from "vue";
   import { useI18n } from "vue-i18n";
   import draggable from "vuedraggable";
   import { useToast } from "@/composables/useToast";
@@ -437,6 +455,8 @@
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import api from "@/utils/api";
   import LayoutSectionCard from "@/components/seller/LayoutSectionCard.vue";
+  import ImagePlacementButton from "@/components/media/preview/ImagePlacementButton.vue";
+  import { usePlacementLauncher } from "@/composables/usePlacementLauncher";
 
   // tradehub-upload-ui pattern: logo upload için bar overlay + ✓ mark
   const logoUpload = useImageUploadProgress();
@@ -468,6 +488,19 @@
   ]);
   const { success, error } = useToast();
   const auth = useAuthStore();
+
+  const ImagePlacementModal = defineAsyncComponent(
+    () => import("@/components/media/preview/ImagePlacementModal.vue")
+  );
+  const placement = usePlacementLauncher();
+  function openPlacement({ fileUrl, slotKey, trigger }) {
+    placement.show({
+      fileUrl,
+      slotKey,
+      trigger,
+      context: { storeName: auth.user?.admin_seller_profile?.seller_name || "" },
+    });
+  }
 
   // Yazma yetkisi: backend `seller_profile.write` capability'sine bağlı
   // (require_seller_capability `update_my_admin_seller_profile`'da). UI'da
@@ -694,6 +727,13 @@
       const fileUrl = await api.uploadFile(file, "Home");
       if (fileUrl) {
         storeHeader.value[field] = fileUrl;
+        if (field === "logo")
+          placement.afterUpload({
+            selected: 1,
+            fileUrl,
+            slotKey: "seller.logo",
+            context: { storeName: auth.user?.admin_seller_profile?.seller_name || "" },
+          });
         await saveStoreHeader();
       }
       if (field === "logo") await logoUpload.finish();

@@ -22,7 +22,8 @@ const STUB = "/src/stores/__tests__/fixtures/subscriptionApiStub.js";
 
 // Zaman-bombası denetimi gereği gelecek tarih SABİT yazılamaz; koşuma göre
 // ileri tarihler hesaplanır (assertion'lar tarih metnine bağlı değil).
-const gunSonra = (n) => `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
+const gunSonra = (n) =>
+  `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
 
 let server;
 let subscriptionModule;

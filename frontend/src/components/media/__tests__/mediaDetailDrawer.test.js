@@ -10,6 +10,8 @@ import { renderToString } from "@vue/server-renderer";
 
 import tr from "../../../i18n/locales/tr.js";
 import en from "../../../i18n/locales/en.js";
+import ru from "../../../i18n/locales/ru.js";
+import ar from "../../../i18n/locales/ar.js";
 
 /**
  * Detay çekmecesi — versiyon / türev / kullanım / kalite (T-093).
@@ -88,6 +90,7 @@ async function render(path, props) {
 const USAGE = "/src/components/media/MediaUsagePanel.vue";
 const QUALITY = "/src/components/media/MediaQualityPanel.vue";
 const DETAIL = "/src/components/media/MediaDetailPanel.vue";
+const INFO_TIP = "/src/components/media/InfoTip.vue";
 
 const item = {
   id: "/files/a.webp",
@@ -160,8 +163,9 @@ test("türev yokken kalite paneli 'ölçüm yok' der, sıfır uydurmaz", async (
 test("ölçülmemiş kaynak künyesi '—' ile durur, satır gizlenmez", async () => {
   const html = await render(QUALITY, { item, fileName: "" });
 
-  // DPI / renk uzayı / alfa arka tarafta YOK; satırlar tablodan çıkarılmadı
-  // ki "ölçülmedi" ile "sorunsuz" karıştırılmasın.
+  // Dosya adı yokken ölçüm gelmez: DPI / renk uzayı / alfa satırları
+  // gizlenmez, "—" ile durur ki "ölçülmedi" ile "sorunsuz" karıştırılmasın.
+  // Dolu hâlin hücre biçimi `qualityFacts.test.js`te ölçülür.
   assert.match(html, /media\.quality\.attr\.dpi|DPI/i);
   assert.match(html, /media\.quality\.attr\.colorSpace|Renk uzayı/i);
   assert.match(html, /media\.quality\.attr\.alpha|Alfa/i);
@@ -257,4 +261,146 @@ test("çeviri anahtarları tek listede — i18n bağlantısı bunları bekliyor"
   ]) {
     assert.ok(quality.includes(anahtar), `${anahtar} eksik`);
   }
+});
+
+// ── Yatay taşma düzeltmesi (Kullanım/Özet kartları) ────────────────
+//
+// Kök neden: flex çocuğunun (ürün adı, kategori adı) örtük minimum genişliği
+// metnin TAM genişliğiydi (`min-width: 0` yoktu) — yanındaki rozet dışarı
+// itiliyor, panel yatayda kayıyordu. Gerçek tarayıcı ölçümü bu görevde
+// yapılmadı (jsdom layout motoru yok, `scrollWidth`/`clientWidth` her zaman
+// 0 döner); düzeltme bu yüzden KAYNAK üzerinden doğrulanıyor — aynı dosyanın
+// kendi `ÖLÇÜLMEDİ` deseniyle tutarlı.
+
+test("kullanım kartında ürün adı sarar, rozet asla kırpılmaz", () => {
+  const usage = read("src/components/media/MediaUsagePanel.vue");
+
+  assert.match(usage, /\.musage__label\s*\{[^}]*min-width:\s*0/s);
+  assert.match(usage, /\.musage__label\s*\{[^}]*overflow-wrap:\s*anywhere/s);
+  assert.match(usage, /\.musage__status\s*\{[^}]*flex-shrink:\s*0/s);
+});
+
+test("bağlı kayıtlar satırı ve sınır notu uzun metinde sarar", () => {
+  const usage = read("src/components/media/MediaUsagePanel.vue");
+
+  assert.match(usage, /\.musage__row\s*\{[^]*?span\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  assert.match(usage, /\.musage__row\s*\{[^]*?code\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  assert.match(usage, /\.musage__hint,\s*\n\s*\.musage__scope\s*\{[^}]*overflow-wrap:\s*anywhere/s);
+});
+
+test("Özet sekmesindeki kategori adı da aynı desenle sarar", () => {
+  const panel = read("src/components/media/MediaDetailPanel.vue");
+
+  assert.match(panel, /class="detail__category-name"/);
+  assert.match(panel, /\.detail__category-name\s*\{[^}]*min-width:\s*0/s);
+  assert.match(panel, /\.detail__category-name\s*\{[^}]*overflow-wrap:\s*anywhere/s);
+});
+
+test("çekmecenin kaydırma alanı yatayda kilitli — gerçek taşma nedenleri ayrı düzeltildi", () => {
+  const panel = read("src/components/media/MediaDetailPanel.vue");
+
+  assert.match(panel, /\.detail__scroll\s*\{[^}]*overflow-x:\s*hidden/s);
+});
+
+test("Türevler ve Kalite tabloları kendi yatay kaydırma sarmalayıcısında — panel değil", () => {
+  const renditions = read("src/components/media/MediaRenditionList.vue");
+  const quality = read("src/components/media/MediaQualityPanel.vue");
+
+  assert.match(renditions, /<div v-else class="mrend__scroll">/);
+  assert.match(renditions, /\.mrend__scroll\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(quality, /<div class="mqual__scroll">/);
+  assert.match(quality, /\.mqual__scroll\s*\{[^}]*overflow-x:\s*auto/s);
+});
+
+// ── SSIM bilgi ipucu ────────────────────────────────────────────────
+
+test("bilgi ipucu düğmesi erişilebilir addan render edilir ve varsayılan kapalıdır", async () => {
+  const html = await render(INFO_TIP, {
+    text: "Açıklama metni buraya",
+    title: "SSIM nedir?",
+    label: "SSIM nedir?",
+  });
+
+  assert.match(html, /aria-label="SSIM nedir\?"/);
+  assert.match(html, /role="tooltip"/);
+  assert.match(html, /aria-expanded="false"/);
+  // Balon HER ZAMAN DOM'da (SSR metninde bulunabilir), yalnız CSS ile gizli —
+  // ekran okuyucu `aria-describedby` ile ona ulaşabilsin diye kaldırılmaz.
+  assert.match(html, /Açıklama metni buraya/);
+  // Başlık ayrı, kalın bir satır olarak çiziliyor — gövdeyle karışmıyor.
+  assert.match(html, /<strong class="infotip__bubble-title"[^>]*>SSIM nedir\?<\/strong>/);
+  assert.doesNotMatch(html, /infotip__bubble--on/);
+});
+
+test("başlıksız kullanımda <strong> hiç çizilmez", async () => {
+  const html = await render(INFO_TIP, { text: "Sade açıklama", label: "Bilgi" });
+
+  assert.doesNotMatch(html, /infotip__bubble-title/);
+});
+
+test("Türevler'in SSIM başlığı ve Kalite'nin SSIM satırı bilgi ipucu kullanıyor", () => {
+  const renditions = read("src/components/media/MediaRenditionList.vue");
+  const quality = read("src/components/media/MediaQualityPanel.vue");
+
+  assert.match(renditions, /<InfoTip\s+:text="t\('media\.ssimInfo\.text'\)"/);
+  assert.match(quality, /<InfoTip\s+:text="t\('media\.ssimInfo\.text'\)"/);
+  assert.match(renditions, /:title="t\('media\.ssimInfo\.title'\)"/);
+  assert.match(quality, /:title="t\('media\.ssimInfo\.title'\)"/);
+  // "SSIM" etiketi aynı kalmalı — görev metni bunu istiyor.
+  assert.match(renditions, /t\("media\.renditions\.col\.ssim"\)/);
+});
+
+test("SSIM açıklaması dört dilde de tanımlı ve boş değil", () => {
+  for (const locale of [tr, en, ru, ar]) {
+    assert.equal(typeof locale.media.ssimInfo?.label, "string");
+    assert.ok(locale.media.ssimInfo.label.trim().length > 0);
+    assert.equal(typeof locale.media.ssimInfo?.title, "string");
+    assert.ok(locale.media.ssimInfo.title.trim().length > 0);
+    assert.equal(typeof locale.media.ssimInfo?.text, "string");
+    // Uydurma kısa metin değil — gerçek açıklama uzunluğunda olmalı.
+    assert.ok(locale.media.ssimInfo.text.trim().length > 40);
+    // Ölçek listesi madde madde: 4 satır da mevcut.
+    assert.equal((locale.media.ssimInfo.text.match(/•/g) || []).length, 4);
+  }
+});
+
+// ── Balonun tipografi sıfırlaması — kök neden regresyonu ────────────
+//
+// Bu balon bir tablo BAŞLIĞININ (`<th>`) içinde açılıyor. `position: fixed`
+// yalnız kırpılma/kaydırma zincirinden kaçar, CSS inheritance'tan KAÇMAZ —
+// ilk sürümde bu unutulmuştu: `thead th`'nin BÜYÜK HARF + `nowrap` +
+// kalın kuralı balona miras kaldı, metin tek satıra sıkışıp panelin
+// sağından taştı (ekran görüntüsüyle bildirildi, 2026-09-30). Bu testler
+// sıfırlamanın KAYNAKTA durduğunu kanıtlar — CSS motoru olmadığı için
+// gerçek piksel sonucu `infoTipPlacement.test.js`teki konum testleriyle
+// ve bu dosyanın üstündeki "ÖLÇÜLMEDİ" notuyla birlikte okunmalı.
+test("balon üst bağlamdan (tablo başlığı) hiçbir tipografi mirası almaz", () => {
+  const infoTip = read("src/components/media/InfoTip.vue");
+  const bubbleBlock = infoTip.match(/\.infotip__bubble\s*\{[\s\S]*?\n {2}\}/)?.[0] || "";
+
+  assert.ok(bubbleBlock, "`.infotip__bubble` kuralı bulunamadı");
+  for (const reset of [
+    "text-transform: none",
+    "letter-spacing: normal",
+    "font-weight: 400",
+    "white-space: normal",
+    "text-align: start",
+  ]) {
+    assert.ok(bubbleBlock.includes(reset), `${reset} eksik — miras sızabilir`);
+  }
+  // Madde listesi (`\n` ile) yalnız GÖVDEDE `pre-line` ile satır sonu sayılır;
+  // kutunun geneli `pre` DEĞİL, uzun satırlar yine normal sarmalı.
+  assert.match(infoTip, /\.infotip__bubble-body\s*\{[^}]*white-space:\s*pre-line/s);
+});
+
+test("balon genişliği viewport'a göre sınırlı — 280px üst sınır, 16px kenar payı", () => {
+  const placement = read("src/components/media/infoTipPlacement.js");
+  const infoTip = read("src/components/media/InfoTip.vue");
+
+  assert.match(placement, /maxWidth\s*=\s*280/);
+  assert.match(placement, /margin\s*=\s*16/);
+  // CSS üst sınırı (`max-width`) JS'teki üst sınırla TUTARLI kalmalı —
+  // biri değişip diğeri unutulursa balon ya JS'te dar hesaplanıp CSS'te
+  // geniş çizilir ya da tersi.
+  assert.match(infoTip, /max-width:\s*17\.5rem/); // 280px
 });

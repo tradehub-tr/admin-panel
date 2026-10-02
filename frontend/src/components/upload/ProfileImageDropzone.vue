@@ -87,6 +87,13 @@
       <p v-if="modelValue" class="text-[10px] text-gray-400 truncate" :title="modelValue">
         {{ getFileName(modelValue) }}
       </p>
+      <ImagePlacementButton
+        v-if="modelValue && placementSlot"
+        :file-url="modelValue"
+        :slot-key="placementSlot"
+        class="pt-1"
+        @open="emit('placement', $event)"
+      />
       <div v-if="modelValue" class="flex items-center gap-2 pt-1">
         <button
           type="button"
@@ -114,6 +121,7 @@
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import { useDropzone } from "@/composables/useDropzone";
+  import ImagePlacementButton from "@/components/media/preview/ImagePlacementButton.vue";
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
@@ -122,9 +130,11 @@
     accept: { type: String, default: "image/jpeg,image/png,image/webp" },
     maxBytes: { type: Number, default: 5 * 1024 * 1024 },
     recommendedSize: { type: String, default: "" },
+    /** Doluysa "Nerelerde görünecek?" düğmesi bu slotla gösterilir (seller.logo / company.cover_image). */
+    placementSlot: { type: String, default: "" },
   });
 
-  const emit = defineEmits(["update:modelValue"]);
+  const emit = defineEmits(["update:modelValue", "uploaded", "placement"]);
 
   const { t } = useI18n();
   const toast = useToast();
@@ -152,7 +162,10 @@
     upload.start();
     try {
       const url = await api.uploadFile(file);
-      if (url) emit("update:modelValue", url);
+      if (url) {
+        emit("update:modelValue", url);
+        emit("uploaded", url);
+      }
       await upload.finish();
       toast.success(t("profileImageDropzone.uploaded", { name: props.placeholder }));
     } catch (err) {

@@ -6,10 +6,13 @@ import { JSDOM } from "jsdom";
 import { compileScript, parse } from "@vue/compiler-sfc";
 
 // Render the actual SFC; replace external services and unrelated child components.
-const dom = new JSDOM("<!doctype html><html><body></body></html>");
+// `pretendToBeVisual`: içerik geçişi (<Transition>) requestAnimationFrame ister.
+const dom = new JSDOM("<!doctype html><html><body></body></html>", { pretendToBeVisual: true });
 for (const key of ["window", "document", "Node", "Element", "HTMLElement", "SVGElement"])
   globalThis[key] = dom.window[key];
+globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
 const Vue = await import("vue");
+const regionFocus = await import("../../../lib/media/regionFocus.js");
 const source = readFileSync(new URL("../MediaExplorerView.vue", import.meta.url), "utf8");
 const { descriptor } = parse(source);
 const compiled = compileScript(descriptor, { id: "media-explorer-load", inlineTemplate: true });
@@ -39,6 +42,7 @@ async function mount(responses) {
       "@/utils/mediaFormat": { canRenderThumb: () => false, formatSize: String },
       "@/composables/useMediaAccess": { useMediaAccess: () => ({}) },
       "@/composables/useToast": { useToast: () => ({ error() {}, success() {} }) },
+      "@/lib/media/regionFocus": regionFocus,
       "@/components/media/MediaFolderGrid.vue": Vue.defineComponent({
         props: ["items"],
         setup: (props) => () =>

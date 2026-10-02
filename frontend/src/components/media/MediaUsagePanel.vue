@@ -313,18 +313,30 @@
 
   .musage__use-head {
     display: flex;
-    align-items: center;
+    // `center` DEĞİL: ürün adı uzunsa iki satıra sarar (aşağıya bkz.), rozet
+    // ilk satırla hizalı kalsın diye `flex-start` — `center` olsaydı rozet
+    // sarılmış metnin DÜŞEY ORTASINA kayardı.
+    align-items: flex-start;
     gap: media.$s-2;
   }
 
+  // Uzun ürün adı KIRPILMAZ, SARAR: `min-width: 0` olmadan flex çocuğunun
+  // örtük minimum genişliği metnin tam genişliğidir (nowrap + ellipsis bunu
+  // gizlemez, sadece görünmez taşmayı SAKLAR) — satır rozeti panelin dışına
+  // iter, panel de yatayda kayar. Ölçüldü: 420px panelde uzun bir ürün adı +
+  // "Aktif" rozeti bu yüzden taşıyordu.
   .musage__label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
     @include media.text("sm");
     font-weight: 600;
-    @include media.truncate;
   }
 
   .musage__status {
     margin-inline-start: auto;
+    // Rozet ASLA kırpılmaz — satır ne kadar dar olursa olsun tam metniyle kalır.
+    flex-shrink: 0;
     @include media.chip("neutral");
   }
 
@@ -336,6 +348,7 @@
     gap: media.$s-05;
 
     li {
+      overflow-wrap: anywhere;
       @include media.text("xs");
       @include media.muted(1);
     }
@@ -343,7 +356,7 @@
 
   .musage__row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: media.$s-2;
     @include media.text("xs");
     color: $l-text-700;
@@ -352,8 +365,18 @@
       color: $d-text;
     }
 
+    span {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-wrap: anywhere;
+    }
+
     code {
       margin-inline-start: auto;
+      min-width: 0;
+      max-width: 60%;
+      overflow-wrap: anywhere;
+      text-align: end;
       @include media.text("xs");
       @include media.muted(2);
     }
@@ -384,6 +407,7 @@
     align-items: flex-start;
     gap: media.$s-1;
     margin: 0;
+    overflow-wrap: anywhere;
     @include media.text("xs");
     @include media.muted(1);
   }

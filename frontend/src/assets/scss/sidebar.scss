@@ -308,29 +308,58 @@
 }
 
 // ── Panel Group (collapsible) ────────────────────────────────
+// grid-template-rows 0fr↔1fr: içerik yüksekliği ölçülmeden gerçek yüksekliğe
+// açılır (eski max-height: 800px hilesi uzun grupları kesiyor, kısa gruplarda
+// ölü zaman bırakıyordu).
+// visibility kapanış BİTTİKTEN sonra düşer (gecikmeli adım): kapanan içerik
+// görünür kalarak söner, sonra Tab/AT'den çıkar (template'te ayrıca `inert`).
 .panel-group {
   &.collapsible {
-    overflow: hidden;
-    transition:
-      max-height 0.3s ease,
-      opacity 0.25s ease,
-      padding 0.3s ease,
-      margin 0.3s ease;
-    max-height: 0;
+    display: grid;
+    grid-template-rows: 0fr;
     opacity: 0;
-    padding: 0;
-    margin: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows $d-pop $ease-out,
+      opacity $d-pop $ease-out,
+      visibility 0s linear $d-pop;
 
     &.open {
-      max-height: 800px;
+      grid-template-rows: 1fr;
       opacity: 1;
-      padding: 4px 0 6px;
-      margin-top: 2px;
+      visibility: visible;
+      transition:
+        grid-template-rows $d-pop $ease-out,
+        opacity $d-pop $ease-out,
+        visibility 0s linear 0s;
+    }
+
+    // Dikey boşluk padding değil içerik ayraçları: padding 0fr satırında bile
+    // yer kaplardı; ayraçlar yükseklikle birlikte katlanır (üst 2+4, alt 6px).
+    > .panel-group-inner {
+      min-height: 0;
+      overflow: hidden;
+
+      &::before,
+      &::after {
+        content: "";
+        display: block;
+        height: 6px;
+      }
     }
   }
 
-  &:not(.collapsible) {
+  &:not(.collapsible) > .panel-group-inner {
     padding: 2px 0 6px;
+  }
+
+  // Global reduced-motion kuralı süreyi 0.01ms yapıyor ama gecikmeyi değil —
+  // visibility gecikmesi de sıfırlansın, durum anında değişsin.
+  @media (prefers-reduced-motion: reduce) {
+    &.collapsible,
+    &.collapsible.open {
+      transition: none;
+    }
   }
 }
 
@@ -339,6 +368,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  // <button> olarak render ediliyor: tarayıcı varsayılanlarını sıfırla.
+  width: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: start;
   padding: 8px 16px;
   margin-top: 4px;
   font-size: 11px;
@@ -356,11 +391,27 @@
     background: $l-bg-muted;
   }
 
+  &:focus-visible {
+    outline: 3px solid $brand-text;
+    outline-offset: -3px;
+  }
+
+  // Tam genişlik gezinme satırı: base.scss'teki global basış küçültmesi
+  // (scale 0.97) burada kenarları içeri çekip satırı zıplatıyor. Seçici
+  // global kuraldan (0,3,1) özgül (0,4,0) — `!important` gerekmez.
+  &:not(:disabled):not([aria-disabled="true"]):active {
+    transform: none;
+  }
+
   @include dark {
     color: $d-text-muted;
 
     &:hover {
       background: $d-item-hover;
+    }
+
+    &:focus-visible {
+      outline-color: $brand-light;
     }
   }
 }
@@ -428,11 +479,15 @@
   width: 16px;
   height: 16px;
   color: $d-text-faint;
-  transition: transform 0.2s;
+  transition: transform $d-pop $ease-out;
   flex-shrink: 0;
 
   &.open {
     transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 }
 

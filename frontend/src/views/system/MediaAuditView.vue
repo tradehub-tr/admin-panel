@@ -1121,95 +1121,98 @@
     >
       <!-- Pencereleme padding'i iç gövdeye: `.card`'ın kendi 20px'i bozulmasın -->
       <div ref="listEl" class="ma__list-body" :style="listPadStyle">
-      <div
-        v-for="(r, i) in listVisible"
-        :key="r.name"
-        class="ma__row"
-        :class="[`ma__row--${tone(r)}`, { 'ma__row--cursor': cursor === listOffset + i }]"
-        :data-row="listOffset + i"
-        :data-cell="listOffset + i"
-        :aria-setsize="a.items.value.length"
-        :aria-posinset="listOffset + i + 1"
-      >
-        <!-- Görsel kabı: masaüstünde `display: contents` (yerleşim aynı);
+        <div
+          v-for="(r, i) in listVisible"
+          :key="r.name"
+          class="ma__row"
+          :class="[`ma__row--${tone(r)}`, { 'ma__row--cursor': cursor === listOffset + i }]"
+          :data-row="listOffset + i"
+          :data-cell="listOffset + i"
+          :aria-setsize="a.items.value.length"
+          :aria-posinset="listOffset + i + 1"
+        >
+          <!-- Görsel kabı: masaüstünde `display: contents` (yerleşim aynı);
              dokunmatikte satırın sol çapası olur ve tam yüksekliğe uzar
              (MediaOptimizeView `.mo__thumb-wrap` deseni). -->
-        <span class="ma__thumb-wrap">
-          <img
-            v-if="canThumb(r) && r.target_state === 'ok'"
-            class="ma__thumb"
-            :src="thumbUrl(r)"
-            :alt="r.object_name"
-            loading="lazy"
-            decoding="async"
-            @click="openLightbox(r)"
-          />
-          <span v-else class="ma__thumb ma__thumb--ph" :title="targetNote(r)">
-            <AppIcon :name="targetIcon(r)" :size="14" />
+          <span class="ma__thumb-wrap">
+            <img
+              v-if="canThumb(r) && r.target_state === 'ok'"
+              class="ma__thumb"
+              :src="thumbUrl(r)"
+              :alt="r.object_name"
+              loading="lazy"
+              decoding="async"
+              @click="openLightbox(r)"
+            />
+            <span v-else class="ma__thumb ma__thumb--ph" :title="targetNote(r)">
+              <AppIcon :name="targetIcon(r)" :size="14" />
+            </span>
           </span>
-        </span>
 
-        <div class="ma__row-main">
-          <span class="ma__row-head">
-            <span class="ma__badge" :class="`ma__badge--${tone(r)}`">
-              <AppIcon :name="actionIcon(r.action)" :size="11" />
-              {{ actionLabel(r.action) }}
+          <div class="ma__row-main">
+            <span class="ma__row-head">
+              <span class="ma__badge" :class="`ma__badge--${tone(r)}`">
+                <AppIcon :name="actionIcon(r.action)" :size="11" />
+                {{ actionLabel(r.action) }}
+              </span>
+              <span v-if="r.tenant" class="ma__tenant" :title="r.tenant">
+                {{ r.tenant_name || r.tenant }}
+              </span>
+              <span class="ma__muted" :title="fmtTime(r.timestamp)">{{ fmtAgo(r.timestamp) }}</span>
             </span>
-            <span v-if="r.tenant" class="ma__tenant" :title="r.tenant">
-              {{ r.tenant_name || r.tenant }}
-            </span>
-            <span class="ma__muted" :title="fmtTime(r.timestamp)">{{ fmtAgo(r.timestamp) }}</span>
-          </span>
-          <!-- Alt satır kabı: masaüstünde görünmez (`display: contents`),
+            <!-- Alt satır kabı: masaüstünde görünmez (`display: contents`),
                dokunmatikte yol + e-postayı soluk, kırpılan tek şeritte tutar
                (dar ekranda ikisi alt alta düşer). -->
-          <span class="ma__row-foot">
-            <span
-              class="ma__target"
-              :class="{ 'ma__target--masked': isMasked(r) }"
-              :title="targetNote(r)"
-            >
-              <template v-if="isMasked(r)">{{ t("mediaAudit.masked") }}</template>
-              <template v-else-if="r.object_name">{{ r.object_name }}</template>
-              <template v-else-if="hasBatchFiles(r)">
-                {{ batchFiles(r).list[0] }}
-                <span v-if="batchFiles(r).list.length > 1 || batchFiles(r).more" class="ma__tstate">
-                  {{
-                    t("mediaAudit.andMore", {
-                      n: batchFiles(r).list.length - 1 + batchFiles(r).more,
-                    })
-                  }}
-                </span>
-              </template>
-              <template v-else>{{ t("mediaAudit.target.none") }}</template>
+            <span class="ma__row-foot">
               <span
-                v-if="r.target_state === 'deleted' || r.target_state === 'trashed'"
-                class="ma__tstate"
+                class="ma__target"
+                :class="{ 'ma__target--masked': isMasked(r) }"
+                :title="targetNote(r)"
               >
-                {{ t(`mediaAudit.targetShort.${r.target_state}`) }}
+                <template v-if="isMasked(r)">{{ t("mediaAudit.masked") }}</template>
+                <template v-else-if="r.object_name">{{ r.object_name }}</template>
+                <template v-else-if="hasBatchFiles(r)">
+                  {{ batchFiles(r).list[0] }}
+                  <span
+                    v-if="batchFiles(r).list.length > 1 || batchFiles(r).more"
+                    class="ma__tstate"
+                  >
+                    {{
+                      t("mediaAudit.andMore", {
+                        n: batchFiles(r).list.length - 1 + batchFiles(r).more,
+                      })
+                    }}
+                  </span>
+                </template>
+                <template v-else>{{ t("mediaAudit.target.none") }}</template>
+                <span
+                  v-if="r.target_state === 'deleted' || r.target_state === 'trashed'"
+                  class="ma__tstate"
+                >
+                  {{ t(`mediaAudit.targetShort.${r.target_state}`) }}
+                </span>
+              </span>
+              <span class="ma__row-sub">
+                <!-- Görünen ad ile e-posta birlikte: aynı hesap iki ekranda iki
+                 farklı isimle görünüp çelişki yaratıyordu. -->
+                {{ r.actor || "—" }}
+                <span v-if="r.actor_display" class="ma__muted">({{ r.actor_display }})</span>
+                <template v-if="ctxSummary(r)"> · {{ ctxSummary(r) }}</template>
               </span>
             </span>
-            <span class="ma__row-sub">
-              <!-- Görünen ad ile e-posta birlikte: aynı hesap iki ekranda iki
-                 farklı isimle görünüp çelişki yaratıyordu. -->
-              {{ r.actor || "—" }}
-              <span v-if="r.actor_display" class="ma__muted">({{ r.actor_display }})</span>
-              <template v-if="ctxSummary(r)"> · {{ ctxSummary(r) }}</template>
-            </span>
-          </span>
-        </div>
+          </div>
 
-        <div class="ma__row-acts">
-          <button
-            type="button"
-            class="ma__eye"
-            :title="t('mediaAudit.action.detail')"
-            @click="openDetail(r)"
-          >
-            <AppIcon name="eye" :size="15" />
-          </button>
+          <div class="ma__row-acts">
+            <button
+              type="button"
+              class="ma__eye"
+              :title="t('mediaAudit.action.detail')"
+              @click="openDetail(r)"
+            >
+              <AppIcon name="eye" :size="15" />
+            </button>
+          </div>
         </div>
-      </div>
       </div>
       <p v-if="!a.items.value.length" class="ma__empty">
         {{ a.loading.value ? t("mediaAudit.loading") : t("mediaAudit.empty") }}

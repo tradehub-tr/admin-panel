@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { mediaPhase } from "../../../lib/media/status.js";
 
 // Video transcode durumu (backend: th_media_video_status → API: video_status)
 // panelde uçtan uca görünür olmalı — TUR video-durum düzeltmesi. Backend alanı
@@ -22,11 +23,11 @@ test("useSellerMedia backend'in video_status alanını videoStatus olarak harita
 });
 
 test("MediaCard işleniyor/başarısız rozetlerini videoStatus'e bağlar", () => {
-  assert.match(card, /item\.videoStatus === 'processing'/);
-  assert.match(card, /item\.videoStatus === 'failed'/);
-  // Rozet metni TUR-296 anahtarlarından gelir (media.videoStatus.*) —
-  // durum adı dinamik interpolasyonla üretilir.
-  assert.match(card, /media\.videoStatus\./);
+  assert.match(card, /<MediaStatusBadge/);
+  assert.match(card, /mediaPhase\(item, item.kind\)/);
+  assert.equal(mediaPhase({ videoStatus: "processing" }, "video"), "processing");
+  assert.equal(mediaPhase({ videoStatus: "failed" }, "video"), "processingFailed");
+  assert.equal(mediaPhase({ videoStatus: "ready", scanStatus: "pending" }, "video"), "scanning");
   // "ready" rozeti BİLİNÇLİ yok: oynatılabilir video zaten kendi kanıtı,
   // her karta "Hazır" basmak gürültü olur.
   assert.doesNotMatch(card, /media\.video(?:Status)?\.ready/);

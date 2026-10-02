@@ -5,6 +5,7 @@ import { useSellerMedia } from "@/composables/useSellerMedia";
 import { SEVERITY } from "@/lib/media/upload/preflight.js";
 import { runPreflight } from "@/lib/media/upload/preflightClient.js";
 import { loadLibraryManifests } from "@/lib/media/libraryManifests.js";
+import { dataThumbnail } from "@/lib/media/thumbnail.js";
 import api from "@/utils/api";
 import * as policy from "@/utils/uploadPolicy";
 import { kindOfFile } from "@/utils/mediaKind";
@@ -1193,12 +1194,15 @@ export const useMediaStore = defineStore("media", () => {
           // gitmesi beklenmiyor. On dosya birden atıldığında hangisinin ne
           // olduğunu addan çıkarmak gerekiyordu.
           //
-          // Adres KUYRUKTAN ÇIKARKEN serbest bırakılıyor (bkz. `_onizlemeBirak`):
-          // bırakılmazsa dosyanın tamamı bellekte tutulmaya devam eder ve
-          // 12 MB'lık on dosya 120 MB demek.
-          previewUrl: file.type?.startsWith("image/") ? URL.createObjectURL(file) : "",
+          // Panelin CSP'si `blob:` görsele izin vermiyor (img-src 'self' data: https:);
+          // bu yüzden ön izleme 96 px'lik küçük bir `data:` adresi olarak
+          // sonradan doldurulur (bkz. `_kucukOnizleme`). Dosyanın tamamı
+          // bellekte bir adrese bağlanmadığı için serbest bırakma da gerekmez.
+          previewUrl: "",
           progress: 0,
           status: kontrol.ok ? "uploading" : "error",
+          progressKnown: false,
+          retryable: kontrol.ok,
           // Ret sebebi KOD olarak tutuluyor, metin olarak değil: ekran çeviriyi
           // kendisi seçer, mağaza ekranı ile e-posta bildirimi aynı koda farklı
           // metin verebilir.
@@ -1211,6 +1215,7 @@ export const useMediaStore = defineStore("media", () => {
           file,
         },
       ];
+      _kucukOnizleme(id, file);
       if (kontrol.ok) runUpload(id);
     }
   }
@@ -1242,11 +1247,14 @@ export const useMediaStore = defineStore("media", () => {
     iptaller.set(uploadId, ctrl);
 
     try {
-      await medya.upload(up.file, {
+      up.result = await medya.upload(up.file, {
         signal: ctrl.signal,
         onProgress: (p) => {
           const satir = uploads.value.find((u) => u.id === uploadId);
-          if (satir) satir.progress = p;
+          if (satir) {
+            satir.progress = p;
+            satir.progressKnown = true;
+          }
         },
       });
       up.progress = 100;
@@ -1315,9 +1323,18 @@ export const useMediaStore = defineStore("media", () => {
    */
   function _onizlemeBirak(up) {
     if (up?.previewUrl) {
-      URL.revokeObjectURL(up.previewUrl);
+      if (up.previewUrl.startsWith("blob:")) URL.revokeObjectURL(up.previewUrl);
       up.previewUrl = "";
     }
+  }
+
+  /** 96 px küçük ön izleme (`data:` WebP); okunamazsa satır tür simgesiyle kalır. */
+  async function _kucukOnizleme(id, file) {
+    // Çözülemeyen görsel (bozuk, HEIC…): boş döner, ön izlemesiz devam.
+    const url = await dataThumbnail(file);
+    if (!url) return;
+    const up = uploads.value.find((u) => u.id === id);
+    if (up) up.previewUrl = url;
   }
 
   return {

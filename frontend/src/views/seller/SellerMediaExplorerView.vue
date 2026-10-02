@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onMounted, ref, watch } from "vue";
+  import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
 
@@ -12,6 +12,7 @@
   import api from "@/utils/api";
   import { formatDay } from "@/utils/dateFormat";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
+  import { focusRegionIfLost } from "@/lib/media/regionFocus";
   import { useMediaBrowser } from "@/composables/useMediaBrowser";
   import { useSellerMedia } from "@/composables/useSellerMedia";
   import { useToast } from "@/composables/useToast";
@@ -67,6 +68,7 @@
 
   const {
     path,
+    shownPath,
     folders,
     files,
     total,
@@ -119,6 +121,14 @@
   const folderStack = ref([]);
   const inFolders = computed(() => folderStack.value.length > 0);
   const currentFolder = computed(() => folderStack.value[folderStack.value.length - 1] || null);
+  /**
+   * Ekrandaki içeriğin zinciri. `folderStack` kırıntı içindir ve tıklandığı an
+   * değişir; içerik ise dosyalar gelince bununla BİRLİKTE değişir. Yoksa soluk
+   * eski içerik yeni klasörün alt klasörlerini ve boş satırlarını gösterirdi.
+   */
+  const shownStack = ref([]);
+  const shownInFolders = computed(() => shownStack.value.length > 0);
+  const shownFolder = computed(() => shownStack.value[shownStack.value.length - 1] || null);
 
   const folderFiles = ref([]);
   const folderTotal = ref(0);
@@ -128,24 +138,39 @@
   const folderLoading = ref(false);
   const folderError = ref(false);
 
+  /** Gerçek klasör yükleme sırası — yalnız son isteğin yanıtı işlenir. */
+  let folderSeq = 0;
+
   async function loadFolderFiles() {
-    if (!currentFolder.value) return;
+    const mine = ++folderSeq;
+    const stack = folderStack.value;
+    // Köke dönüş: yüklenecek dosya yok; uçuştaki istek düşer, içerik hemen döner.
+    if (!stack.length) {
+      shownStack.value = stack;
+      folderLoading.value = false;
+      return;
+    }
     folderLoading.value = true;
-    folderError.value = false;
+    // `folderError` burada sıfırlanmıyor: hata satırı sonuç gelene kadar kalır.
     try {
-      const res = await media.folderMedia(currentFolder.value.id, {
+      const res = await media.folderMedia(stack[stack.length - 1].id, {
         page: folderPage.value,
         pageSize: FOLDER_PAGE_SIZE,
         search: folderSearch.value,
       });
+      if (mine !== folderSeq) return;
+      folderError.value = false;
       folderFiles.value = res.items;
       folderTotal.value = res.total;
+      shownStack.value = stack;
     } catch {
+      if (mine !== folderSeq) return;
       folderError.value = true;
       folderFiles.value = [];
       folderTotal.value = 0;
+      shownStack.value = stack;
     } finally {
-      folderLoading.value = false;
+      if (mine === folderSeq) folderLoading.value = false;
     }
   }
 
@@ -235,7 +260,7 @@
       toast.success(t("sellerMediaExplorer.folderOps.deleted", {}, "Klasör silindi"));
       folderStack.value = folderStack.value.slice(0, -1);
       await loadFolders();
-      if (inFolders.value) await loadFolderFiles();
+      await loadFolderFiles();
     } catch (e) {
       // En sık sebep: klasör dolu. Sunucunun gerekçesi kullanıcıya aynen gider.
       toast.error(
@@ -321,10 +346,25 @@
     chat: { icon: "message-circle", label: "sellerMediaExplorer.folder.chat" },
   };
 
+  // Sunucunun `media/browse.py` içindeki özel kova kimlikleri (Mağaza dosyalarım altında).
+  // Ham kimlik ekrana basılmaz; satıcıya ne olduklarını anlatan ad + açıklama gösterilir.
+  const SPECIAL = {
+    __none__: {
+      icon: "folder",
+      label: "sellerMediaExplorer.folder.uncategorized",
+      hint: "sellerMediaExplorer.folder.uncategorizedHint",
+    },
+    __unused__: {
+      icon: "unlink",
+      label: "sellerMediaExplorer.folder.unused",
+      hint: "sellerMediaExplorer.folder.unusedHint",
+    },
+  };
+
   /** Kök sayıları üst şeritte sabit kalır — klasöre girince sıfırlanmaz. */
   const rootStats = ref({ public: 0, private: 0, chat: 0 });
   watch(folders, (list) => {
-    if (path.value.scope) return;
+    if (shownPath.value.scope) return;
     const byId = Object.fromEntries(list.map((f) => [f.id, f.count || 0]));
     rootStats.value = {
       public: byId.public || 0,
@@ -347,26 +387,37 @@
 
   const gridItems = computed(() => {
     // Gerçek klasörün içi: yalnız alt klasörler.
-    if (inFolders.value) return childrenOf(currentFolder.value.id).map(realGridItem);
+    if (shownInFolders.value) return childrenOf(shownFolder.value.id).map(realGridItem);
 
     const sanal = folders.value.map((f) => ({
       ...f,
       label: folderLabel(f),
-      icon: ROOTS[f.id]?.icon || "folder",
+      hint: specialOf(f) ? t(specialOf(f).hint) : "",
+      icon: ROOTS[f.id]?.icon || specialOf(f)?.icon || "folder",
       countText: t("sellerMediaExplorer.fileCount", { n: f.count || 0 }),
     }));
     // Kökte iki ağaç yan yana: önce sanal kökler, sonra satıcının klasörleri.
-    if (!path.value.scope) return [...sanal, ...childrenOf("").map(realGridItem)];
+    if (!shownPath.value.scope) return [...sanal, ...childrenOf("").map(realGridItem)];
     return sanal;
   });
 
+  /** Kategori seviyesindeki özel kova mı (`__none__` / `__unused__`)? */
+  function specialOf(folder) {
+    const p = shownPath.value;
+    return p.scope && !p.category ? SPECIAL[folder.id] : null;
+  }
+
   function folderLabel(folder) {
-    const root = !path.value.scope && ROOTS[folder.id];
+    const root = !shownPath.value.scope && ROOTS[folder.id];
     if (root) return t(root.label);
+    const special = specialOf(folder);
+    if (special) return t(special.label);
     return folder.label || folder.id;
   }
 
   function onSelect(item) {
+    // Tıklanan kart yeni içerik gelince kalkar — odak bölgeye taşınacak.
+    focusAfterLoad = true;
     if (item.real) return enterFolder(item);
     clearSelection();
     // Kırıntı ham kimliği değil, kullanıcının tıkladığı adı göstersin.
@@ -388,10 +439,11 @@
 
   function onJump(key) {
     clearSelection();
+    focusAfterLoad = true;
     if (!inFolders.value) return jump(key);
     if (key === "root") {
       folderStack.value = [];
-      return;
+      return loadFolderFiles();
     }
     const i = folderStack.value.findIndex((f) => f.id === key);
     if (i < 0 || i === folderStack.value.length - 1) return;
@@ -402,10 +454,53 @@
   }
 
   const isLoading = computed(() => loading.value || folderLoading.value);
-  const showFiles = computed(() => (inFolders.value ? true : atFileLevel.value));
+
+  // ── Klasör geçişi ─────────────────────────────────────────────────
+  // Yükleme kartı yalnız İLK yüklemede. Sonrakilerde eski içerik yerinde
+  // kalır (150ms'yi aşan yüklemede soluklaşır); yeni konumun verisi gelince
+  // `shownKey` değişir ve içerik yumuşak bir geçişle yenilenir.
+  const hasLoaded = ref(false);
+  const slowLoad = ref(false);
+  let slowTimer = 0;
+  /** Kullanıcı klasör/sayfa değiştirdi mi — ilk açılışta odak yerinde kalır. */
+  let focusAfterLoad = false;
+  const regionEl = useTemplateRef("region");
+
+  watch(isLoading, (busy, was) => {
+    clearTimeout(slowTimer);
+    slowLoad.value = false;
+    if (was && !busy) hasLoaded.value = true;
+    if (busy && hasLoaded.value) slowTimer = setTimeout(() => (slowLoad.value = true), 150);
+  });
+  onBeforeUnmount(() => clearTimeout(slowTimer));
+
+  /** Konum kimliği — arama bilerek dışarıda: aramada içerik kaymaz. */
+  const locationKey = computed(() =>
+    inFolders.value
+      ? JSON.stringify(["folder", folderStack.value.map((f) => f.id), folderPage.value])
+      : JSON.stringify(["virtual", path.value, page.value])
+  );
+  const shownKey = ref("");
+  // Yükleme sürerken anahtar eski konumda kalır; veri gelince işlenir.
+  watch(
+    [locationKey, isLoading],
+    ([key, busy]) => {
+      if (busy) return;
+      shownKey.value = key;
+      // Kullanıcının başlattığı geçiş bitti: odak kaybolduysa yeni içeriğe.
+      if (!focusAfterLoad) return;
+      focusAfterLoad = false;
+      nextTick(() => focusRegionIfLost(regionEl.value));
+    },
+    { immediate: true }
+  );
+
+  /** Giden içerik beklemeden kalkar; yalnız gelen içerik belirir. */
+  const leaveNow = (_el, done) => done();
+  const showFiles = computed(() => (shownInFolders.value ? true : atFileLevel.value));
   /** Klasör modunda alt klasör yoksa ızgara hiç çizilmez — boş metni liste taşır. */
   const showGrid = computed(() =>
-    inFolders.value ? gridItems.value.length > 0 : !atFileLevel.value
+    shownInFolders.value ? gridItems.value.length > 0 : !atFileLevel.value
   );
 
   /**
@@ -413,7 +508,7 @@
    * biçiminden sanal satır biçimine çevrilir; şablon tek sözlük konuşur.
    */
   const rows = computed(() => {
-    if (!inFolders.value) return files.value;
+    if (!shownInFolders.value) return files.value;
     return folderFiles.value.map((i) => ({
       name: i.docName || i.fileUrl,
       file_url: i.fileUrl,
@@ -423,12 +518,13 @@
     }));
   });
 
-  const listTotal = computed(() => (inFolders.value ? folderTotal.value : total.value));
-  const listPage = computed(() => (inFolders.value ? folderPage.value : page.value));
-  const listPageSize = computed(() => (inFolders.value ? FOLDER_PAGE_SIZE : pageSize.value));
+  const listTotal = computed(() => (shownInFolders.value ? folderTotal.value : total.value));
+  const listPage = computed(() => (shownInFolders.value ? folderPage.value : page.value));
+  const listPageSize = computed(() => (shownInFolders.value ? FOLDER_PAGE_SIZE : pageSize.value));
 
   function onSetPage(v) {
     clearSelection();
+    focusAfterLoad = true;
     if (!inFolders.value) return setPage(v);
     folderPage.value = v;
     return loadFolderFiles();
@@ -515,7 +611,9 @@
     return typeof url === "string" && /^\/[^/]/.test(url) ? url : null;
   }
 
-  const hasError = computed(() => (inFolders.value ? folderError.value : Boolean(error.value)));
+  const hasError = computed(() =>
+    shownInFolders.value ? folderError.value : Boolean(error.value)
+  );
 
   const emptyText = computed(() =>
     hasError.value ? t("sellerMediaExplorer.loadFailed") : t("sellerMediaExplorer.empty")
@@ -627,99 +725,119 @@
 
     <p class="sx__sr" role="status" aria-live="polite">{{ statusText }}</p>
 
-    <div v-if="isLoading" class="card sx__empty-card">{{ t("sellerMediaExplorer.loading") }}</div>
+    <!-- İçerik bölgesi: ilk yüklemeden sonra eski içerik yeni konum gelene
+         kadar yerinde kalır; bu sırada etkileşime kapalı (`inert`), yoksa
+         eski bir klasöre tıklamak yeni yolun üstüne eklenirdi. -->
+    <div
+      ref="region"
+      class="sx__region"
+      role="region"
+      tabindex="-1"
+      :aria-label="hereLabel"
+      :class="{ 'sx__region--dim': slowLoad }"
+      :aria-busy="isLoading ? 'true' : 'false'"
+      :inert="isLoading && hasLoaded ? true : undefined"
+    >
+      <Transition name="sx-swap" @leave="leaveNow">
+        <div v-if="isLoading && !hasLoaded" key="boot" class="card sx__empty-card">
+          {{ t("sellerMediaExplorer.loading") }}
+        </div>
 
-    <!-- ── Klasör seviyesi ──
+        <div v-else :key="shownKey" class="sx__swap">
+          <!-- ── Klasör seviyesi ──
          Gerçek klasör modunda ızgara ve dosya listesi BİRLİKTE çizilir:
          bir klasör aynı anda alt klasör de dosya da taşıyabilir. -->
-    <MediaFolderGrid
-      v-if="!isLoading && showGrid"
-      :class="{ 'sx__grid-gap': showFiles }"
-      :items="gridItems"
-      :empty-text="emptyText"
-      :aria-label="t('sellerMediaExplorer.folderGridAria')"
-      @select="onSelect"
-      @drop="onFolderDrop"
-    />
-
-    <!-- ── Dosya seviyesi ── -->
-    <template v-if="!isLoading && showFiles">
-      <div class="card sx__list">
-        <div
-          v-for="item in rows"
-          :key="item.name"
-          class="sx__row"
-          :class="{ 'sx__row--dragging': draggingUrl === item.file_url }"
-          :draggable="selectable(item) && !moveBusy"
-          @dragstart="onFileDragStart($event, item)"
-          @dragend="onFileDragEnd"
-        >
-          <input
-            v-if="selectable(item)"
-            type="checkbox"
-            class="sx__check"
-            :checked="selected.has(item.file_url)"
-            :aria-label="
-              t(
-                'sellerMediaExplorer.selectFile',
-                { name: item.file_name || item.file_url },
-                'Dosyayı seç: {name}'
-              )
-            "
-            @change="toggleSelect(item.file_url)"
+          <MediaFolderGrid
+            v-if="showGrid"
+            :class="{ 'sx__grid-gap': showFiles }"
+            :items="gridItems"
+            :empty-text="emptyText"
+            :aria-label="t('sellerMediaExplorer.folderGridAria')"
+            @select="onSelect"
+            @drop="onFolderDrop"
           />
-          <MediaImage
-            v-if="canThumb(item)"
-            class="sx__thumb"
-            :src="item.file_url"
-            :alt="item.file_name"
-            :width="THUMB_PX"
-            :height="THUMB_PX"
-          />
-          <span v-else class="sx__thumb sx__thumb--ph">{{ extOf(item) }}</span>
 
-          <div class="sx__row-main">
-            <span class="sx__file-name">{{ item.file_name || item.file_url }}</span>
-            <span class="sx__row-sub">
-              {{ formatSize(item.file_size || 0) }} · {{ fmtDate(item.creation) }}
-            </span>
-          </div>
+          <!-- ── Dosya seviyesi ── -->
+          <template v-if="showFiles">
+            <div class="card sx__list">
+              <div
+                v-for="item in rows"
+                :key="item.name"
+                class="sx__row"
+                :class="{ 'sx__row--dragging': draggingUrl === item.file_url }"
+                :draggable="selectable(item) && !moveBusy"
+                @dragstart="onFileDragStart($event, item)"
+                @dragend="onFileDragEnd"
+              >
+                <input
+                  v-if="selectable(item)"
+                  type="checkbox"
+                  class="sx__check"
+                  :checked="selected.has(item.file_url)"
+                  :aria-label="
+                    t(
+                      'sellerMediaExplorer.selectFile',
+                      { name: item.file_name || item.file_url },
+                      'Dosyayı seç: {name}'
+                    )
+                  "
+                  @change="toggleSelect(item.file_url)"
+                />
+                <MediaImage
+                  v-if="canThumb(item)"
+                  class="sx__thumb"
+                  :src="item.file_url"
+                  :alt="item.file_name"
+                  :width="THUMB_PX"
+                  :height="THUMB_PX"
+                />
+                <span v-else class="sx__thumb sx__thumb--ph">{{ extOf(item) }}</span>
 
-          <span v-if="item.is_private" class="sx__pill">
-            {{ t("sellerMediaExplorer.badge.private") }}
-          </span>
+                <div class="sx__row-main">
+                  <span class="sx__file-name">{{ item.file_name || item.file_url }}</span>
+                  <span class="sx__row-sub">
+                    {{ formatSize(item.file_size || 0) }} · {{ fmtDate(item.creation) }}
+                  </span>
+                </div>
 
-          <!-- Sohbet eki dış serviste durur; dosya adresi yok, kim gönderdi
+                <span v-if="item.is_private" class="sx__pill">
+                  {{ t("sellerMediaExplorer.badge.private") }}
+                </span>
+
+                <!-- Sohbet eki dış serviste durur; dosya adresi yok, kim gönderdi
                ve hangi konuşma bilgisi gösterilir. -->
-          <template v-if="item.chat">
-            <span class="sx__pill" :title="t('sellerMediaExplorer.chatSender')">
-              {{ item.sender }}
-            </span>
-            <span class="sx__pill">#{{ item.conversation_id }}</span>
-          </template>
-          <a
-            v-else-if="safeHref(item.file_url)"
-            class="sx__link"
-            :href="safeHref(item.file_url)"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t("sellerMediaExplorer.action.open") }}
-          </a>
-        </div>
-        <p v-if="!rows.length" class="sx__empty">{{ emptyText }}</p>
-      </div>
+                <template v-if="item.chat">
+                  <span class="sx__pill" :title="t('sellerMediaExplorer.chatSender')">
+                    {{ item.sender }}
+                  </span>
+                  <span class="sx__pill">#{{ item.conversation_id }}</span>
+                </template>
+                <a
+                  v-else-if="safeHref(item.file_url)"
+                  class="sx__link"
+                  :href="safeHref(item.file_url)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ t("sellerMediaExplorer.action.open") }}
+                </a>
+              </div>
+              <p v-if="!rows.length" class="sx__empty">{{ emptyText }}</p>
+            </div>
 
-      <div class="mpage__pagination">
-        <ListPagination
-          v-if="listTotal > listPageSize"
-          :model-value="listPage"
-          :total="listTotal"
-          :page-size="listPageSize"
-          @update:model-value="onSetPage"
-        />
-      </div>
-    </template>
+            <div class="mpage__pagination">
+              <ListPagination
+                v-if="listTotal > listPageSize"
+                :model-value="listPage"
+                :total="listTotal"
+                :page-size="listPageSize"
+                @update:model-value="onSetPage"
+              />
+            </div>
+          </template>
+        </div>
+      </Transition>
+    </div>
 
     <!-- ── Seçim çubuğu: yalnız klasöre taşıma (T-094) ──
          Diğer toplu işlemler kütüphane ekranında; gezgin dosyaların YERİNİ
@@ -977,6 +1095,41 @@
     &:hover {
       text-decoration: underline;
     }
+  }
+
+  // ── İçerik geçişi ─────────────────────────────────────────────────
+  // Yalnız opacity. Giden içerik ANINDA kalkar (`leaveNow`), gelen 160ms'de
+  // belirir — geçiş yeni içeriği hiç bekletmez.
+  .sx__region {
+    transition: opacity $d-fast $ease-out;
+
+    // Klasör değişince odak buraya taşınabilir (`focusRegionIfLost`):
+    // klavye kullanıcısı nerede olduğunu görsün. Fareyle gelende çizilmez.
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 3px solid $brand-text;
+      outline-offset: 2px;
+      border-radius: 0.6rem;
+
+      @include dark {
+        outline-color: $brand-light;
+      }
+    }
+  }
+
+  .sx__region--dim {
+    opacity: 0.6;
+  }
+
+  .sx-swap-enter-active {
+    transition: opacity 160ms $ease-out;
+  }
+
+  .sx-swap-enter-from {
+    opacity: 0;
   }
 
   // Duyuru görsel olarak gizli: aynı bilgi zaten ekranda yazıyor.

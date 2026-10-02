@@ -71,6 +71,22 @@
           :height="item.height || 0"
           :label="item.title || item.fileName"
         />
+        <!-- Görsele tıklayınca sayfanın önizleme kipi (orijinal boyut) açılır. -->
+        <button
+          v-else-if="item.kind === 'image'"
+          type="button"
+          class="detail__zoom"
+          :aria-label="t('media.actions.preview')"
+          @click="emit('action', 'preview')"
+        >
+          <MediaThumb
+            :item="item"
+            region="detailPreview"
+            ratio="wide"
+            :icon-size="40"
+            class="detail__preview"
+          />
+        </button>
         <MediaThumb
           v-else
           :item="item"
@@ -147,7 +163,14 @@
 
         <div class="detail__field">
           <label :for="`tag-${item.id}`">{{ t("media.detail.tags") }}</label>
-          <ul class="detail__tags">
+          <ul
+            :id="`tags-${item.id}`"
+            ref="tagList"
+            class="detail__tags"
+            :style="
+              tagsClipped ? { maxHeight: `${tagsCollapsedHeight}px`, overflow: 'hidden' } : null
+            "
+          >
             <li v-for="tag in draft.tags" :key="tag" class="detail__tag">
               {{ tag }}
               <button
@@ -163,6 +186,21 @@
               {{ t("media.detail.noTags") }}
             </li>
           </ul>
+          <button
+            v-if="tagsOverflow"
+            type="button"
+            class="detail__tags-toggle"
+            :aria-expanded="tagsExpanded"
+            :aria-controls="`tags-${item.id}`"
+            @click="tagsExpanded = !tagsExpanded"
+          >
+            {{
+              tagsExpanded
+                ? t("media.detail.tagsShowLess")
+                : t("media.detail.tagsShowAll", { n: tagsHidden })
+            }}
+            <AppIcon :name="tagsExpanded ? 'chevron-up' : 'chevron-down'" :size="14" />
+          </button>
           <input
             :id="`tag-${item.id}`"
             v-model="tagInput"
@@ -196,7 +234,7 @@
                 :style="{ backgroundColor: category.color }"
                 aria-hidden="true"
               />
-              <span>{{ category.categoryName }}</span>
+              <span class="detail__category-name">{{ category.categoryName }}</span>
               <small
                 v-if="
                   assignmentOf(category.name) &&
@@ -428,7 +466,7 @@
 </template>
 
 <script setup>
-  import { computed, nextTick, ref, useId, watch } from "vue";
+  import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import MediaHistoryPanel from "@/components/media/MediaHistoryPanel.vue";
@@ -701,6 +739,56 @@
     draft.value.tags = draft.value.tags.filter((x) => x !== tag);
   }
 
+  // ── Etiketler: en fazla iki satır, fazlası açılır/kapanır ─────────
+  //
+  // Satır sayısı pillerin gerçek konumundan ölçülür; pil genişliği metne ve
+  // panel genişliğine bağlı olduğu için "ilk N etiket" gibi sabit sayı yanlış
+  // olur. Kırpma yalnız `max-height` ile yapılır, düzen değişmez.
+  const TAG_ROWS = 2;
+  const tagList = ref(null);
+  const tagsExpanded = ref(false);
+  const tagsOverflow = ref(false);
+  const tagsHidden = ref(0);
+  const tagsCollapsedHeight = ref(0);
+  const tagsClipped = computed(() => tagsOverflow.value && !tagsExpanded.value);
+
+  function measureTags() {
+    const list = tagList.value;
+    const pills = list ? [...list.querySelectorAll(".detail__tag")] : [];
+    const listTop = list?.getBoundingClientRect().top ?? 0;
+    const tops = pills.map((el) => Math.round(el.getBoundingClientRect().top - listTop));
+    const rows = [...new Set(tops)].sort((a, b) => a - b);
+    tagsOverflow.value = rows.length > TAG_ROWS;
+    if (!tagsOverflow.value) {
+      tagsHidden.value = 0;
+      return;
+    }
+    const cut = rows[TAG_ROWS];
+    const lastVisible = pills[tops.findIndex((top) => top === rows[TAG_ROWS - 1])];
+    tagsHidden.value = tops.filter((top) => top >= cut).length;
+    tagsCollapsedHeight.value = rows[TAG_ROWS - 1] + (lastVisible?.offsetHeight || 0);
+  }
+
+  let tagObserver = null;
+  onMounted(() => {
+    measureTags();
+    if (typeof ResizeObserver === "undefined" || !tagList.value) return;
+    tagObserver = new ResizeObserver(() => measureTags());
+    tagObserver.observe(tagList.value);
+  });
+  onBeforeUnmount(() => tagObserver?.disconnect());
+  watch(
+    () => draft.value.tags.length,
+    () => nextTick(measureTags)
+  );
+  watch(
+    () => props.item.id,
+    () => {
+      tagsExpanded.value = false;
+      nextTick(measureTags);
+    }
+  );
+
   function save() {
     emit("save", {
       ...draft.value,
@@ -748,6 +836,10 @@
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
   @use "@/assets/scss/media" as media;
+
+  // Etiket pilleri: marka sarısıyla uyumlu yumuşak pastel (açık tema).
+  $tag-pastel: #fef6d8;
+  $tag-pastel-border: #f6e3a4;
 
   .detail {
     display: flex;
@@ -851,6 +943,12 @@
     flex: 1;
     min-height: 0; // flex çocuğunun taşmayı kendi içinde tutması için
     overflow-y: auto;
+    // Gerçek taşma nedenleri (uzun ürün adı/kategori adı flex çocuklarında
+    // `min-width: 0` eksikliği, geniş tablo) ayrı ayrı düzeltildi — bu satır
+    // son güvenlik ağı: bu panel ASLA yatayda kaymaz. Türevler/Kalite
+    // tablolarının kendi `overflow-x: auto` sarmalayıcısı (mrend__scroll /
+    // mqual__scroll) bundan etkilenmez, kendi ekseninde bağımsız kayar.
+    overflow-x: hidden;
     padding: media.$s-4;
   }
 
@@ -947,6 +1045,25 @@
 
     @include dark {
       border-color: $d-border-inner;
+    }
+  }
+
+  .detail__zoom {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: media.$r-md;
+    cursor: zoom-in;
+
+    &:hover .detail__preview {
+      border-color: $c-info;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $c-info;
+      outline-offset: 2px;
     }
   }
 
@@ -1105,12 +1222,14 @@
     align-items: center;
     gap: media.$s-1;
     padding: media.$s-1 media.$s-2;
+    border: 1px solid $tag-pastel-border;
     border-radius: media.$r-pill;
-    background: $l-bg-muted;
+    background: $tag-pastel;
     color: $l-text-700;
     @include media.text("sm");
 
     @include dark {
+      border-color: transparent;
       background: $d-bg-elevated;
       color: $d-text;
     }
@@ -1123,6 +1242,34 @@
       color: inherit;
       cursor: pointer;
       opacity: 0.65;
+    }
+  }
+
+  .detail__tags-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $l-text-700;
+    cursor: pointer;
+    @include media.text("sm");
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $c-info;
+      outline-offset: 2px;
+      border-radius: media.$r-sm;
+    }
+
+    @include dark {
+      color: $d-text;
     }
   }
 
@@ -1194,6 +1341,7 @@
 
     small {
       margin-inline-start: auto;
+      flex-shrink: 0;
       color: $l-text-500;
       white-space: nowrap;
 
@@ -1201,6 +1349,15 @@
         color: $d-text-muted;
       }
     }
+  }
+
+  // Uzun kategori adı KIRPILMAZ, SARAR — aynı hata musage__label'da da vardı:
+  // `min-width: 0` olmadan flex çocuğu kendi metnine göre genişlik ister,
+  // yanındaki `small` rozetini panelin dışına iter.
+  .detail__category-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
   }
 
   .detail__category-color {

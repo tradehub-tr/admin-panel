@@ -1,5 +1,6 @@
 import { ref, reactive, onUnmounted } from "vue";
 import api from "@/utils/api";
+import { importOutcome } from "@/utils/importStatus.js";
 import { useToast } from "@/composables/useToast";
 
 const POLL_INTERVAL_MS = 3000;
@@ -78,9 +79,9 @@ export function useBulkImport() {
    */
   async function uploadFile(file, isZip = false) {
     if (!file) return null;
-    const maxSize = isZip ? 200 * 1024 * 1024 : 25 * 1024 * 1024;
+    const maxSize = isZip ? 50 * 1024 * 1024 : 25 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast.error(`Dosya çok büyük (en fazla ${isZip ? "200" : "25"} MB)`);
+      toast.error(`Dosya çok büyük (en fazla ${isZip ? "50" : "25"} MB)`);
       return null;
     }
     uploading.value = true;
@@ -214,7 +215,7 @@ export function useBulkImport() {
           job_name: jobName,
         });
         const data = res.message || {};
-        activeJob.state = data.state || "running";
+        activeJob.state = importOutcome(data);
         activeJob.total = data.total || 0;
         activeJob.processed = data.processed || 0;
         activeJob.inserted = data.inserted || 0;

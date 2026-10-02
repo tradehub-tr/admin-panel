@@ -117,7 +117,8 @@ async function render(path, { ua, accessState, user, props } = {}) {
 
 // Zaman-bombası denetimi gereği gelecek tarih SABİT yazılamaz; koşuma göre
 // ileri tarihler hesaplanır (assertion'lar tarih metnine bağlı değil).
-const gunSonra = (n) => `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
+const gunSonra = (n) =>
+  `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
 
 const ACTIVE_STATE = {
   access: "ok",
@@ -250,7 +251,10 @@ test("gate (past_due, web + iOS): 'Ödeme bekleniyor' etiketi, kilit yok, iptal 
     assert.ok(html.includes("Aktif Aboneliğiniz"), "hoşgörü penceresi paywall'a düşürmez (AC-1)");
     assert.ok(html.includes("Ödeme bekleniyor"), "dunning'deki mağaza 'Aktif' etiketi GÖRMEZ");
     assert.ok(!html.includes(">Aktif<"), "past_due'da 'Aktif' rozeti basılmaz");
-    assert.ok(!html.includes("Aboneliği İptal Et"), "canCancel yalnız status==='active' (değişmedi)");
+    assert.ok(
+      !html.includes("Aboneliği İptal Et"),
+      "canCancel yalnız status==='active' (değişmedi)"
+    );
   }
 });
 

@@ -6,6 +6,7 @@ src/lib/media/crop/vendor
 src/lib/media/simulator/vendor
 src/lib/media/rum/vendor
 src/lib/media/policy/vendor
+src/lib/media/vendor
 
 # ÜRETİLMİŞ lojistik fixture'ları — kaynağı tradehub_core'daki
 # `scripts/gen_logistics_types.py`, biçimini de o belirliyor (TAB).

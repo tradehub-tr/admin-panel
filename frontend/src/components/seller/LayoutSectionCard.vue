@@ -225,6 +225,13 @@
                   >
                     {{ t("layoutSectionCard.removeImage") }}
                   </button>
+                  <ImagePlacementButton
+                    v-if="slide.image"
+                    compact
+                    :file-url="slide.image"
+                    slot-key="company.cover_image"
+                    @open="openPlacement"
+                  />
                   <p class="text-[10px] text-gray-400">{{ t("layoutSectionCard.imageHint") }}</p>
                 </div>
               </div>
@@ -432,6 +439,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Görsel önizleme penceresi — tek örnek; düğmeler ve tek-dosya yüklemesi açar. -->
+    <ImagePlacementModal
+      v-if="placement.state.open"
+      v-model:open="placement.state.open"
+      :file-url="placement.state.fileUrl"
+      :slot-key="placement.state.slotKey"
+      :file-name="placement.state.fileName"
+      :context="placement.state.context"
+      :return-focus="placement.state.returnFocus"
+    />
   </div>
 </template>
 
@@ -440,11 +458,27 @@
   // defineModel ile model olarak işaretlendiği için nested mutation eslint'in
   // vue/no-mutating-props rule'una takılmaz; reference semantics sayesinde
   // parent state otomatik güncellenir.
-  import { ref, computed, watchEffect, reactive } from "vue";
+  import { ref, computed, watchEffect, reactive, defineAsyncComponent } from "vue";
   import MediaPickButton from "@/components/media/MediaPickButton.vue";
+  import ImagePlacementButton from "@/components/media/preview/ImagePlacementButton.vue";
+  import { usePlacementLauncher } from "@/composables/usePlacementLauncher";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useAuthStore } from "@/stores/auth";
+
+  const ImagePlacementModal = defineAsyncComponent(
+    () => import("@/components/media/preview/ImagePlacementModal.vue")
+  );
+  const placement = usePlacementLauncher();
+  const auth = useAuthStore();
+  /** Önizleme bağlamı satıcının gerçek mağaza adını gösterir (spec §4.2). */
+  const placementContext = () => ({
+    storeName: auth.user?.admin_seller_profile?.seller_name || "",
+  });
+  function openPlacement({ fileUrl, slotKey, trigger }) {
+    placement.show({ fileUrl, slotKey, trigger, context: placementContext() });
+  }
 
   const { t } = useI18n();
 
@@ -551,6 +585,12 @@
       const fileUrl = await api.uploadFile(file, "Home");
       if (fileUrl) {
         slide.image = fileUrl;
+        placement.afterUpload({
+          selected: 1,
+          fileUrl,
+          slotKey: "company.cover_image",
+          context: placementContext(),
+        });
       }
       window.clearInterval(uploadIntervals[sid]);
       uploadProgress[sid] = 100;

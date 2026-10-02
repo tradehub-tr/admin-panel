@@ -153,9 +153,16 @@ test("65 kombinasyonun özeti ölçülen değerlerle aynı", () => {
   // çubuğu düşülmüyordu). Katalog düzeltilince kutu küçüldü, merdivenin aynı
   // basamağı artık FAZLA iniyor — yani aşırı servis zaten VARDI, katalog onu
   // göremiyordu. Yeni ikisi: desktop-1080p ve desktop-1440p × seller_shop.
-  assert.equal(s.sourceInsufficient, 0, "kaynak_yetersiz=0 @2160px");
+  // 2026-09-30 (kullanıcı kararı): product.image merdiveni 7 basamak AVIF
+  // (96…1920) → 4 basamak WebP (192/384/768/1280). En büyük basamak 1280
+  // olduğu için ürün detay ana görselinde üç cihaz (iPhone 15 Pro Max, iPad
+  // mini 6, iPad Pro 11) artık tam yoğunluğu alamıyor: kaynak_yetersiz 0→3.
+  // w96 ve w640 kalkınca küçük kutular bir üst basamağı indiriyor: aşırı
+  // servis 3→15. Bu bir gerileme değil, kararın bilinçli bedeli (rapor:
+  // tradehub_core/.superpowers/sdd/2026-09-29-urun-gorseli-kare/webp-renditions-report.md).
+  assert.equal(s.sourceInsufficient, 3, "kaynak_yetersiz=3 @2160px (üst basamak 1280)");
   assert.equal(s.zoomInsufficient, 6, "zoom_yetersiz=6");
-  assert.equal(s.overshoot, 3, "aşırı servis=3");
+  assert.equal(s.overshoot, 15, "aşırı servis=15");
   assert.equal(s.sourceInsufficient, ref.kaynak_yetersiz);
   assert.equal(s.zoomInsufficient, ref.zoom_yetersiz);
   assert.equal(s.overshoot, ref.asiri_servis);

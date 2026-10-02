@@ -238,8 +238,8 @@
                    testi görünümden bağımsız kılar. -->
             <button
               v-for="row in col.rows"
-              data-testid="kuyruk-satiri"
               :key="row.shipment"
+              data-testid="kuyruk-satiri"
               type="button"
               class="kanban-card w-full text-start"
               @click="openWorkspace(row)"
@@ -276,8 +276,8 @@
     <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
       <div
         v-for="row in store.queueRows"
-        data-testid="kuyruk-satiri"
         :key="row.shipment"
+        data-testid="kuyruk-satiri"
         class="list-grid-card !cursor-default"
       >
         <div class="mb-2 flex items-start justify-between gap-2">
@@ -334,8 +334,8 @@
     >
       <div
         v-for="row in store.queueRows"
-        data-testid="kuyruk-satiri"
         :key="row.shipment"
+        data-testid="kuyruk-satiri"
         class="list-compact-item list-compact-item--secilebilir !cursor-default"
       >
         <input
@@ -396,8 +396,8 @@
         <tbody>
           <tr
             v-for="row in store.queueRows"
-            data-testid="kuyruk-satiri"
             :key="row.shipment"
+            data-testid="kuyruk-satiri"
             class="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
           >
             <td class="p-3">
