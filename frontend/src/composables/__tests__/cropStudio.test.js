@@ -55,9 +55,15 @@ after(async () => {
 });
 
 const SOURCE = { width: 4000, height: 3000, url: "/files/x.jpg" };
-const COVER = "company.cover_image";
-/** 1000/563 — ETİKETTEN değil, profil boyutundan. */
-const AR = 1000 / 563;
+/**
+ * Kırpılan profilleri olan slot. 2026-09-30'a kadar `company.cover_image`
+ * (kırpılan `cover_16x9_1000`, 1000×563) kullanılıyordu; mağaza kapağı artık
+ * oranı KORUYOR (`contain`, kırpılan profil yok) — stüdyonun kırpma davranışı
+ * kırpılan tek slotta, kapak videosunun posterlerinde ölçülüyor.
+ */
+const COVER = "company.cover_video";
+/** 1280/720 — ETİKETTEN değil, profil boyutundan (poster_1280, ilk seçenek). */
+const AR = 1280 / 720;
 
 function clock(start = 0) {
   let t = start;
@@ -252,7 +258,7 @@ test("bir sürükleme jesti = tam olarak 1 geçmiş adımı", () => {
   assert.equal(s.historyDepth.value, once + 1);
 });
 
-// NOT: `company.cover_image` hedef oranı (1,776) kaynağın oranından (4:3)
+// NOT: `company.cover_video` hedef oranı (16:9 = 1,778) kaynağın oranından (4:3)
 // geniş olduğu için pencere taban bölgeyi YATAYDA daima doldurur — yatayda
 // oynatacak boşluk yoktur, bu geometrinin doğru davranışı. İnce ayar bu
 // profilde dikeyde ölçülür.
@@ -415,7 +421,7 @@ test("kaydetme yükü Media Crop Intent alanlarından ibaret — yeni alan icat 
 
 test("engelleyici uyarı varken kadraj yine hesaplanır — kilitlenme yok", () => {
   const s = useCropStudio({ source: { width: 500, height: 400 }, slotKey: COVER });
-  assert.equal(s.blocked.value, true, "500 px kaynak 1000 px profili besleyemez");
+  assert.equal(s.blocked.value, true, "500 px kaynak 1280 px profili besleyemez");
   assert.ok(s.win.value, "yine de kadraj gösterilir");
 });
 
@@ -575,8 +581,8 @@ test("overrides[].profile YANLIŞSA reddedilir — slot_key bir profil değildir
       focal_x: 0.5,
       focal_y: 0.5,
       overrides: [
-        { profile: "cover_16x9_1000", ...kutu },
-        { profile: "cover_16x9_1000", ...kutu },
+        { profile: "poster_1280", ...kutu },
+        { profile: "poster_1280", ...kutu },
       ],
     },
     { slotKey: COVER }
@@ -586,7 +592,7 @@ test("overrides[].profile YANLIŞSA reddedilir — slot_key bir profil değildir
   // Gerçek profil adı geçer.
   assert.deepEqual(
     validateIntentPayload(
-      { focal_x: 0.5, focal_y: 0.5, overrides: [{ profile: "cover_16x9_1000", ...kutu }] },
+      { focal_x: 0.5, focal_y: 0.5, overrides: [{ profile: "poster_1280", ...kutu }] },
       { slotKey: COVER }
     ),
     []

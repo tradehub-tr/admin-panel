@@ -148,7 +148,7 @@
     multiple: false,
     maxBytes: 50 * 1024 * 1024,
     onValidationError: (kind, file) => {
-      toast.error(_validationMsg(kind, file, 200, t("bulkProductImport.hintMustBeZip")));
+      toast.error(_validationMsg(kind, file, 50, t("bulkProductImport.hintMustBeZip")));
     },
   });
 
@@ -786,6 +786,7 @@
             <AppIcon name="archive" :size="32" class="dz-icon" />
             <p class="text-sm font-medium mb-1">{{ t("bulkProductImport.dropZipOrClick") }}</p>
             <p class="text-xs text-gray-500">{{ t("bulkProductImport.zipHint") }}</p>
+            <p class="bulk-media-note">{{ t("mediaFlow.bulkHelp") }}</p>
             <button type="button" class="tpl-btn mt-3" @click.stop="zipInputRef?.click()">
               <AppIcon name="upload" :size="14" />
               {{ t("bulkProductImport.chooseFile") }}
@@ -1099,7 +1100,7 @@
       </div>
 
       <!-- Sayısal özet -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+      <div class="bulk-media-stats grid gap-3 mt-5">
         <div class="stat-card">
           <div class="text-2xl font-bold text-emerald-600">
             {{ previewData?.will_insert ?? 0 }}
@@ -1288,7 +1289,7 @@
     <div v-else-if="currentStep === 4" class="card !p-6">
       <h4 class="minor-title">{{ t("bulkProductImport.importSummary") }}</h4>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <div class="bulk-media-stats grid gap-3 mb-5">
         <div class="stat-card">
           <div class="text-2xl font-bold text-emerald-600">
             {{ previewData?.will_insert ?? 0 }}
@@ -1414,7 +1415,7 @@
         <span>%{{ progressPct }}</span>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+      <div class="bulk-media-stats grid gap-3 mt-5">
         <div class="stat-card">
           <div class="text-lg font-bold text-emerald-600">{{ activeJob.inserted }}</div>
           <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.inserted") }}</div>
@@ -1432,6 +1433,8 @@
           <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.errors") }}</div>
         </div>
       </div>
+
+      <p class="bulk-media-note">{{ t("mediaFlow.bulkMedia") }}</p>
 
       <div v-if="!isTerminal" class="note-info mt-4">
         <AppIcon name="clock" :size="13" class="inline-block mr-1" />
@@ -1486,6 +1489,41 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+
+  .bulk-import-wizard,
+  .bulk-import-detail {
+    container-type: inline-size;
+  }
+  .bulk-media-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bulk-media-stats > * {
+    min-width: 0;
+    padding: 12px;
+  }
+  .bulk-media-stats > * > * {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .bulk-media-stats .font-bold {
+    font-size: clamp(18px, 3cqi, 24px);
+    font-variant-numeric: tabular-nums;
+  }
+  .bulk-media-note {
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  @container (min-width: 560px) {
+    .bulk-media-stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
 
   .bulk-import-wizard {
     max-width: 1100px;
@@ -2024,6 +2062,24 @@
         }
       }
     }
+  }
+  .progress-actions > button {
+    position: relative;
+    width: auto;
+    min-height: 30px;
+    height: auto;
+    padding: 5px 9px;
+    margin-block: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .progress-actions > button::after {
+    content: "";
+    position: absolute;
+    inset: -7px 0;
+    min-height: 44px;
   }
 </style>
 

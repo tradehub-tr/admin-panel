@@ -95,7 +95,7 @@
   });
 
   /** Kaynak açılamadıysa çağıran başka bir kademeye düşebilsin. */
-  const emit = defineEmits(["error"]);
+  const emit = defineEmits(["error", "load"]);
 
   const loaded = ref(false);
   const failed = ref(false);
@@ -238,6 +238,10 @@
     failed.value = true;
     emit("error");
   }
+  function onLoad() {
+    loaded.value = true;
+    emit("load");
+  }
 
   const boxStyle = computed(() => {
     const style = {
@@ -273,7 +277,7 @@
         :loading="effectiveLoading"
         :fetchpriority="fetchPriority"
         decoding="async"
-        @load="loaded = true"
+        @load="onLoad"
         @error="onError"
       />
     </picture>

@@ -38,6 +38,15 @@
     <p v-if="slotPolicy" class="up-pf__slot">
       {{ t("media.preflight.slotLine", { slot: slotPolicy.title }) }}
     </p>
+
+    <!-- Ürün görseli otomatik kareye tamamlanıyor (media/kare.py, 1000–2000 px
+         beyaz dolgu). Reddetme yok; satıcı ne olacağını bilsin diye bilgi
+         satırı — panelin ölçüm/bulgu listesinin DIŞINDA, çünkü bu bir ihlal
+         değil. -->
+    <p v-if="showSquareNote" class="up-pf__square-note">
+      <AppIcon name="info" :size="14" />
+      {{ t("media.preflight.squareNote") }}
+    </p>
   </div>
 </template>
 
@@ -188,6 +197,22 @@
     return liste;
   });
 
+  // Ürün görseli slotu: kare-tamamlama devreye girmeden ÖNCE satıcıya ne
+  // olacağını söylemek için — görsel kare değilse ya da uzun kenarı
+  // 1000–2000 px aralığının dışındaysa gösterilir. `product-image.json`
+  // `master.{min_long_edge,max_long_edge}` = 1000/2000 (2026-09-29 kare
+  // kuralı); bu panel yalnız ÖLÇÜLEN dosyayı bu sabitlere karşı kontrol
+  // ediyor, ayrı bir eşik uydurmuyor.
+  const showSquareNote = computed(() => {
+    if (props.slotPolicy?.slotKey !== "product.image") return false;
+    const m = props.measure;
+    if (!m || !m.width || !m.height) return false;
+    const kare = m.width === m.height;
+    const uzunKenar = Math.max(m.width, m.height);
+    const araligiTutuyor = uzunKenar >= 1000 && uzunKenar <= 2000;
+    return !kare || !araligiTutuyor;
+  });
+
   function iconFor(severity) {
     if (severity === SEVERITY.BLOCK) return "circle-x";
     if (severity === SEVERITY.WARN) return "triangle-alert";
@@ -262,7 +287,8 @@
   }
 
   .up-pf__ok,
-  .up-pf__slot {
+  .up-pf__slot,
+  .up-pf__square-note {
     display: flex;
     align-items: center;
     gap: media.$s-1;

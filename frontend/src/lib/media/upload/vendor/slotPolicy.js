@@ -11,17 +11,17 @@
 export const VENDOR_MANIFEST = {
   "gorev": "T-081 · T-091",
   "uretici": "src/lib/media/upload/sync.mjs",
-  "senkron_tarihi": "2026-09-17",
+  "senkron_tarihi": "2026-09-30",
   "kaynaklar": {
     "tradehub_core/tradehub_core/media/pipeline/policy/slots/brand-logo.json": "e982a6cb01382bd3c040d5b19a0f69b1ad8d8506c22358265de4e231366ff344",
     "tradehub_core/tradehub_core/media/pipeline/policy/slots/category-banner.json": "a34ffde6809e6b7426693850bc98c13a6f2e986a84f158deb7e3efb7885536d4",
-    "tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-image.json": "92adc83621a155aac1c7c007c6c8dc90aa77c11fa85f9f918f36df6a07fc4f61",
+    "tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-image.json": "66c1994e938121e85dbcbb05dc45c647ea80a55574d6679cc2e451487ee4236f",
     "tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-video.json": "48c357a8d275fa6d782a536b72e80635e73f1de24f97733592894f57696ec12a",
     "tradehub_core/tradehub_core/media/pipeline/policy/slots/document-attachment.json": "41fb1d282230bbea634a353b25da4597227b734de34859b88dc8fc2bd95b6dbf",
     "tradehub_core/tradehub_core/media/pipeline/policy/slots/library-image.json": "6f13815b4aa2dd5810904f3d9a1c0dcbfa88693ff7802f9b0f56b8ae9935e1a3",
-    "tradehub_core/tradehub_core/media/pipeline/policy/slots/product-image.json": "a6f6f7e52711cd0134ce684dbb1e9bcf212982e7a7490d43190534405176ae6a",
+    "tradehub_core/tradehub_core/media/pipeline/policy/slots/product-image.json": "5452631a37341ad9a35701308fa65959c9b5856cfa15d4b60d14294974c92765",
     "tradehub_core/tradehub_core/media/pipeline/policy/slots/product-video.json": "bca5f07253f7aac71c6a85cccc6e9de9438f493fb8e61f37d4276fa073c77ae0",
-    "tradehub_core/tradehub_core/media/pipeline/policy/slots/seller-logo.json": "4962294ae22bcf5c36d5628d6d19c5892f88f32d81df2643f8b552f718abc46a",
+    "tradehub_core/tradehub_core/media/pipeline/policy/slots/seller-logo.json": "76e644358700dc14af0dcacd238e69c5a2325397e181fb6d614004544afa58a0",
     "tradehub_core/tradehub_core/media/pipeline/policy/slots/user-avatar.json": "8de8f0b6424d2621d2e1477a5bdac9ab907e201d92877132633c5ed8fcc2456c"
   }
 };
@@ -383,18 +383,14 @@ export const SLOT_POLICIES = [
       "allowAnimated": false
     },
     "require": {
-      "minShortEdge": 1000,
+      "minShortEdge": null,
       "maxShortEdge": null,
-      "minArea": 1000000,
+      "minArea": null,
       "maxEdge": null,
       "recommendedEdge": null,
       "lowResolutionWarnBelow": null,
-      "allowedRatios": [
-        "1:1",
-        "4:5",
-        "3:4"
-      ],
-      "ratioTolerance": 0.02,
+      "allowedRatios": [],
+      "ratioTolerance": null,
       "aspectBand": null,
       "alphaChannel": null,
       "minCount": null,

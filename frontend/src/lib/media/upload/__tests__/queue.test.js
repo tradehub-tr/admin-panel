@@ -26,6 +26,8 @@ const STUB = "/src/lib/media/upload/__tests__/fixtures/apiStub.js";
 
 let server;
 let useMediaUpload;
+let useSharedMediaUpload;
+let disposeSharedMediaUpload;
 let ITEM_STATUS;
 let apiStub;
 let uploadPolicy;
@@ -46,9 +48,8 @@ before(async () => {
     server: { middlewareMode: true },
     appType: "custom",
   });
-  ({ useMediaUpload, ITEM_STATUS } = await server.ssrLoadModule(
-    "/src/composables/useMediaUpload.js"
-  ));
+  ({ useMediaUpload, useSharedMediaUpload, disposeSharedMediaUpload, ITEM_STATUS } =
+    await server.ssrLoadModule("/src/composables/useMediaUpload.js"));
   apiStub = await server.ssrLoadModule(STUB);
   uploadPolicy = await server.ssrLoadModule("/src/utils/uploadPolicy.js");
 });
@@ -297,12 +298,19 @@ test("politika ihlalinde TEK BAYT gitmiyor, satır kuyrukta kalıyor", async () 
   apiStub.__reset({ upload_media: () => ({ file_url: "/olmamali" }) });
 
   const { q, bitir } = await kuyrukKur({ slotKey: "product.image" });
-  // 200×200: product.image min_short_edge 1000 — ihlal.
-  q.add([pngDosya("kucuk.png", 200, 200)]);
+  // GÜNCELLENDİ 2026-09-29 (kare kuralı): 200×200 artık `product.image`'da
+  // KABUL ediliyor (`require.min_short_edge` kaldırıldı — ürüne bağlanan
+  // görsel artık kare 1000–2000 px beyaz dolguya otomatik çevriliyor,
+  // media/kare.py). Bu testin amacı "politika ihlalinde tek bayt gitmiyor"
+  // GENEL sözleşmesi — vektör hâlâ geçerli bir ihlal üreten bir künyeye
+  // taşındı: 9000×9000 = 81 MP, product.image `accept.max_megapixels_hard`
+  // (80) tavanını aşıyor. PNG başlığı sahte üretildiği için gerçek piksel
+  // verisi yazılmıyor, boyut maliyetsiz.
+  q.add([pngDosya("buyuk.png", 9000, 9000)]);
 
   const engellendi = await dur(q, (x) => x.items.value[0]?.status === ITEM_STATUS.BLOCKED);
   assert.ok(engellendi, `durum: ${q.items.value[0]?.status}`);
-  assert.ok(q.items.value[0].findings.some((f) => f.reason === "short_edge_too_small"));
+  assert.ok(q.items.value[0].findings.some((f) => f.reason === "megapixel_bomb"));
   // Satır SİLİNMİYOR: kullanıcı sebebini görebilmeli.
   assert.equal(q.items.value.length, 1);
   assert.equal(q.stats.value.blocked, 1);
@@ -333,4 +341,59 @@ test("aynı dosya iki kez eklenmiyor", async () => {
   q.add([f]);
   assert.equal(q.items.value.length, 1);
   bitir();
+});
+
+test("ortak kuyruk: açan bileşen sökülse de yükleme biter; aynı örnek döner", async () => {
+  // "Medya Yükle" modalı kapanınca yükleme sürmeli — tepsi bunu gösteriyor.
+  // Yerel kuyrukta kapsamın ölümü süren isteği keser (onScopeDispose); ortak
+  // kuyruk ayrık kapsamda yaşadığı için kesilmemeli.
+  uploadPolicy.setLimits({
+    media_extensions: [".png"],
+    extensions: [".png"],
+    denied_extensions: [],
+    kinds: { ".png": "image" },
+    max_bytes: { image: 25 * 1024 * 1024 },
+    max_bytes_unknown: 25 * 1024 * 1024,
+    single_shot_limit: 8 * 1024 * 1024,
+    retryable_codes: [],
+  });
+  let birak;
+  const bekle = new Promise((r) => (birak = r));
+  apiStub.__reset({
+    upload_media: async () => {
+      await bekle;
+      return { file_url: "/files/ortak.png", file_name: "ortak.png" };
+    },
+  });
+
+  // Bileşen kapsamını taklit et: modal açıldı, dosya eklendi, modal kapandı.
+  const bilesen = effectScope();
+  let q;
+  bilesen.run(() => {
+    q = useSharedMediaUpload();
+    q.add([pngDosya("ortak.png", 2000, 2000, 2048)], { slotKey: "product.image", session: "s1" });
+  });
+  const yukleniyor = await dur(q, (x) => x.items.value[0]?.status === ITEM_STATUS.UPLOADING);
+  assert.ok(yukleniyor, `durum: ${q.items.value[0]?.status}`);
+  bilesen.stop();
+  // Yerel kuyrukta söküm süren isteğin AbortController'ını keserdi.
+  assert.equal(q.items.value[0]._controller?.signal.aborted, false, "söküm yüklemeyi kesti");
+
+  birak();
+  const bitti = await dur(q, (x) => x.items.value[0]?.status === ITEM_STATUS.DONE);
+  assert.ok(bitti, `söküm sonrası durum: ${q.items.value[0]?.status}`);
+  assert.equal(q.items.value[0].result.file_url, "/files/ortak.png");
+  // Satır kendi slotunu ve açılışını taşıyor (yeniden açılışta slot değişse de).
+  assert.equal(q.items.value[0].slotKey, "product.image");
+  assert.equal(q.items.value[0].session, "s1");
+  assert.equal(q.items.value[0].kind, "image");
+  // Yeniden açılan modal aynı kuyruğu görür.
+  assert.equal(useSharedMediaUpload(), q);
+  // "Yüklendi" bildirimi tek sefer.
+  assert.equal(q.claimDone(q.items.value[0].id), true);
+  assert.equal(q.claimDone(q.items.value[0].id), false);
+
+  disposeSharedMediaUpload();
+  assert.notEqual(useSharedMediaUpload(), q);
+  disposeSharedMediaUpload();
 });

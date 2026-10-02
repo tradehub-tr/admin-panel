@@ -20,23 +20,6 @@
       </MediaThumb>
     </button>
 
-    <!-- Hover/odak ile çıkan hızlı işlemler: kısayol bilmeyen kullanıcı için
-         görünür yol (menüyü açmadan tek tıkla önizle/düzenle). -->
-    <div class="mcard__quick">
-      <button
-        v-for="quick in QUICK_ACTIONS"
-        :key="quick.id"
-        type="button"
-        class="mcard__quick-btn"
-        :title="t(quick.labelKey)"
-        :aria-label="t(quick.labelKey)"
-        :disabled="quick.needsEdit && !editable"
-        @click.stop="emit('action', quick.id)"
-      >
-        <AppIcon :name="quick.icon" :size="15" />
-      </button>
-    </div>
-
     <!-- role=checkbox: shift+tık aralık seçimi için ham click olayı gerekli -->
     <button
       type="button"
@@ -66,63 +49,69 @@
       <span v-if="item.owner === 'shared'" class="mcard__badge mcard__badge--shared">
         {{ t("media.shared") }}
       </span>
-      <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
-           "hazır" olağan durumdur, rozetlemek gürültü. -->
-      <span
-        v-if="item.videoStatus === 'processing' || item.videoStatus === 'failed'"
-        class="mcard__badge"
-        :class="`mcard__badge--v-${item.videoStatus}`"
-      >
-        <AppIcon
-          :name="item.videoStatus === 'processing' ? 'loader' : 'alert-triangle'"
-          :size="10"
-          :class="{ 'animate-spin': item.videoStatus === 'processing' }"
-        />
-        {{ t(`media.videoStatus.${item.videoStatus}`) }}
-      </span>
-      <!-- Tarama rozeti (TUR-125). "taranıyor" da gösteriliyor: bekletme
-           mekanizması dosyayı tarama bitene kadar erişime kapatıyor, yani
-           önizleme YÜKLENMİYOR. Rozet olmadan kullanıcı bunu bozuk görsel
-           sanardı. "temiz" rozetlenmiyor — olağan durum. -->
-      <span
-        v-if="['infected', 'failed', 'pending'].includes(item.scanStatus)"
-        class="mcard__badge"
-        :class="`mcard__badge--s-${item.scanStatus}`"
-      >
-        <AppIcon
-          :name="SCAN_ICON[item.scanStatus]"
-          :size="10"
-          :class="{ 'animate-spin': item.scanStatus === 'pending' }"
-        />
-        {{ t(`media.scanStatus.${item.scanStatus}`) }}
-      </span>
+
+      <MediaStatusBadge
+        v-if="
+          ['blocked', 'scanFailed', 'processingFailed', 'scanning', 'processing'].includes(
+            mediaPhase(item, item.kind)
+          )
+        "
+        :phase="mediaPhase(item, item.kind)"
+        class="mcard__status"
+      />
     </div>
 
     <div class="mcard__menu">
       <button
+        ref="menuBtnEl"
         type="button"
         class="mcard__menu-btn"
+        aria-haspopup="menu"
         :aria-label="t('media.card.actionsAria')"
         :aria-expanded="menuOpen"
+        :aria-controls="menuOpen ? menuId : undefined"
         @click.stop="menuOpen = !menuOpen"
       >
         <AppIcon name="more-vertical" :size="16" />
       </button>
-      <ul v-if="menuOpen" class="mcard__menu-list" role="menu" @click.stop>
-        <li v-for="action in actions" :key="action.id" role="none">
-          <button
-            type="button"
-            role="menuitem"
-            class="mcard__menu-item"
-            :class="{ 'mcard__menu-item--danger': action.danger }"
-            :disabled="action.disabled"
-            @click="run(action.id)"
+      <!-- Liste body'ye Teleport edilir: kart `overflow: hidden` (köşe
+           yuvarlama + hover kalkması) ve pencerelenmiş ızgara kapsayıcısı
+           listeyi kırpıyordu — son ögeler (Arşivle, Sil) görünmüyordu. Konum
+           düğmeden hesaplanıp position:fixed ile verilir (menuPlacement.js). -->
+      <Teleport to="body">
+        <ul
+          v-if="menuOpen"
+          :id="menuId"
+          ref="menuListEl"
+          class="mcard__menu-list"
+          role="menu"
+          :style="menuStyle"
+          @click.stop
+          @keydown="onMenuKeydown"
+        >
+          <li
+            v-for="action in actions"
+            :key="action.id"
+            role="none"
+            :class="{ 'mcard__menu-row--danger': action.danger }"
+            :title="action.hint"
           >
-            <AppIcon :name="action.icon" :size="14" />
-            {{ action.label }}
-          </button>
-        </li>
-      </ul>
+            <button
+              type="button"
+              role="menuitem"
+              class="mcard__menu-item"
+              :class="{ 'mcard__menu-item--danger': action.danger }"
+              :data-action="action.id"
+              :disabled="action.disabled"
+              :aria-description="action.hint"
+              @click="run(action.id)"
+            >
+              <AppIcon :name="action.icon" :size="14" />
+              {{ action.label }}
+            </button>
+          </li>
+        </ul>
+      </Teleport>
     </div>
 
     <div class="mcard__meta">
@@ -158,12 +147,15 @@
 </template>
 
 <script setup>
-  import { computed, onUnmounted, ref, watch } from "vue";
+  import { computed, nextTick, onUnmounted, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import MediaStatusBadge from "./MediaStatusBadge.vue";
+  import { mediaPhase } from "@/lib/media/status.js";
   import MediaThumb from "@/components/media/MediaThumb.vue";
-  import { CARD_ACTIONS, QUICK_ACTIONS } from "@/components/media/mediaActions";
+  import { CARD_ACTIONS } from "@/components/media/mediaActions";
+  import { placeMenu } from "@/components/media/menuPlacement";
   import { formatBytes, formatDate, formatDimensions } from "@/utils/mediaFormat";
 
   const props = defineProps({
@@ -195,7 +187,6 @@
   const menuOpen = ref(false);
 
   // Tarama rozeti ikonları — şablonda üçlü koşul zinciri yerine harita.
-  const SCAN_ICON = { infected: "shield-alert", failed: "shield-off", pending: "loader" };
 
   /** Görselde alt metin yoksa SEO/erişilebilirlik uyarısı göster. */
   const missingAlt = computed(() => props.item.kind === "image" && !props.item.alt.trim());
@@ -209,10 +200,11 @@
       id: action.id,
       icon: action.icon(props.item),
       label: t(action.labelKey(props.item)),
+      hint: action.hintKey?.(props.item) ? t(action.hintKey(props.item)) : undefined,
       danger: action.danger === true,
       disabled:
         (action.needsEdit === true && !props.editable) ||
-        // Ürününde kullanılan dosyada silme kapalı — sebebi etikette yazıyor.
+        // Ürününde kullanılan dosyada silme kapalı — sebebi ipucunda yazıyor.
         (action.blockedWhenUsed === true && (props.item.liveUsage || 0) > 0),
     }))
   );
@@ -226,15 +218,105 @@
     emit("action", id);
   }
 
-  function closeMenu(event) {
-    if (!event.target.closest?.(".mcard__menu")) menuOpen.value = false;
+  // ── Teleport'lu menü: konum, dışarı tıklama, klavye ─────────────────
+  const menuId = useId();
+  const menuBtnEl = ref(null);
+  const menuListEl = ref(null);
+  const menuStyle = ref({});
+
+  function positionMenu() {
+    const btn = menuBtnEl.value;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    // Pencerelenmiş ızgara kaydırılıp düğme ekrandan çıktıysa menü viewport
+    // kenarına yapışık kalmasın — kapat.
+    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+      menuOpen.value = false;
+      return;
+    }
+    const list = menuListEl.value;
+    const { top, left, maxHeight } = placeMenu(
+      rect,
+      { width: list?.offsetWidth || 0, height: list?.scrollHeight || 0 },
+      { width: window.innerWidth, height: window.innerHeight },
+      { rtl: getComputedStyle(btn).direction === "rtl" }
+    );
+    menuStyle.value = { top: `${top}px`, left: `${left}px`, maxHeight: `${maxHeight}px` };
   }
 
-  watch(menuOpen, (open) => {
-    if (open) document.addEventListener("click", closeMenu);
-    else document.removeEventListener("click", closeMenu);
+  // Liste artık `.mcard__menu` altında değil (body'de) — "içeride" kontrolü
+  // iki kökü de saymalı.
+  function isInsideMenu(target) {
+    return Boolean(
+      target?.closest?.(".mcard__menu") === menuBtnEl.value?.parentElement ||
+      menuListEl.value?.contains(target)
+    );
+  }
+
+  function closeMenu(event) {
+    if (!isInsideMenu(event.target)) menuOpen.value = false;
+  }
+
+  function onDocKeydown(event) {
+    if (event.key !== "Escape") return;
+    menuOpen.value = false;
+    menuBtnEl.value?.focus();
+  }
+
+  function enabledItems() {
+    return [...(menuListEl.value?.querySelectorAll('[role="menuitem"]:not(:disabled)') || [])];
+  }
+
+  // Menü düğmesi deseni (ARIA APG): oklar ögeler arasında gezer, Tab menüyü
+  // kapatıp odağı düğmeye iade eder — Teleport yüzünden listenin DOM'daki
+  // yeri body'nin sonu; iade edilmezse Tab sayfanın sonuna atlardı.
+  function onMenuKeydown(event) {
+    const items = enabledItems();
+    const index = items.indexOf(document.activeElement);
+    const moves = {
+      ArrowDown: (index + 1) % items.length,
+      ArrowUp: (index - 1 + items.length) % items.length,
+      Home: 0,
+      End: items.length - 1,
+    };
+    if (event.key in moves && items.length) {
+      event.preventDefault();
+      items[moves[event.key]].focus();
+    } else if (event.key === "Tab") {
+      menuOpen.value = false;
+      menuBtnEl.value?.focus();
+    }
+  }
+
+  function unbindMenuListeners() {
+    // capture=true: başka kartın menü düğmesi `@click.stop` kullanıyor; kabarcık
+    // evresinde dinlenirse o tıklama buraya hiç ulaşmaz ve iki menü aynı anda
+    // açık kalırdı.
+    document.removeEventListener("click", closeMenu, true);
+    document.removeEventListener("keydown", onDocKeydown);
+    document.removeEventListener("scroll", positionMenu, true);
+    window.removeEventListener("resize", positionMenu);
+  }
+
+  watch(menuOpen, async (open) => {
+    if (!open) {
+      unbindMenuListeners();
+      return;
+    }
+    // İlk kaba konum (liste ölçülmeden), sonra ölçüp yukarı açılma/sınırlama.
+    positionMenu();
+    await nextTick();
+    // Beklerken kapatıldıysa (ör. hızlı çift tık) dinleyici bağlanmasın.
+    if (!menuOpen.value) return;
+    positionMenu();
+    enabledItems()[0]?.focus({ preventScroll: true });
+    document.addEventListener("click", closeMenu, true);
+    document.addEventListener("keydown", onDocKeydown);
+    // capture=true: ızgaranın kendi kaydırma kapsayıcısını da yakala.
+    document.addEventListener("scroll", positionMenu, true);
+    window.addEventListener("resize", positionMenu);
   });
-  onUnmounted(() => document.removeEventListener("click", closeMenu));
+  onUnmounted(unbindMenuListeners);
 </script>
 
 <style scoped lang="scss">
@@ -343,62 +425,6 @@
     background: $brand;
     border-color: $brand;
     color: $brand-ink;
-  }
-
-  .mcard__quick {
-    position: absolute;
-    top: 3rem;
-    inset-inline-end: 0.5rem;
-    z-index: 3;
-    display: flex;
-    flex-direction: column;
-    gap: media.$s-1;
-    opacity: 0;
-    transform: translateY(-0.25rem);
-    transition:
-      opacity $t-fast,
-      transform $t-fast;
-  }
-
-  .mcard:hover .mcard__quick,
-  .mcard:focus-within .mcard__quick {
-    opacity: 1;
-    transform: none;
-  }
-
-  .mcard__quick-btn {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border: 0;
-    border-radius: media.$r-sm;
-    background: rgb(0 0 0 / 55%);
-    color: #fff;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    @include media.focus-ring;
-    @include media.press(0.92);
-
-    @include media.hoverable {
-      &:hover:not(:disabled) {
-        background: $brand;
-        color: $brand-ink;
-      }
-    }
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  // Dokunmatikte hover yok — hızlı işlemler hep görünür.
-  @media (hover: none) {
-    .mcard__quick {
-      opacity: 1;
-      transform: none;
-    }
   }
 
   .mcard__star {
@@ -528,26 +554,72 @@
     @include media.press(0.92);
   }
 
+  // Body'ye Teleport edilir (scoped özniteliği korunur, bu kurallar geçerli).
+  // top/left/max-height inline :style ile menuPlacement.js'ten gelir.
+  // z-index AppSelect'in teleport'lu paneliyle aynı: modal/başlığın üstü.
   .mcard__menu-list {
-    position: absolute;
-    top: 2.25rem;
-    inset-inline-end: 0;
-    min-width: 11rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    // Genişlik içerikten: en uzun etiket ("Üründe kullanıldığı için
+    // silinemez") kadar, ama viewport'u aşmadan.
+    width: max-content;
+    min-width: 10rem;
+    max-width: calc(100vw - #{media.$s-4});
     margin: 0;
     padding: media.$s-1;
     list-style: none;
-    box-shadow: 0 10px 30px rgb(26 26 26 / 14%);
-    @include media.surface("raised");
+    // macOS bağlam menüsü gibi sade: ince kenarlık, yumuşak gölge.
+    // Zemin PopMenu ile aynı çift ($l-bg / $d-bg-card): koyu temada
+    // `$d-bg-elevated` ile `$d-item-hover` aynı renk, hover görünmezdi.
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: media.$r-md + media.$s-05;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 10%);
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
+    }
   }
 
+  // Tehlikeli işlem (Sil) diğerlerinden ince bir çizgiyle ayrılır.
+  .mcard__menu-row--danger:not(:first-child) {
+    margin-top: media.$s-1;
+    padding-top: media.$s-1;
+    @include media.divider(top);
+  }
+
+  // Kompakt öge (~30px): `media.button` mixin'i BİLİNÇLİ kullanılmıyor —
+  // 44px dokunma hedefi ve kalın yazı menüyü iri gösteriyordu. Dokunmatikte
+  // 44px hedef aşağıdaki (pointer: coarse) bloğunda geri geliyor.
   .mcard__menu-item {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
     width: 100%;
+    min-height: media.$s-6 - media.$s-05;
+    padding: 0 (media.$s-2 + media.$s-05);
+    border: 0;
     border-radius: media.$r-sm;
+    background: none;
+    color: $l-text-700;
+    @include media.text("sm");
+    font-weight: 450;
+    line-height: 1.25;
     text-align: start;
-    @include media.button("ghost");
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background $t-fast;
     @include media.focus-ring;
 
-    padding: 0 media.$s-2;
+    @include dark {
+      color: $d-text;
+    }
 
     @include media.hoverable {
       &:hover:not(:disabled) {
@@ -559,20 +631,149 @@
       }
     }
 
-    // Dokunmatikte menü ögesi basınca tepki vermeli — ölçek yerine arka plan,
-    // liste içinde scale komşuları kaydırıyor gibi görünüyor.
+    // Dokunmatikte basınca tepki — ölçek yerine arka plan (liste içinde
+    // scale komşuları kaydırıyor gibi görünüyor).
     &:active:not(:disabled) {
       background: $l-bg-muted;
-      transform: none;
 
       @include dark {
         background: $d-item-hover;
       }
     }
 
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    // Koyu temadaki `html.dark .mcard__menu-item` rengi daha özgül — kırmızı
+    // orada da ezilmesin diye tekrar veriliyor.
     &--danger {
       color: $c-error;
+
+      @include dark {
+        color: $c-error;
+      }
     }
+
+    // İkon (14px) dar menüde sıkışıp küçülmesin.
+    // overflow: kalkan kapak/katman viewBox dışına taşınca kesilmesin.
+    :deep(svg) {
+      flex-shrink: 0;
+      overflow: visible;
+      transition: transform $t-fast;
+    }
+
+    // Hover'da ikonun PARÇALARI oynar (lucide-animated deseni): göz kırpar,
+    // indirme oku iner, çöp kapağı kalkar, katmanlar ayrışır. Kapalı şekiller
+    // hafifçe dolar. Menü günde onlarca kez açılıyor — hareket 1–2 birim,
+    // yalnız transform; klavyeyle gezinmede ve dokunmatikte oynamaz.
+    // Azaltılmış harekette yalnız dolgu kalır. Parça sırası lucide SVG'sinin
+    // çocuk sırası (lucide-vue-next); ikon değişirse seçici de değişmeli.
+    @include media.hoverable {
+      :deep(svg > *) {
+        transform-box: fill-box;
+        transform-origin: center;
+        fill: currentColor;
+        fill-opacity: 0;
+        transition:
+          transform $t-fast,
+          fill-opacity $d-fast ease;
+      }
+
+      &:hover:not(:disabled) {
+        // Dolan gövde parçaları (açık çizgiler dolguya girmez).
+        &[data-action="preview"] :deep(svg > path),
+        &[data-action="edit"] :deep(svg > path:first-child),
+        &[data-action="use"] :deep(svg > path:first-child),
+        &[data-action="copyLink"] :deep(svg > rect),
+        &[data-action="duplicate"] :deep(svg > path:first-child),
+        &[data-action="archive"] :deep(svg > rect),
+        &[data-action="delete"] :deep(svg > path:nth-child(3)) {
+          fill-opacity: 0.14;
+        }
+      }
+    }
+
+    @include media.hoverable {
+      @media (prefers-reduced-motion: no-preference) {
+        &:hover:not(:disabled) {
+          &[data-action="preview"] :deep(svg > *) {
+            animation: mcard-blink 320ms $ease-in-out;
+          }
+
+          &[data-action="edit"] :deep(svg) {
+            transform: rotate(-12deg);
+          }
+
+          &[data-action="use"] :deep(svg) {
+            transform: translateY(-1.5px);
+          }
+
+          // Ok (sap + uç) iner, tepsi yerinde.
+          &[data-action="download"] {
+            :deep(svg > path:first-child),
+            :deep(svg > path:last-child) {
+              transform: translateY(2px);
+            }
+          }
+
+          // Öndeki kâğıt öne, arkadaki geriye: kopya ayrışır.
+          &[data-action="copyLink"] {
+            :deep(svg > rect) {
+              transform: translate(1.5px, 1.5px);
+            }
+
+            :deep(svg > path) {
+              transform: translate(-1.5px, -1.5px);
+            }
+          }
+
+          // Üst katman kalkıp yığına geri oturur, orta katman peşinden
+          // (tek sefer) — kopyanın yığına eklenmesi.
+          &[data-action="duplicate"] {
+            :deep(svg > path:first-child) {
+              animation: mcard-stack 420ms $ease-in-out;
+            }
+
+            :deep(svg > path:nth-child(2)) {
+              animation: mcard-stack-mid 420ms $ease-in-out 40ms both;
+            }
+          }
+
+          // Kapak sol menteşeden açılıp geri kapanır (tek sefer).
+          &[data-action="archive"] :deep(svg > rect) {
+            transform-origin: left bottom;
+            animation: mcard-lid 480ms $ease-in-out;
+          }
+
+          // Kapak (üst çizgi + sap) sol köşeden kalkar.
+          &[data-action="delete"] {
+            :deep(svg > path:nth-child(4)),
+            :deep(svg > path:nth-child(5)) {
+              transform: translateY(-1.5px) rotate(-12deg);
+            }
+
+            :deep(svg > path:nth-child(4)) {
+              transform-origin: left bottom;
+            }
+          }
+
+          &[data-action="retryVideo"] :deep(svg) {
+            transform: rotate(90deg);
+          }
+        }
+      }
+    }
+
+    @media (pointer: coarse) {
+      @include media.tap-target;
+    }
+  }
+
+  .mcard__status {
+    font-size: 11px;
+    max-width: 100%;
   }
 
   .mcard__meta {
@@ -632,6 +833,39 @@
 
     &--unused {
       @include media.chip("warning");
+    }
+  }
+
+  @keyframes mcard-stack {
+    45% {
+      transform: translateY(-3.5px);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes mcard-stack-mid {
+    45% {
+      transform: translateY(-1.5px);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes mcard-lid {
+    40% {
+      transform: translateY(-2px) rotate(-16deg);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes mcard-blink {
+    50% {
+      transform: scaleY(0.15);
     }
   }
 </style>

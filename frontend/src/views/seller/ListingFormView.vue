@@ -433,10 +433,10 @@
                     v-if="form.primary_image || uploads.states['primary_image']"
                     class="relative w-32 h-32 rounded-xl border border-gray-200 dark:border-white/10 shrink-0 overflow-hidden bg-gray-100"
                   >
-                    <img
+                    <!-- Yüklenemeyen görsel: erişilebilir hata + aynı adresle sınırlı yeniden deneme (FormImage) -->
+                    <FormImage
                       v-if="form.primary_image"
                       :src="form.primary_image"
-                      class="w-full h-full object-cover"
                       :alt="t('listingForm.primaryImage')"
                     />
                     <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni -->
@@ -508,24 +508,15 @@
                          aynı dosyayı iki kez yüklemek zorunda kalıyordu: bir kez
                          kütüphaneye, bir kez ürüne. -->
                     <MediaPickButton kind="image" @select="form.primary_image = $event" />
-                    <!-- Kırpma kısayolu: Medya Kütüphanesi'ndeki Crop Studio'nun
-                         aynısı, buradan açılır — satıcı ürün formundan ayrılmadan
-                         kadraj çizebilsin. Kadraj "niyet" olarak kaydedilir,
-                         dosyanın adresi DEĞİŞMEZ (bkz. cropIntentApi). -->
-                    <button
+                    <!-- "Nerelerde görünecek?" (spec 2026-10-01 §4.4): görselin vitrinde
+                         göründüğü her yer + odak noktası. Eski "Kırp" kısayolunun yerini
+                         aldı; ürün görseli kare ve contain gösterildiği için kırpılmaz. -->
+                    <ImagePlacementButton
                       v-if="form.primary_image"
-                      type="button"
-                      class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/15 text-xs text-gray-600 dark:text-gray-300 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors w-fit disabled:opacity-60"
-                      :disabled="cropBusy"
-                      @click="openCrop(form.primary_image)"
-                    >
-                      <AppIcon
-                        :name="cropBusy ? 'loader' : 'crop'"
-                        :size="14"
-                        :class="cropBusy ? 'animate-spin' : 'text-gray-400'"
-                      />
-                      {{ t("media.actions.crop") }}
-                    </button>
+                      :file-url="form.primary_image"
+                      slot-key="product.image"
+                      @open="openPlacement"
+                    />
                     <button
                       v-if="form.primary_image"
                       class="text-xs text-red-500 hover:text-red-700"
@@ -1076,6 +1067,7 @@
               />
             </button>
             <div v-if="openSections.media" id="sec-body-media" class="lfv-sec-body space-y-4">
+              <MediaFileStatusList :files="existingMediaFiles" />
               <div class="card space-y-4">
                 <h3 class="section-title">{{ t("listingForm.additionalImages") }}</h3>
                 <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
@@ -1083,97 +1075,105 @@
                   <div
                     v-for="(img, idx) in childData.listing_images"
                     :key="img._uploadKey || idx"
-                    class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3"
+                    class="flex flex-col gap-2"
                   >
-                    <img
-                      v-if="img.image || img._previewUrl"
-                      :src="img.image || img._previewUrl"
-                      class="w-full h-full object-cover"
-                      :alt="img.alt_text || ''"
-                    />
-                    <div v-else class="w-full h-full flex items-center justify-center">
-                      <AppIcon name="image" :size="24" class="text-gray-300" />
-                    </div>
-
-                    <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni.
-                   Yeni eklenen kartlar `_uploadKey`, mevcut satır güncellemeleri `row-${idx}`. -->
                     <div
-                      v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'uploading'"
-                      class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
+                      class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3"
                     >
-                      <div
-                        class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden"
-                      >
-                        <div
-                          class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
-                          :style="{
-                            width:
-                              Math.max(6, uploads.states[img._uploadKey || `row-${idx}`].progress) +
-                              '%',
-                          }"
-                        ></div>
-                      </div>
-                      <span class="text-[11px] text-white font-semibold">
-                        {{ Math.round(uploads.states[img._uploadKey || `row-${idx}`].progress) }}%
-                      </span>
-                    </div>
-                    <Transition name="fade">
-                      <div
-                        v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'success'"
-                        class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
-                      >
-                        <div
-                          class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
-                        >
-                          ✓
-                        </div>
-                      </div>
-                    </Transition>
-
-                    <div
-                      class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
-                    >
-                      <label
-                        class="cursor-pointer bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
-                        :title="t('listingForm.changeImage')"
-                      >
-                        <AppIcon name="upload" :size="14" class="text-white" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          class="hidden"
-                          @change="uploadImageRow(idx, $event)"
-                        />
-                      </label>
-                      <!-- Kart üstünde yer dar: yalnız simge. -->
-                      <MediaPickButton
-                        kind="image"
-                        icon-only
-                        variant="ghost"
-                        :label="t('media.pick.replace')"
-                        @select="childData.listing_images[idx].image = $event"
+                      <FormImage
+                        v-if="img.image || img._previewUrl"
+                        :src="img.image || img._previewUrl"
+                        :alt="img.alt_text || ''"
                       />
-                      <button
-                        type="button"
-                        class="bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
-                        :title="t('media.actions.crop')"
-                        @click="openCrop(childData.listing_images[idx].image)"
+                      <div v-else class="w-full h-full flex items-center justify-center">
+                        <AppIcon name="image" :size="24" class="text-gray-300" />
+                      </div>
+
+                      <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni.
+                   Yeni eklenen kartlar `_uploadKey`, mevcut satır güncellemeleri `row-${idx}`. -->
+                      <div
+                        v-if="
+                          uploads.states[img._uploadKey || `row-${idx}`]?.status === 'uploading'
+                        "
+                        class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
                       >
-                        <AppIcon name="crop" :size="14" class="text-white" />
-                      </button>
-                      <button
-                        class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600"
-                        :title="t('listingForm.remove')"
-                        @click="removeImageRow(idx)"
+                        <div
+                          class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden"
+                        >
+                          <div
+                            class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                            :style="{
+                              width:
+                                Math.max(
+                                  6,
+                                  uploads.states[img._uploadKey || `row-${idx}`].progress
+                                ) + '%',
+                            }"
+                          ></div>
+                        </div>
+                        <span class="text-[11px] text-white font-semibold">
+                          {{ Math.round(uploads.states[img._uploadKey || `row-${idx}`].progress) }}%
+                        </span>
+                      </div>
+                      <Transition name="fade">
+                        <div
+                          v-if="
+                            uploads.states[img._uploadKey || `row-${idx}`]?.status === 'success'
+                          "
+                          class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
+                        >
+                          <div
+                            class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
+                          >
+                            ✓
+                          </div>
+                        </div>
+                      </Transition>
+
+                      <div
+                        class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end gap-2 p-2"
                       >
-                        <AppIcon name="trash-2" :size="14" class="text-white" />
-                      </button>
+                        <label
+                          class="cursor-pointer bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
+                          :title="t('listingForm.changeImage')"
+                        >
+                          <AppIcon name="upload" :size="14" class="text-white" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            @change="uploadImageRow(idx, $event)"
+                          />
+                        </label>
+                        <!-- Kart üstünde yer dar: yalnız simge. -->
+                        <MediaPickButton
+                          kind="image"
+                          icon-only
+                          variant="ghost"
+                          :label="t('media.pick.replace')"
+                          @select="childData.listing_images[idx].image = $event"
+                        />
+                        <button
+                          class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600"
+                          :title="t('listingForm.remove')"
+                          @click="removeImageRow(idx)"
+                        >
+                          <AppIcon name="trash-2" :size="14" class="text-white" />
+                        </button>
+                      </div>
+                      <input
+                        v-model="img.alt_text"
+                        type="text"
+                        class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 border-0 outline-none placeholder-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        :placeholder="t('listingForm.altTextPlaceholder')"
+                      />
                     </div>
-                    <input
-                      v-model="img.alt_text"
-                      type="text"
-                      class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 border-0 outline-none placeholder-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      :placeholder="t('listingForm.altTextPlaceholder')"
+                    <ImagePlacementButton
+                      v-if="img.image"
+                      compact
+                      :file-url="img.image"
+                      slot-key="product.image"
+                      @open="openPlacement"
                     />
                   </div>
                   <!-- Ekle butonu — drop-target (drag-drop + multi-file). -->
@@ -3160,16 +3160,26 @@
     @cancel="onConfirmNo"
   />
 
-  <!-- Crop Studio — Medya Kütüphanesi'ndeki modalın kendisi. `asset` boşsa
-       (varlık kaydı çözülemedi) modal dürüst "kaydedilemez" durumunda açılır;
-       kaynak ölçüsü çözülemezse modal HİÇ açılmaz, sebep toast'ta. -->
-  <CropStudioModal
-    v-if="cropOpen"
-    :open="cropOpen"
-    :source="cropSource"
-    :asset="cropAssetName"
-    slot-key="product.image"
-    @close="cropOpen = false"
+  <MediaUploadQueue
+    floating
+    :uploads="mediaTransfers.rows.value"
+    :facts="mediaTransfers.facts.value"
+    :unavailable="mediaTransfers.unavailable.value"
+    :suspended="placement.state.open"
+    @clear="mediaTransfers.clear"
+    @cancel="mediaTransfers.cancel"
+    @placement="openPlacement({ fileUrl: $event.result.file_url, slotKey: 'product.image' })"
+  />
+
+  <!-- Görsel önizleme penceresi — tek örnek; düğmeler ve tek-dosya yüklemesi açar. -->
+  <ImagePlacementModal
+    v-if="placement.state.open"
+    v-model:open="placement.state.open"
+    :file-url="placement.state.fileUrl"
+    :slot-key="placement.state.slotKey"
+    :file-name="placement.state.fileName"
+    :context="placement.state.context"
+    :return-focus="placement.state.returnFocus"
   />
 </template>
 
@@ -3187,6 +3197,10 @@
   import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
+  import MediaFileStatusList from "@/components/media/MediaFileStatusList.vue";
+  import MediaUploadQueue from "@/components/media/MediaUploadQueue.vue";
+  import { useUploadPlacementQueue } from "@/composables/useUploadPlacementQueue.js";
+  import { useTrackedMediaUpload } from "@/composables/useTrackedMediaUpload.js";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
   import { useDropzone } from "@/composables/useDropzone";
   import { useAuthStore } from "@/stores/auth";
@@ -3200,6 +3214,9 @@
   } from "@/utils/listingDocuments.js";
   import AppIcon from "@/components/common/AppIcon.vue";
   import MediaPickButton from "@/components/media/MediaPickButton.vue";
+  import ImagePlacementButton from "@/components/media/preview/ImagePlacementButton.vue";
+  import FormImage from "@/components/media/preview/FormImage.vue";
+  import { usePlacementLauncher } from "@/composables/usePlacementLauncher";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
@@ -3214,9 +3231,9 @@
   const RichTextEditor = defineAsyncComponent(
     () => import("@/components/common/RichTextEditor.vue")
   );
-  // Kırpma stüdyosu ağır (canvas + geometri) — yalnız Kırp'a basılınca iner.
-  const CropStudioModal = defineAsyncComponent(
-    () => import("@/components/media/crop/CropStudioModal.vue")
+  // Görsel önizleme penceresi bağlam şablonlarını taşır — yalnız açılınca insin.
+  const ImagePlacementModal = defineAsyncComponent(
+    () => import("@/components/media/preview/ImagePlacementModal.vue")
   );
 
   // tradehub-upload-ui pattern — 6 upload yeri için ortak key-bazlı progress
@@ -3227,55 +3244,47 @@
   //   'variant-<idx>'    → varyant öğesi
   //   'color-<value>'    → renk varyantı tek resim
   //   'gallery-<value>-<i>' → renk galeri çoklu
-  const uploads = useImageUploadProgressMap();
+  const uploads = useImageUploadProgressMap({ measured: true });
+  const mediaTransfers = useTrackedMediaUpload();
+  const existingMediaFiles = computed(() => {
+    const newlyUploaded = new Set(mediaTransfers.rows.value.map((row) => row.result?.file_url));
+    return [
+      form.primary_image,
+      form.video_url,
+      ...childData.listing_images.map((row) => row.image),
+      ...childData.documents.map((row) => row.file),
+    ].filter((url) => url && !newlyUploaded.has(url));
+  });
 
   const route = useRoute();
   const router = useRouter();
   const { t, locale } = useI18n();
   const toast = useToast();
 
-  // ── Crop Studio kısayolu (ürün görselleri, slot: product.image) ────────
-  //
-  // Modal kaynak PİKSEL ölçüsü ister; liste satırı burada olmadığı için ölçü
-  // `seller_media.get_dimensions`'tan gelir (ilk soruluşta diskten okunup
-  // saklanır). `Media Asset` adı manifest ucundan çözülür — çözülemezse modal
-  // yine açılır ama Uygula kapalıdır (MediaLibraryView ile aynı sözleşme).
-  const cropOpen = ref(false);
-  const cropBusy = ref(false);
-  const cropSource = ref({ url: "", width: 0, height: 0 });
-  const cropAssetName = ref("");
-
-  async function openCrop(url) {
-    if (!url || cropBusy.value) return;
-    cropBusy.value = true;
-    try {
-      let olcu = null;
-      try {
-        const res = await api.callMethodGET("tradehub_core.api.seller_media.get_dimensions", {
-          file_url: url,
-        });
-        olcu = res?.message ?? res;
-      } catch {
-        olcu = null;
-      }
-      if (!(olcu?.width > 0 && olcu?.height > 0)) {
-        toast.error(t("media.actions.cropNoDims"));
-        return;
-      }
-      cropSource.value = { url, width: olcu.width, height: olcu.height };
-      cropAssetName.value = "";
-      try {
-        const res = await api.callMethod("tradehub_core.api.media_manifest.manifest_batch", {
-          file_urls: [url],
-        });
-        cropAssetName.value = res?.message?.manifests?.[url]?.assets?.[0] || "";
-      } catch {
-        cropAssetName.value = "";
-      }
-      cropOpen.value = true;
-    } finally {
-      cropBusy.value = false;
-    }
+  // ── Görsel önizleme penceresi (spec 2026-10-01 §4.4) ──────────────────
+  const placement = usePlacementLauncher();
+  const uploadPlacement = useUploadPlacementQueue({
+    rows: mediaTransfers.rows,
+    facts: mediaTransfers.facts,
+    launcher: placement,
+    isCurrent: (url) =>
+      form.primary_image === url || childData.listing_images.some((row) => row.image === url),
+  });
+  function placementContext() {
+    const fiyat = Number(form.selling_price || form.base_price || 0);
+    return {
+      storeName: auth.user?.admin_seller_profile?.seller_name || "",
+      productName: form.title || "",
+      price:
+        fiyat > 0
+          ? new Intl.NumberFormat(locale.value, { style: "currency", currency: "TRY" }).format(
+              fiyat
+            )
+          : "",
+    };
+  }
+  function openPlacement({ fileUrl, slotKey, trigger }) {
+    placement.show({ fileUrl, slotKey, trigger, context: placementContext() });
   }
   const auth = useAuthStore();
   const seoStore = useSeoEditorStore();
@@ -4408,9 +4417,16 @@
     uploadingField.value = fieldName;
     uploads.start(fieldName);
     try {
-      const url = await doUpload(file);
+      const url = await doUpload(file, fieldName);
       form[fieldName] = url;
       await uploads.finish(fieldName);
+      if (fieldName === "primary_image")
+        uploadPlacement.enqueue({
+          selected: 1,
+          fileUrl: url,
+          slotKey: "product.image",
+          context: placementContext(),
+        });
       toast.success(t("listingForm.imageUploaded"));
     } catch (err) {
       uploads.fail(fieldName);
@@ -4433,7 +4449,7 @@
     uploadingField.value = "video_url";
     uploads.start("video_url");
     try {
-      const url = await doUpload(file);
+      const url = await doUpload(file, "video_url");
       form.video_url = url;
       await uploads.finish("video_url");
       toast.success(t("listingForm.videoUploaded"));
@@ -4477,7 +4493,7 @@
       for (const row of newRows) {
         uploads.start(row._uploadKey);
         try {
-          const url = await doUpload(row._file);
+          const url = await doUpload(row._file, row._uploadKey);
           row.image = url;
           await uploads.finish(row._uploadKey);
         } catch (err) {
@@ -4497,6 +4513,13 @@
           delete row._file;
         }
       }
+      // Toplu yüklemede açılmaz (spec §4.4); tek dosya başarısızsa adres boş kalır, açılmaz.
+      uploadPlacement.enqueue({
+        selected: files.length,
+        fileUrl: newRows.length === 1 ? newRows[0].image : "",
+        slotKey: "product.image",
+        context: placementContext(),
+      });
     } finally {
       uploadingImageRow.value = false;
     }
@@ -4508,9 +4531,15 @@
     const key = `row-${idx}`;
     uploads.start(key);
     try {
-      const url = await doUpload(file);
+      const url = await doUpload(file, key);
       childData.listing_images[idx].image = url;
       await uploads.finish(key);
+      uploadPlacement.enqueue({
+        selected: 1,
+        fileUrl: url,
+        slotKey: "product.image",
+        context: placementContext(),
+      });
       toast.success(t("listingForm.imageUpdated"));
     } catch (err) {
       uploads.fail(key);
@@ -4531,7 +4560,7 @@
     const key = `variant-${idx}`;
     uploads.start(key);
     try {
-      const url = await api.uploadFile(file);
+      const url = await mediaTransfers.upload(file);
       childData.variant_items[idx].variant_image = url;
       await uploads.finish(key);
     } catch (err) {
@@ -5008,17 +5037,20 @@
     setVariantGallery(idx, current);
   }
 
-  async function doUpload(file) {
+  async function doUpload(file, progressKey = "") {
     // Tarayıcıda sıkıştır/çevir (görsel→WebP, video→WebM/MP4) — ürün formundaki
     // tüm görsel/video yüklemeleri bu tek noktadan geçer. Safari WebP üretemezse
     // client küçültülmüş JPEG gönderir. Sıkıştırılamayan (converted: "none") dosya
     // orijinal haliyle yüklenir.
-    const prepared = await prepareMedia(file);
-    const outFile =
-      prepared.converted === "none"
-        ? file
-        : new File([prepared.blob], prepared.name, { type: prepared.blob.type });
-    return api.uploadFile(outFile);
+    return mediaTransfers.upload(file, {
+      prepare: async (source) => {
+        const prepared = await prepareMedia(source);
+        return prepared.converted === "none"
+          ? source
+          : new File([prepared.blob], prepared.name, { type: prepared.blob.type });
+      },
+      onProgress: (percent) => uploads.progress(progressKey, percent),
+    });
   }
 
   // ── Medya kütüphanesinden seçme ───────────────────────────────────────────────
@@ -5063,7 +5095,7 @@
     try {
       for (const file of files) {
         try {
-          const url = await api.uploadFile(file);
+          const url = await mediaTransfers.upload(file);
           appendDocumentRows(childData.documents, [{ url, name: file.name }]);
         } catch (err) {
           toast.error(`${file.name}: ${err.message || t("listingForm.documentsUploadFailed")}`);
@@ -5161,7 +5193,7 @@
     const key = `color-${colorValue}`;
     uploads.start(key);
     try {
-      const url = await api.uploadFile(file);
+      const url = await mediaTransfers.upload(file);
       for (const row of childData.variant_items) {
         if (row.attribute_value === colorValue) row.variant_image = url;
       }
@@ -5198,7 +5230,7 @@
       for (const entry of queue) {
         uploads.start(entry._key);
         try {
-          const url = await api.uploadFile(entry._file);
+          const url = await mediaTransfers.upload(entry._file);
           if (url) {
             const existing = parseVariantGallery(childData.variant_items[idx]);
             existing.push(url);

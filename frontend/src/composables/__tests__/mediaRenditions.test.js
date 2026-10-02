@@ -134,6 +134,11 @@ test("satır eşlemesi çağıran bileşenlerin sözleşmesini korur", async () 
     bytes: 2048,
     ssim: 0.97,
     generation: "lazy",
+    // Çıktı künyesi gelmediyse (eski satır) ölçüm UYDURULMAZ: boş renk uzayı
+    // "ölçülmedi" demektir, DPI 0 ve alfa yok yalnız varsayılan boşluktur.
+    dpi: 0,
+    colorspace: "",
+    hasAlpha: false,
   });
   // Ölçülmemiş SSIM 0 kalır — bileşen onu "—" basar, "0,00" değil.
   assert.equal(rows[1].ssim, 0);
@@ -222,4 +227,45 @@ test("yeni yükleme öncekini temizler", async () => {
   await r.load("FILE-2");
   assert.deepEqual(r.rows.value, []);
   assert.equal(r.emptyReason.value, "noAsset");
+});
+
+test("ölçülen künye akar: kaynak `source`, türev `output_*` alanları", async () => {
+  // Gövde 2026-09-30'da yerel siteden ölçülen gerçek yanıttan alındı
+  // (/files/98/988c22f07137dd72181b088abce70f38.tif — Adobe RGB, 300 DPI TIFF;
+  // en büyük türevi w1920 AVIF, sRGB profilli, DPI etiketi yok).
+  apiStub.respondWith(() =>
+    manifestYaniti("FILE-1", {
+      file: "FILE-1",
+      file_url: "/files/98/988c22f07137dd72181b088abce70f38.tif",
+      assets: ["MA-0001"],
+      source: { status: "ok", dpi: 300, colorspace: "Adobe RGB", has_alpha: false },
+      renditions: [
+        {
+          ...HAM_TUREV,
+          width: 1920,
+          format: "avif",
+          output_dpi: 0,
+          output_colorspace: "sRGB",
+          output_has_alpha: 0,
+        },
+      ],
+    })
+  );
+  const r = useMediaRenditions();
+
+  const rows = await r.load("FILE-1");
+
+  assert.deepEqual(r.source.value, {
+    status: "ok",
+    dpi: 300,
+    colorspace: "Adobe RGB",
+    has_alpha: false,
+  });
+  assert.equal(rows[0].dpi, 0);
+  assert.equal(rows[0].colorspace, "sRGB");
+  assert.equal(rows[0].hasAlpha, false);
+
+  // `clear` künyeyi de sıfırlar — bir önceki dosyanın DPI'ı sızmaz.
+  r.clear();
+  assert.equal(r.source.value, null);
 });

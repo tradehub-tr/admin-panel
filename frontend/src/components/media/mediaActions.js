@@ -56,26 +56,16 @@ export const CARD_ACTIONS = [
   {
     id: "delete",
     icon: () => "trash-2",
-    // Ürününde kullanılan dosya silinemez: düğme kapanır ve etiketi sebebi
-    // söyler. Açık bırakılsaydı basılınca arka taraf reddederdi ama kullanıcı
-    // neden olmadığını göremezdi — "hiçbir şey olmadı" izlenimi kalırdı.
+    // Ürününde kullanılan dosya silinemez: düğme kapanır, sebep ipucunda
+    // (title) yazar. Etiket kısa kalır — uzun sebep cümlesi menüyü
+    // genişletip tasarımı bozuyordu. Açık bırakılsaydı basılınca arka taraf
+    // reddederdi ama kullanıcı neden olmadığını göremezdi.
     // "Sil" = KALICI silme. Arşivleme ayrı eylem; ikisi ayrı iş yapıyor.
     // Arşivde de gösterilir: oradaki dosya da kalıcı silinebilmeli.
-    labelKey: (item) =>
-      (item.liveUsage || 0) > 0 ? "media.actions.deleteBlocked" : "media.actions.purge",
+    labelKey: () => "media.actions.purge",
+    hintKey: (item) => ((item.liveUsage || 0) > 0 ? "media.actions.deleteBlocked" : null),
     needsEdit: true,
     blockedWhenUsed: true,
     danger: true,
   },
-];
-
-/**
- * Kart üzerinde hover/odakla çıkan hızlı işlemler.
- * Menüyü açmadan tek tıkla erişim — kısayol bilmeyen kullanıcı için görünür yol.
- * `CARD_ACTIONS`'ın alt kümesi; id'ler aynı handler'a düşer.
- */
-export const QUICK_ACTIONS = [
-  { id: "preview", icon: "eye", labelKey: "media.actions.preview" },
-  { id: "edit", icon: "pencil", labelKey: "media.actions.edit", needsEdit: true },
-  { id: "download", icon: "download", labelKey: "media.actions.download" },
 ];

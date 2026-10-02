@@ -449,7 +449,14 @@
                               :recommended-size="
                                 field.fieldname === 'banner_image' ? '1600×400' : '400×400'
                               "
+                              :placement-slot="
+                                field.fieldname === 'banner_image'
+                                  ? 'company.cover_image'
+                                  : 'seller.logo'
+                              "
                               @update:model-value="formData[field.fieldname] = $event"
+                              @placement="openPlacement"
+                              @uploaded="onProfileImageUploaded(field.fieldname, $event)"
                             />
                             <template v-else>
                               <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
@@ -705,24 +712,38 @@
                       <div
                         v-for="(row, idx) in childTableData[table.fieldname] || []"
                         :key="row.name || idx"
-                        class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
+                        class="flex flex-col gap-2"
                       >
-                        <img
-                          v-if="getFirstImageField(row, table.options)"
-                          :src="getFirstImageField(row, table.options)"
-                          class="w-full h-full object-cover"
+                        <div
+                          class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
+                        >
+                          <img
+                            v-if="getFirstImageField(row, table.options)"
+                            :src="getFirstImageField(row, table.options)"
+                            class="w-full h-full object-cover"
+                          />
+                          <button
+                            class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                            :title="t('docTypeForm.delete')"
+                            @click="removeChildRow(table.fieldname, idx)"
+                          >
+                            <AppIcon name="x" :size="12" />
+                          </button>
+                          <span
+                            class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]"
+                            >{{ idx + 1 }}</span
+                          >
+                        </div>
+                        <ImagePlacementButton
+                          v-if="
+                            table.options === 'Seller Gallery Image' &&
+                            getFirstImageField(row, table.options)
+                          "
+                          compact
+                          :file-url="getFirstImageField(row, table.options)"
+                          slot-key="company.cover_image"
+                          @open="openPlacement"
                         />
-                        <button
-                          class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                          :title="t('docTypeForm.delete')"
-                          @click="removeChildRow(table.fieldname, idx)"
-                        >
-                          <AppIcon name="x" :size="12" />
-                        </button>
-                        <span
-                          class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]"
-                          >{{ idx + 1 }}</span
-                        >
                       </div>
                       <label
                         class="relative aspect-square rounded-lg border-2 border-dashed border-brand-300 dark:border-brand-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
@@ -1324,11 +1345,32 @@
         }}</span>
       </button>
     </div>
+
+    <!-- Görsel önizleme penceresi — tek örnek; düğmeler ve tek-dosya yüklemesi açar. -->
+    <ImagePlacementModal
+      v-if="placement.state.open"
+      v-model:open="placement.state.open"
+      :file-url="placement.state.fileUrl"
+      :slot-key="placement.state.slotKey"
+      :file-name="placement.state.fileName"
+      :context="placement.state.context"
+      :return-focus="placement.state.returnFocus"
+    />
   </div>
 </template>
 
 <script setup>
-  import { ref, computed, reactive, onMounted, onUnmounted, watch, provide, nextTick } from "vue";
+  import {
+    ref,
+    computed,
+    reactive,
+    onMounted,
+    onUnmounted,
+    watch,
+    provide,
+    nextTick,
+    defineAsyncComponent,
+  } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
@@ -1351,6 +1393,8 @@
   import Skeleton from "@/components/common/Skeleton.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ProfileImageDropzone from "@/components/upload/ProfileImageDropzone.vue";
+  import ImagePlacementButton from "@/components/media/preview/ImagePlacementButton.vue";
+  import { usePlacementLauncher } from "@/composables/usePlacementLauncher";
   import { getTabExtension } from "./tab-extensions";
   import { resolveFieldRenderer } from "@/components/form-fields/registry";
   import WidgetPreview from "@/components/form-fields/WidgetPreview.vue";
@@ -1437,6 +1481,24 @@
   const pendingAction = ref(null);
   const docData = ref({});
   const formData = ref({});
+
+  // ── Görsel önizleme penceresi (spec 2026-10-01 §4.4) ──────────────────
+  const ImagePlacementModal = defineAsyncComponent(
+    () => import("@/components/media/preview/ImagePlacementModal.vue")
+  );
+  const placement = usePlacementLauncher();
+  const placementContext = () => ({ storeName: formData.value?.seller_name || "" });
+  function openPlacement({ fileUrl, slotKey, trigger }) {
+    placement.show({ fileUrl, slotKey, trigger, context: placementContext() });
+  }
+  function onProfileImageUploaded(fieldname, url) {
+    placement.afterUpload({
+      selected: 1,
+      fileUrl: url,
+      slotKey: fieldname === "banner_image" ? "company.cover_image" : "seller.logo",
+      context: placementContext(),
+    });
+  }
   // Make formData reachable from any descendant custom field renderer with
   // guaranteed reactivity (prop binding via v-bind unwraps the ref into a
   // non-tracked object, breaking deep watchers in nested components).
@@ -2531,6 +2593,7 @@
     const batchKey = `child-${fieldname}-multi`;
     uploads.start(batchKey);
     let anySuccess = false;
+    let tekUrl = "";
     try {
       const meta = childTableMeta[childDoctype] || [];
       const imageField = meta.find((f) => f.fieldtype === "Attach Image");
@@ -2543,6 +2606,7 @@
         try {
           const url = await api.uploadFile(file);
           anySuccess = true;
+          tekUrl = url;
           const row = {};
           // Pre-fill defaults for all fields
           for (const f of meta) {
@@ -2561,6 +2625,13 @@
           toast.error(`${file.name}: ${err.message || t("docTypeForm.uploadFailedShort")}`);
         }
       }
+      if (childDoctype === "Seller Gallery Image")
+        placement.afterUpload({
+          selected: files.length,
+          fileUrl: files.length === 1 ? tekUrl : "",
+          slotKey: "company.cover_image",
+          context: placementContext(),
+        });
       if (anySuccess) await uploads.finish(batchKey);
       else uploads.fail(batchKey);
     } finally {

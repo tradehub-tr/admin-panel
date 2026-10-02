@@ -71,7 +71,9 @@ function kur({ fail = false, gecikme = 0 } = {}) {
         else
           resolve({
             message: {
-              sections: [{ section_key: "dashboard", items: [{ label: "G", module_key: "m", items: [] }] }],
+              sections: [
+                { section_key: "dashboard", items: [{ label: "G", module_key: "m", items: [] }] },
+              ],
               hidden_doctypes: ["Gizli DT"],
               hidden_routes: ["/gizli"],
             },

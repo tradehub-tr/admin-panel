@@ -24,7 +24,14 @@ import { computed, ref, toValue } from "vue";
 export function useMediaBrowser({ keys, fetchLevel, rootLabel = "", pageSize: initialSize = 50 }) {
   const blankPath = () => Object.fromEntries(keys.map((k) => [k, ""]));
 
+  /** İstenen konum — kırıntı bunu okur, tıklandığı an güncellenir. */
   const path = ref(blankPath());
+  /**
+   * Ekrandaki içeriğin konumu — veriyle BİRLİKTE işlenir. Yükleme sürerken
+   * eski içerik görünür kalıyor; klasör adları/özel kovalar `path`'ten
+   * okunsaydı soluk eski içerik yeni klasörün bağlamıyla etiketlenirdi.
+   */
+  const shownPath = ref(blankPath());
   const folders = ref([]);
   const files = ref([]);
   const total = ref(0);
@@ -70,29 +77,41 @@ export function useMediaBrowser({ keys, fetchLevel, rootLabel = "", pageSize: in
    * o durumda ekran çökmemeli, boş klasör göstermeli. Hata metni `error`'da
    * durur, çağıran ekran onu boş durumun altında gösterir.
    */
+  /**
+   * Yükleme sırası. Hızlı art arda tıklamada geç dönen ESKİ yanıt yenisinin
+   * üstüne yazmasın: yalnız son isteğin sonucu işlenir.
+   */
+  let seq = 0;
+
   async function load() {
+    const mine = ++seq;
+    const requested = { ...path.value };
     loading.value = true;
-    error.value = "";
     try {
       const data =
         (await fetchLevel({
-          ...path.value,
+          ...requested,
           page: page.value,
           page_size: pageSize.value,
           search: search.value,
         })) || {};
+      if (mine !== seq) return;
+      error.value = "";
+      shownPath.value = requested;
       atFileLevel.value = Array.isArray(data.items);
       folders.value = data.folders || [];
       files.value = data.items || [];
       total.value = data.total || 0;
     } catch (e) {
+      if (mine !== seq) return;
       error.value = e?.message || "unknown";
+      shownPath.value = requested;
       atFileLevel.value = false;
       folders.value = [];
       files.value = [];
       total.value = 0;
     } finally {
-      loading.value = false;
+      if (mine === seq) loading.value = false;
     }
   }
 
@@ -131,6 +150,7 @@ export function useMediaBrowser({ keys, fetchLevel, rootLabel = "", pageSize: in
 
   return {
     path,
+    shownPath,
     folders,
     files,
     total,

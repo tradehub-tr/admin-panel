@@ -71,7 +71,13 @@ export const SOURCES = [
   { width: 3, height: 2 }, // dejenere: yuvarlama burada acımasız
 ];
 
-export const SLOTS = ["company.cover_image", "company.cover_video"];
+/**
+ * Kırpılan profili OLAN slotlar. 2026-09-30'dan beri `company.cover_image`
+ * oranı korur (5 `contain` basamağı, kırpılan profil yok) — kırpılabilir
+ * profili olmayan slotta `chooseProfile` `null` döner ve vaka üretilmez.
+ * Kırpılan tek slot `company.cover_video` (16:9 + 4:3 posterler).
+ */
+export const SLOTS = ["company.cover_video"];
 
 /**
  * Vaka sınıfları. Parite tek bir sayı DEĞİLDİR — hangi yolun ölçüldüğü

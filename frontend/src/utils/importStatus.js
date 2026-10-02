@@ -30,3 +30,12 @@ export function isFailed(state) {
 export function isIncompleteImport(state, errorCount = 0) {
   return isPartial(state) || isFailed(state) || Number(errorCount) > 0;
 }
+
+// Older runner caches report "done" even when some rows failed. Counts
+// refine that terminal result; an active import must remain active.
+export function importOutcome(data = {}) {
+  const state = normalizeState(data.state) || "running";
+  if (["done", "completed"].includes(state) && Number(data.error_count) > 0)
+    return Number(data.inserted) > 0 || Number(data.updated) > 0 ? "partial" : "failed";
+  return state;
+}

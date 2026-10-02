@@ -125,59 +125,59 @@ export default {
 			"maxMegapixelsHard": 80,
 			"profiles": [
 				{
+					"name": "cover_384",
+					"width": 384,
+					"height": null,
+					"fit": "contain",
+					"formats": [
+						"webp"
+					],
+					"ratioLabel": null,
+					"maxOvershoot": null
+				},
+				{
 					"name": "cover_768",
 					"width": 768,
 					"height": null,
-					"fit": "cover",
+					"fit": "contain",
 					"formats": [
-						"avif"
+						"webp"
 					],
-					"ratioLabel": "24:5",
-					"maxOvershoot": 1.2
+					"ratioLabel": null,
+					"maxOvershoot": null
 				},
 				{
 					"name": "cover_1280",
 					"width": 1280,
 					"height": null,
-					"fit": "cover",
+					"fit": "contain",
 					"formats": [
-						"avif"
+						"webp"
 					],
-					"ratioLabel": "24:5",
-					"maxOvershoot": 1
+					"ratioLabel": null,
+					"maxOvershoot": null
+				},
+				{
+					"name": "cover_1536",
+					"width": 1536,
+					"height": null,
+					"fit": "contain",
+					"formats": [
+						"webp"
+					],
+					"ratioLabel": null,
+					"maxOvershoot": null
 				},
 				{
 					"name": "cover_1920",
 					"width": 1920,
 					"height": null,
-					"fit": "cover",
+					"fit": "contain",
 					"formats": [
-						"avif"
+						"webp"
 					],
-					"ratioLabel": "24:5",
-					"maxOvershoot": 1
-				},
-				{
-					"name": "cover_2560",
-					"width": 2560,
-					"height": null,
-					"fit": "cover",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": "24:5",
-					"maxOvershoot": 1
-				},
-				{
-					"name": "cover_16x9_1000",
-					"width": 1000,
-					"height": 563,
-					"fit": "cover",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": "16:9",
-					"maxOvershoot": 1
+					"ratioLabel": null,
+					"maxOvershoot": null
 				}
 			]
 		},
@@ -307,30 +307,19 @@ export default {
 		{
 			"slotKey": "product.image",
 			"title": "Ürün görseli",
-			"minShortEdge": 1000,
+			"minShortEdge": null,
 			"maxMegapixelsHard": 80,
 			"profiles": [
-				{
-					"name": "w96",
-					"width": 96,
-					"height": null,
-					"fit": "pad",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": "1:1",
-					"maxOvershoot": 1.85
-				},
 				{
 					"name": "w192",
 					"width": 192,
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"avif"
+						"webp"
 					],
 					"ratioLabel": "1:1",
-					"maxOvershoot": 1.85
+					"maxOvershoot": 3.69
 				},
 				{
 					"name": "w384",
@@ -338,21 +327,10 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"avif"
+						"webp"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.83
-				},
-				{
-					"name": "w640",
-					"width": 640,
-					"height": null,
-					"fit": "pad",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": "1:1",
-					"maxOvershoot": 1.66
 				},
 				{
 					"name": "w768",
@@ -360,32 +338,21 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"avif"
+						"webp"
 					],
 					"ratioLabel": "1:1",
-					"maxOvershoot": 1.16
+					"maxOvershoot": 1.53
 				},
 				{
 					"name": "w1280",
 					"width": 1280,
 					"height": null,
-					"fit": "contain",
+					"fit": "pad",
 					"formats": [
-						"avif"
+						"webp"
 					],
-					"ratioLabel": null,
-					"maxOvershoot": 1.59
-				},
-				{
-					"name": "w1920",
-					"width": 1920,
-					"height": null,
-					"fit": "contain",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": null,
-					"maxOvershoot": 1.49
+					"ratioLabel": "1:1",
+					"maxOvershoot": 1.25
 				}
 			]
 		},
@@ -429,67 +396,34 @@ export default {
 					"name": "w64",
 					"width": 64,
 					"height": 64,
-					"fit": "pad",
+					"fit": "contain",
 					"formats": [
-						"avif"
+						"webp"
 					],
-					"ratioLabel": "1:1",
+					"ratioLabel": null,
 					"maxOvershoot": 1.33
 				},
 				{
 					"name": "w128",
 					"width": 128,
 					"height": 128,
-					"fit": "pad",
+					"fit": "contain",
 					"formats": [
-						"avif"
+						"webp"
 					],
-					"ratioLabel": "1:1",
+					"ratioLabel": null,
 					"maxOvershoot": 1.07
 				},
 				{
 					"name": "w256",
 					"width": 256,
 					"height": 256,
-					"fit": "pad",
+					"fit": "contain",
 					"formats": [
-						"avif"
+						"webp"
 					],
-					"ratioLabel": "1:1",
+					"ratioLabel": null,
 					"maxOvershoot": 1.6
-				},
-				{
-					"name": "w384",
-					"width": 384,
-					"height": 384,
-					"fit": "pad",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": "1:1",
-					"maxOvershoot": 1.37
-				},
-				{
-					"name": "w512",
-					"width": 512,
-					"height": 512,
-					"fit": "pad",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": "1:1",
-					"maxOvershoot": 1.83
-				},
-				{
-					"name": "og1200x630",
-					"width": 1200,
-					"height": 630,
-					"fit": "pad",
-					"formats": [
-						"avif"
-					],
-					"ratioLabel": "1200:630",
-					"maxOvershoot": null
 				}
 			]
 		},

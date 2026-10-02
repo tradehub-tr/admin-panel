@@ -25,11 +25,12 @@
  *     // q.items · q.stats · q.start() · q.retry(id) · q.abort(id)
  */
 
-import { computed, onScopeDispose, ref, toValue } from "vue";
+import { computed, effectScope, onScopeDispose, ref, toValue } from "vue";
 
 import api from "@/utils/api";
 import { createMediaApi } from "@/lib/api/client.js";
 import { prepareMedia } from "@/lib/media/compress.js";
+import { dataThumbnail } from "@/lib/media/thumbnail.js";
 import { duplicateFinding, findDuplicateInLibrary } from "@/lib/media/upload/dedupCheck.js";
 import {
   CLIENT_ACTION,
@@ -46,6 +47,7 @@ import {
   uploadSingleShot,
 } from "@/lib/media/upload/session.js";
 import * as policy from "@/utils/uploadPolicy";
+import { kindOfFile } from "@/utils/mediaKind";
 
 /** Kuyruk satırının durumu. */
 export const ITEM_STATUS = {
@@ -128,9 +130,16 @@ export function useMediaUpload(options = {}) {
    *
    * Aynı dosya iki kez bırakılırsa (sürükle-bırak + yapıştır) tek satır
    * kalır: parmak izi ad + boyut + değişim zamanı.
+   *
+   * `opts.slotKey` / `opts.session`: ortak kuyrukta (bkz. `useSharedMediaUpload`)
+   * satır kendi slotunu ve hangi yükleyici açılışından geldiğini TAŞIR — modal
+   * kapanıp başka slotla yeniden açılsa da sıradaki dosya eklendiği slotun
+   * politikasıyla gider. Verilmezse kuyruğun `slotKey` seçeneği geçerli.
    */
-  function add(files) {
+  function add(files, opts = {}) {
     const gelen = Array.from(files || []).filter(Boolean);
+    const satirSlotu = opts.slotKey ?? (toValue(slotKey) || "");
+    const oturumu = opts.session ?? null;
     const yeni = [];
     for (const file of gelen) {
       const fp = `${file.name}|${file.size}|${file.lastModified}`;
@@ -143,6 +152,11 @@ export function useMediaUpload(options = {}) {
         fingerprint: fp,
         name: file.name,
         size: file.size,
+        kind: kindOfFile(file),
+        slotKey: satirSlotu,
+        session: oturumu,
+        // Tepsi küçük resmi: CSP `blob:` görsele izin vermiyor → `data:` (thumbnail.js).
+        previewUrl: "",
         status: ITEM_STATUS.QUEUED,
         percent: 0,
         etaSeconds: null,
@@ -166,7 +180,11 @@ export function useMediaUpload(options = {}) {
       // (W5 kablolamasında canlı panelde ölçüldü; birim testleri değerleri
       // doğrudan okuduğu için yakalayamadı). Diğer bütün yollar (`bul`,
       // `start`) satırı zaten `items.value` üzerinden — vekil olarak — alıyor.
-      yeni.push(items.value[items.value.length - 1]);
+      const vekil = items.value[items.value.length - 1];
+      yeni.push(vekil);
+      dataThumbnail(file).then((url) => {
+        if (url) vekil.previewUrl = url;
+      });
     }
     if (yeni.length) onKontrol(yeni);
     return yeni;
@@ -179,16 +197,21 @@ export function useMediaUpload(options = {}) {
     // değil, sunucuya sormak doğru davranış.
     await policy.loadLimits();
 
-    const anahtar = toValue(slotKey) || "";
     for (const satir of satirlar) {
       if (satir.status !== ITEM_STATUS.QUEUED) continue;
       satir.status = ITEM_STATUS.CHECKING;
       try {
         // `count`: bu slota giden kaçıncı dosya olduğu — `max_count` için.
+        // Ortak kuyrukta yalnız AYNI açılışın AYNI slotu sayılır: önceki bir
+        // yüklemenin bitmiş satırları yeni partinin sınırını yemesin.
         const sayi = items.value.filter(
-          (i) => i.status !== ITEM_STATUS.BLOCKED && i.status !== ITEM_STATUS.ABORTED
+          (i) =>
+            i.status !== ITEM_STATUS.BLOCKED &&
+            i.status !== ITEM_STATUS.ABORTED &&
+            i.slotKey === satir.slotKey &&
+            i.session === satir.session
         ).length;
-        const sonuc = await runPreflight(satir.file, { slotKey: anahtar, count: sayi });
+        const sonuc = await runPreflight(satir.file, { slotKey: satir.slotKey, count: sayi });
         if (workerActive.value === null) workerActive.value = sonuc.workerUsed;
 
         satir.measure = sonuc.measure;
@@ -303,7 +326,7 @@ export function useMediaUpload(options = {}) {
       if (kontrol.signal.aborted) throw iptal();
 
       satir.status = ITEM_STATUS.UPLOADING;
-      const etkinSlot = toValue(slotKey) || "";
+      const etkinSlot = satir.slotKey ?? (toValue(slotKey) || "");
       const istemciRaporu = satir.measure
         ? {
             width: satir.measure.width,
@@ -315,7 +338,7 @@ export function useMediaUpload(options = {}) {
         : null;
 
       if (!policy.needsChunking(gonderilecek)) {
-        satir.percent = 5;
+        satir.progressKnown = false;
         satir.result = await uploadSingleShot(gonderilecek, {
           api,
           uploadApi: typedMediaApi,
@@ -336,6 +359,7 @@ export function useMediaUpload(options = {}) {
           contentSha256: gonderilecek === satir.file ? satir.duplicate?.sha256 || "" : "",
           clientReport: istemciRaporu,
           onProgress: (d) => {
+            satir.progressKnown = true;
             satir.percent = Math.round(d.percent);
             satir.etaSeconds = d.etaSeconds;
             satir.resumed = d.resumed;
@@ -437,6 +461,17 @@ export function useMediaUpload(options = {}) {
     );
   }
 
+  /**
+   * "Yüklendi" bildirimi tek sefer: aynı satırı hem açık yükleyici (`uploaded`
+   * olayı) hem kabuktaki tepsi sahibi (liste tazeleme) görebilir; ilk soran alır.
+   */
+  const bildirilenler = new Set();
+  function claimDone(id) {
+    if (bildirilenler.has(id)) return false;
+    bildirilenler.add(id);
+    return true;
+  }
+
   onScopeDispose(() => {
     // Sayfadan çıkılırken süren istekleri kesiyoruz; `upload_abort`
     // beklenmiyor (sayfa gidiyor), sunucudaki zamanlanmış temizlik devralır.
@@ -458,5 +493,29 @@ export function useMediaUpload(options = {}) {
     abortAll,
     remove,
     clearFinished,
+    claimDone,
   };
+}
+
+// ── Ortak (uygulama ömürlü) kuyruk ──────────────────────────────────
+// Kütüphanenin "Medya Yükle" modalı kapanınca kuyruk ölmesin: yüklemeler
+// sürer ve kabuktaki yüzen tepsi (MediaUploadTrayHost) satırları gösterir.
+// Kapsam bilerek AYRIK (`effectScope(true)`): bileşen kapsamına bağlansaydı
+// ilk açan bileşen sökülünce `onScopeDispose` süren istekleri keserdi.
+let ortak = null;
+let ortakKapsam = null;
+
+export function useSharedMediaUpload() {
+  if (!ortak) {
+    ortakKapsam = effectScope(true);
+    ortak = ortakKapsam.run(() => useMediaUpload());
+  }
+  return ortak;
+}
+
+/** Testler ve oturum kapanışı: süren istekleri kes, kuyruğu sıfırla. */
+export function disposeSharedMediaUpload() {
+  ortakKapsam?.stop();
+  ortakKapsam = null;
+  ortak = null;
 }

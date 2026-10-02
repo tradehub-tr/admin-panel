@@ -55,12 +55,22 @@ const byId = new Map(vectors.vectors.map((v) => [v.id, v]));
  * kenarı farklı olan vaka sayısı; `enBuyuk` = kenar başına en büyük fark (px).
  */
 const BEKLENEN = {
+  // YENİDEN ÖLÇÜLDÜ 2026-09-30: company.cover_image artık oranı koruyor
+  // (`contain`, kırpılan profil yok) → vakalar yalnız company.cover_video'dan
+  // üretiliyor (scripts/gen-crop-pixel-cases.mjs SLOTS). Eskiden vakaların
+  // ~yarısı 1000×563 profilindeydi (1,77620 — tam 16:9 değil); şimdi kilitli
+  // oran hep poster_1280'in TAM 16:9'u.
+  //
   // Kanonik yol: oran kilitli, zoom yok, kullanıcı yalnız odağı taşımış.
   // 5 vaka 1 px sapıyor — yuvarlama İFADESİ iki tarafta farklı yazılmış:
   // panel kaynak pikselinde floor(v+0.5) (yarım YUKARI), sunucu normalize
   // uzayda int(round(v)) (Python'da yarım ÇİFTE). 200×150 kaynakta 16:9
   // penceresi tam 112,5 px yüksekliğe düşer ve iki kural ayrılır.
-  A: { adet: 120, sapan: 5, enBuyuk: 1 },
+  // 5 → 13: kilitli oran artık HER vakada tam 16:9, yani 200×150 kaynağın
+  // her A vakası yarım piksele düşüyor (eskiden 1000×563 profilli yarısı
+  // 112,6 px'e düşüp ayrışmıyordu). Mekanizma aynı, aşağıdaki "yalnız
+  // yuvarlama ifadesi" testi bunu her koşuda kanıtlıyor.
+  A: { adet: 120, sapan: 13, enBuyuk: 1 },
   // Zoom + merkez ARTIK YÜKTE (T-105 B/C/E): `savePayload` zoom üçlüsünü
   // taşıyor, sunucu taban bölgeyi `core/crop.py::zoom_region_of` ile birebir
   // yeniden kuruyor. Eski ölçüm 119/120 sapan, 7391 px'e kadar; şimdi kalan
@@ -75,13 +85,19 @@ const BEKLENEN = {
   // kalan 3'ü 1920×1080'in 1000×563 profil oranından %0,09 farkı (2 px).
   // Bu bir kayıt kaybı DEĞİL, bilinçli politika — tolerans gevşetilmedi,
   // sayı olduğu gibi sabitlendi.
-  C: { adet: 120, sapan: 104, enBuyuk: 3704 },
+  // 2026-09-30: 104 → 101. 1000×563 profili kalktı; tam 16:9 poster_1280'de
+  // 1920×1080 kaynağın 2 px'lik oran farkı yok. Kalan 101 serbest-oran vakası.
+  C: { adet: 120, sapan: 101, enBuyuk: 3704 },
   // Kilitli oran + override: oran zaten uyduğu için yalnız yuvarlama kalıyor.
-  D: { adet: 120, sapan: 7, enBuyuk: 1 },
+  // 7 → 13: A ile aynı sebep — tam 16:9 kilidinde 200×150 kaynak hep yarım
+  // piksele düşüyor.
+  D: { adet: 120, sapan: 13, enBuyuk: 1 },
   // Serbest kırpma, override YOK: panel taban bölgeyi gösterir, sunucu
   // profilin oranına kırpar. C ile aynı mekanizma (ölçüldü: 86/86 sunucu
   // profil oranında; 79 serbest oran + 7 kaynak-profil oran farkı, 2 px).
-  E: { adet: 120, sapan: 86, enBuyuk: 3481 },
+  // 2026-09-30: 86 → 79. 1000×563 profili kalktığı için 7'lik 2 px'lik
+  // kaynak-profil oran farkı sınıfı yok oldu; kalan 79 serbest-oran vakası.
+  E: { adet: 120, sapan: 79, enBuyuk: 3481 },
 };
 
 let server;

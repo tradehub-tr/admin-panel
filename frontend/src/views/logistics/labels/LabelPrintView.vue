@@ -205,8 +205,8 @@
                  testi görünümden bağımsız kılar. -->
           <button
             v-for="(pkg, index) in packageRows"
-            data-testid="kuyruk-satiri"
             :key="pkg.package_code ?? index"
+            data-testid="kuyruk-satiri"
             type="button"
             class="list-grid-card !p-0 text-start"
             :class="index === activeIndex ? '!border-amber-400' : ''"
@@ -294,8 +294,8 @@
         >
           <div
             v-for="(pkg, index) in packageRows"
-            data-testid="kuyruk-satiri"
             :key="pkg.package_code ?? index"
+            data-testid="kuyruk-satiri"
             class="list-compact-item list-compact-item--secilebilir"
             :class="index === activeIndex ? 'bg-amber-50/60 dark:bg-amber-900/10' : ''"
             @click="activeIndex = index"
@@ -368,8 +368,8 @@
             <tbody>
               <tr
                 v-for="(pkg, index) in packageRows"
-                data-testid="kuyruk-satiri"
                 :key="pkg.package_code ?? index"
+                data-testid="kuyruk-satiri"
                 class="cursor-pointer border-b border-slate-100 transition-colors last:border-0 dark:border-slate-800"
                 :class="
                   index === activeIndex

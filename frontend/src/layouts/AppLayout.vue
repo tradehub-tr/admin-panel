@@ -17,7 +17,16 @@
         <main :id="PAGE_MAIN_ID" tabindex="-1" class="flex-1 p-4 xl:p-6 page-content">
           <SellerTrialBanner class="mb-2" />
           <DunningBanner class="mb-2" />
-          <router-view />
+          <!-- Sayfa girişi: yalnız GİRİŞ animasyonlu (opacity + 6px yukarı, 180ms).
+               Çıkış anında — `@leave` done()'u eşzamanlı çağırır, eski sayfa aynı
+               tick'te DOM'dan kalkar; iki sayfa üst üste binmez, gezinme beklemez.
+               `:key` YOK: yalnız query/param değişen rotada bileşen yeniden
+               kullanılır (eski davranış); geçiş yalnız eşleşen bileşen değişince. -->
+          <router-view v-slot="{ Component }">
+            <Transition name="page" appear @leave="onPageLeave">
+              <component :is="Component" />
+            </Transition>
+          </router-view>
         </main>
 
         <AppFooter />
@@ -28,6 +37,11 @@
     <MobileTabBar v-if="!isLg" />
 
     <ToastContainer />
+
+    <!-- Medya yükleme tepsisi: kuyruk medya store'unda (genel), yüklemeler sayfa
+         değişince sürüyor. Store hiç kurulmadıysa yükleme de yoktur — bileşen
+         (ve store paketi) ancak o zaman indirilir. -->
+    <MediaUploadTrayHost v-if="mediaStoreReady" />
 
     <!-- Rehberli onboarding turu (her menü/bölüm) -->
     <GuidedTour />
@@ -50,7 +64,8 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, onUnmounted, watch } from "vue";
+  import { computed, defineAsyncComponent, onMounted, onUnmounted, watch } from "vue";
+  import { getActivePinia } from "pinia";
   import { useRoute } from "vue-router";
   import { useI18n } from "vue-i18n";
   import { useNavigationStore } from "@/stores/navigation";
@@ -71,6 +86,12 @@
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
   import DunningBanner from "@/components/DunningBanner.vue";
   import { storefrontBase } from "@/utils/storefrontUrl";
+
+  const MediaUploadTrayHost = defineAsyncComponent(
+    () => import("@/components/media/MediaUploadTrayHost.vue")
+  );
+  const pinia = getActivePinia();
+  const mediaStoreReady = computed(() => Boolean(pinia?.state.value.media));
 
   const { t } = useI18n();
   // <768px: rail + panel yerine MobileTabBar render edilir.
@@ -108,6 +129,11 @@
   // `http://localhost:5500/` diyordu — yerel build'de panelden vitrine
   // giden düğme var olmayan bir porta gidiyordu (ölçüldü 7 Eyl).
   const storefrontHref = storefrontBase() || "/";
+
+  // Çıkan sayfa beklemeden kaldırılır (bkz. template'teki <Transition>).
+  function onPageLeave(_el, done) {
+    done();
+  }
   const showStorefrontBtn = computed(() => auth.isSeller || auth.isAdmin);
 
   onMounted(async () => {
@@ -125,12 +151,33 @@
   });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
   /* Programatik odak halkası çizilmesin: `<main>` Tab ile ulaşılamıyor
      (tabindex="-1"), görünür halka burada bilgi taşımaz — klavye odağının
      gerçek göstergesi içerideki ilk etkileşimli öğe. */
   .page-content:focus {
     outline: none;
+  }
+
+  /* Sayfa girişi — ease-out: hareketin hızlı kısmı kullanıcının baktığı anda.
+     Yalnız transform + opacity (compositor). */
+  .page-enter-active {
+    transition:
+      opacity $d-page $ease-out,
+      transform $d-page $ease-out;
+  }
+  .page-enter-from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  /* Azaltılmış hareket: kayma yok, global kural süreyi zaten ~0'a çekiyor. */
+  @media (prefers-reduced-motion: reduce) {
+    .page-enter-from {
+      transform: none;
+    }
   }
 
   .th-goto-storefront-btn {

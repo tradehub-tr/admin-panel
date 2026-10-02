@@ -162,6 +162,61 @@ test("hatadan sonraki başarılı yükleme hata durumunu temizler", async () => 
   assert.equal(b.folders.value.length, 1);
 });
 
+test("üst üste iki yüklemede geç dönen ESKİ yanıt yenisinin üstüne yazmaz", async () => {
+  const pending = [];
+  const b = useMediaBrowser({
+    keys: SELLER_KEYS,
+    fetchLevel: (params) =>
+      new Promise((resolve) => pending.push({ scope: params.scope, resolve })),
+  });
+
+  const first = b.enter({ id: "public" });
+  const second = b.jump("root");
+  assert.equal(pending.length, 2);
+  // Kırıntı hemen yeni konumu gösterir; içerik yolu (shownPath) veri gelene kadar eski.
+  assert.equal(b.path.value.scope, "");
+  assert.equal(b.shownPath.value.scope, "");
+
+  pending[1].resolve({
+    folders: [
+      { id: "public", count: 1 },
+      { id: "chat", count: 2 },
+    ],
+  });
+  await second;
+  assert.equal(b.loading.value, false);
+  assert.deepEqual(
+    b.folders.value.map((f) => f.id),
+    ["public", "chat"]
+  );
+
+  // İlk istek EN SON dönüyor: düşürülmeli.
+  pending[0].resolve({ items: [{ name: "x" }], total: 1 });
+  await first;
+  assert.equal(b.atFileLevel.value, false);
+  assert.deepEqual(
+    b.folders.value.map((f) => f.id),
+    ["public", "chat"]
+  );
+  assert.deepEqual(b.files.value, []);
+  assert.deepEqual(b.shownPath.value, { scope: "", category: "", listing: "" });
+  assert.equal(b.loading.value, false);
+});
+
+test("içerik yolu (shownPath) veriyle BİRLİKTE işlenir", async () => {
+  let release;
+  const b = useMediaBrowser({
+    keys: SELLER_KEYS,
+    fetchLevel: () => new Promise((resolve) => (release = resolve)),
+  });
+  const p = b.enter({ id: "public" }, "Mağaza");
+  assert.equal(b.path.value.scope, "public", "kırıntı hemen güncellenir");
+  assert.equal(b.shownPath.value.scope, "", "içerik eski klasörde kalır");
+  release({ folders: [{ id: "CAT-1", count: 1 }] });
+  await p;
+  assert.equal(b.shownPath.value.scope, "public");
+});
+
 test("görünüm uç yokken çökmeden render edilir ve boş durumu gösterir", async () => {
   const server = await createServer({
     configFile: false,

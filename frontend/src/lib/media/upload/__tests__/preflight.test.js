@@ -146,27 +146,43 @@ test("[FR-011] megapiksel tavanı `>` ile reddediyor — eşitlik geçerli", () 
   assert.equal(bulgu.params.limit, tavan);
 });
 
-test("[FR-015] kısa kenar `>=` ile geçerli", () => {
-  // Sunucu testi (`test_e2e_scenarios.py:169`) 999'un REDDEDİLDİĞİNİ söylüyor.
+test("[FR-015] kısa kenar artık reddetmiyor — 2026-09-29 kare kuralı: reddetme yok", () => {
+  // ÖNCEDEN: sunucu testi (`test_e2e_scenarios.py`) 999'un REDDEDİLDİĞİNİ
+  // söylüyordu. GÜNCELLENDİ 2026-09-29 (kare kuralı): ürüne bağlanan görsel
+  // artık kare 1000–2000 px beyaz dolguya otomatik çevrildiği için
+  // (media/kare.py) `product-image.json` `require`'dan `min_short_edge`
+  // kaldırıldı; istemci kopyası da `node src/lib/media/upload/sync.mjs` ile
+  // yeniden üretildi. Vektörler SİLİNMEDİ, yalnız beklenti KABUL'e çevrildi.
   const tam = evaluate(gorsel({ width: 1000, height: 1000 }), { slotKey: "product.image" });
   assert.equal(
     tam.findings.some((f) => f.reason === REASON.SHORT_EDGE_TOO_SMALL),
     false
   );
   const eksik = evaluate(gorsel({ width: 999, height: 999 }), { slotKey: "product.image" });
-  assert.ok(eksik.findings.some((f) => f.reason === REASON.SHORT_EDGE_TOO_SMALL));
-  assert.equal(eksik.action, ACTION.REJECT);
+  assert.equal(
+    eksik.findings.some((f) => f.reason === REASON.SHORT_EDGE_TOO_SMALL),
+    false
+  );
+  assert.equal(eksik.action, ACTION.ACCEPT);
 });
 
-test("[FR-016] izinsiz oran reddediliyor, tolerans içi geçiyor", () => {
-  // product.image: 1:1, 4:5, 3:4 · tolerans 0,02
+test("[FR-016] oran artık reddetmiyor — 2026-09-29 kare kuralı: reddetme yok", () => {
+  // ÖNCEDEN: product.image yalnız 1:1, 4:5, 3:4 (± tolerans 0,02) kabul
+  // ediyordu. GÜNCELLENDİ 2026-09-29 (kare kuralı): `require.allowed_ratios`/
+  // `ratio_tolerance` `product-image.json`'dan kaldırıldı (ürüne bağlanan
+  // görsel artık kare 1000–2000 px beyaz dolguya otomatik çevriliyor,
+  // media/kare.py) — HER oran artık kabul ediliyor.
   const kare = evaluate(gorsel({ width: 2000, height: 2000 }), { slotKey: "product.image" });
   assert.equal(
     kare.findings.some((f) => f.reason === REASON.RATIO_NOT_ALLOWED),
     false
   );
   const genis = evaluate(gorsel({ width: 3000, height: 1000 }), { slotKey: "product.image" });
-  assert.ok(genis.findings.some((f) => f.reason === REASON.RATIO_NOT_ALLOWED));
+  assert.equal(
+    genis.findings.some((f) => f.reason === REASON.RATIO_NOT_ALLOWED),
+    false
+  );
+  assert.equal(genis.action, ACTION.ACCEPT);
 });
 
 test("logo oran BANDI ayrı kural — 0,5…2,0 dışı reddediliyor", () => {

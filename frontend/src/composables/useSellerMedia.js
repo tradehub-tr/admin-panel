@@ -493,11 +493,13 @@ export function useSellerMedia() {
         : new File([prepared.blob], prepared.name, { type: prepared.blob.type });
 
     if (!policy.needsChunking(hazir)) {
-      ilerle(5);
       const base64 = await toBase64(hazir);
       if (signal?.aborted) throw yarida();
       const sonuc = ac(
-        await api.callMethod(`${YOL}.upload_media`, { file_name: hazir.name, content: base64 })
+        await api.callMethod(`${YOL}.upload_media`, {
+          file_name: hazir.name,
+          content: base64,
+        })
       );
       ilerle(100);
       return sonuc;

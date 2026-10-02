@@ -17,10 +17,7 @@ export const FLOAT_REPRS = {
 		"compliance_measured.violation_rate": "1.0"
 	},
 	"company.cover_image": {
-		"profiles[1].max_overshoot": "1.0",
-		"profiles[2].max_overshoot": "1.0",
-		"profiles[3].max_overshoot": "1.0",
-		"profiles[4].max_overshoot": "1.0"
+		"master.max_megapixels": "4.0"
 	},
 	"company.cover_video": {
 		"profiles[2].max_overshoot": "1.0",
@@ -32,6 +29,7 @@ export const FLOAT_REPRS = {
 	"document.attachment": {},
 	"library.image": {},
 	"product.image": {
+		"master.max_megapixels": "4.0",
 		"content_rules[2].threshold": "2.0"
 	},
 	"product.video": {},
@@ -948,9 +946,9 @@ export const SLOT_POLICIES = {
 			"max_count": 5
 		},
 		"master": {
-			"max_long_edge": 2560,
+			"max_long_edge": 2000,
 			"min_long_edge": 1920,
-			"max_megapixels": 1.64,
+			"max_megapixels": 4,
 			"dpi_out": 72,
 			"colorspace": "srgb",
 			"format": "webp",
@@ -960,7 +958,8 @@ export const SLOT_POLICIES = {
 				"gps": true,
 				"xmp": true,
 				"icc": false
-			}
+			},
+			"fit": "contain"
 		},
 		"quality": {
 			"metric": "ssim",
@@ -969,100 +968,88 @@ export const SLOT_POLICIES = {
 				"graphic": 0.98,
 				"text": 0.99
 			},
-			"reencode_floor_saving_ratio": 0.1
+			"reencode_floor_saving_ratio": 0.1,
+			"rendition_quality_mode": "fixed"
 		},
 		"profiles": [
+			{
+				"name": "cover_384",
+				"width": 384,
+				"formats": [
+					"webp"
+				],
+				"encoder_quality": {
+					"webp": 80
+				},
+				"fit": "contain",
+				"serves": [
+					"şirket galerisi küçük resmi 96–117px @2x–3x"
+				],
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): ölçüm: /magaza/<kod> 'Genel Bakış' küçük resimleri 96×72 (375 px) / 117×87 (≥820 px); 117 @3x = 351 → 384."
+			},
 			{
 				"name": "cover_768",
 				"width": 768,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 61
+					"webp": 80
 				},
-				"fit": "cover",
-				"target_ratio": "24:5",
+				"fit": "contain",
 				"serves": [
-					"mağaza bandı 360-430px telefonlarda @2x",
-					"640px viewport @1x"
+					"vitrin bandı 375 px @2x",
+					"galeri ana görseli 311 px @2x / 500 px @1x"
 				],
-				"derived_from": "hesap: 360 CSS px @2x = 720 → üst basamak 768; 640 viewport @1x = 640 de kapsanır. Kutu: tam viewport genişliği (tradehubfront/src/utils/seller/section-registry.ts:795 sarmalayıcıda max-width YOK) × section-registry.ts:103 yükseklikleri",
-				"max_overshoot": 1.2
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): ölçüm: vitrin slaytı 375×180 (375 px, DPR2 → 750), galeri 311×175 @2x = 622 ve 500×281 @1x → 768."
 			},
 			{
 				"name": "cover_1280",
 				"width": 1280,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 61
+					"webp": 80
 				},
-				"fit": "cover",
-				"target_ratio": "24:5",
+				"fit": "contain",
 				"serves": [
-					"768px tablet @1x",
-					"1024px @1x",
-					"1280px @1x",
-					"640px viewport @2x"
+					"vitrin bandı 820 px @1x",
+					"vitrin 375 px mobilde object-cover yükseklik sınırı (180 px × 2,67 oran @2x = 960)",
+					"galeri 500 px @2x"
 				],
-				"derived_from": "hesap: max(640 @2x = 1280; 1280 @1x = 1280) = 1280. Kutu: section-registry.ts:103 (h-[180px] sm:220 md:320 lg:400) × tam viewport",
-				"max_overshoot": 1
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): ölçüm: 820×400 @1x = 820; mobilde 1920×720 slayt 180 px yüksekliğe oturunca 480 CSS px → @2x 960 → 1280."
+			},
+			{
+				"name": "cover_1536",
+				"width": 1536,
+				"formats": [
+					"webp"
+				],
+				"encoder_quality": {
+					"webp": 80
+				},
+				"fit": "contain",
+				"serves": [
+					"vitrin bandı 1440 px @1x"
+				],
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): ölçüm: 1440×400 @1x = 1440 → 1536 (1920'ye göre ~%35 daha az piksel)."
 			},
 			{
 				"name": "cover_1920",
 				"width": 1920,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 61
+					"webp": 80
 				},
-				"fit": "cover",
-				"target_ratio": "24:5",
+				"fit": "contain",
 				"serves": [
-					"1440/1536/1920px masaüstü @1x",
-					"768px tablet @2x"
+					"vitrin bandı 1920 px @1x",
+					"820 px @2x (1640)"
 				],
-				"derived_from": "hesap: max(1920 @1x = 1920; 768 @2x = 1536) = 1920. Kutu: 1920×400 = en büyük gerçek kutu (section-registry.ts:103 lg:h-[400px], lg=768 tradehubfront/src/style.css:256-260)",
-				"max_overshoot": 1
-			},
-			{
-				"name": "cover_2560",
-				"width": 2560,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 61
-				},
-				"fit": "cover",
-				"target_ratio": "24:5",
-				"serves": [
-					"1280px viewport @2x",
-					"master / arşiv"
-				],
-				"derived_from": "hesap: 1280 CSS px @2x = 2560. Üst sınır olarak seçilme gerekçesi: tradehub_core/media/presets.py:14 `safe` preset max_dim = 2560 — kod tabanında zaten var olan en büyük eşik, yeni sayı değil.",
-				"max_overshoot": 1
-			},
-			{
-				"name": "cover_16x9_1000",
-				"width": 1000,
-				"height": 563,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 61
-				},
-				"fit": "cover",
-				"target_ratio": "16:9",
-				"serves": [
-					"StoreHeader ana medya alanı (kapak görseli veya video poster'ı)"
-				],
-				"derived_from": "hesap: ≥768px viewport'ta kutu sabit 500 CSS px (tradehubfront/src/components/seller/StoreHeader.ts:203 `w-full lg:w-[500px]`, :296 `aspect-video`); 500 @2x = 1000, yükseklik 1000×9/16 = 562,5 → 563. 640px viewport'ta kutu 608 CSS px (kapsayıcı max-w-[1200px] px-4 lg:px-8, StoreHeader.ts:46) → @1x karşılanır.",
-				"max_overshoot": 1
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): ölçüm: 1920×400 @1x = 1920; 820 @2x = 1640 → 1920. Master tavanı 2000 px, büyütme yok."
 			}
 		],
 		"content_rules": [
@@ -3084,12 +3071,12 @@ export const SLOT_POLICIES = {
 	},
 	"product.image": {
 		"$schema": "../schema/slot-policy.schema.json",
-		"schema_version": "1.0.0",
+		"schema_version": "1.5.0",
 		"status": "draft",
 		"standard_status": "fixed",
 		"slot_key": "product.image",
 		"title": "Ürün görseli",
-		"description": "Bir ilanın ana görseli, galeri görselleri ve varyant görselleri. Sistemdeki en yüksek trafikli ve en yüksek piksel talebi olan slot: 20 render noktasının 20'si de bu slotu basıyor (docs/reports/03-render-envanteri.md §2).",
+		"description": "Bir ilanın ana görseli, galeri görselleri ve varyant görselleri. Sistemdeki en yüksek trafikli ve en yüksek piksel talebi olan slot: 20 render noktasının 20'si de bu slotu basıyor (docs/reports/03-render-envanteri.md §2). Ürüne bağlanan görsel kare 1000–2000 px beyaz dolguya çevrilir (media/kare.py).",
 		"roles": [
 			"seller",
 			"admin"
@@ -3140,20 +3127,12 @@ export const SLOT_POLICIES = {
 			"allow_animated": false
 		},
 		"require": {
-			"min_short_edge": 1000,
-			"min_area": 1000000,
-			"allowed_ratios": [
-				"1:1",
-				"4:5",
-				"3:4"
-			],
-			"ratio_tolerance": 0.02,
 			"max_count": 12
 		},
 		"master": {
-			"max_long_edge": 2400,
-			"min_long_edge": 2000,
-			"max_megapixels": 5.76,
+			"max_long_edge": 2000,
+			"min_long_edge": 1000,
+			"max_megapixels": 4,
 			"dpi_out": 72,
 			"colorspace": "srgb",
 			"format": "webp",
@@ -3173,58 +3152,43 @@ export const SLOT_POLICIES = {
 				"text": 0.99,
 				"fine_detail": 0.975
 			},
-			"reencode_floor_saving_ratio": 0.1
+			"reencode_floor_saving_ratio": 0.1,
+			"rendition_quality_mode": "fixed"
 		},
 		"profiles": [
 			{
-				"name": "w96",
-				"width": 96,
+				"name": "w192",
+				"width": 192,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 88
+					"webp": 80
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
 				"pad_color": "#FFFFFF",
 				"serves": [
 					"R5 lightbox karosu",
-					"R14 sepet SKU satırı"
-				],
-				"derived_from": "hesap: max(lightbox karosu 52px @1x = 52; sepet SKU 40px @2x = 80) = 80 → üst basamak 96. Kutular: docs/reports/03-render-envanteri.md §3.8 (ProductImageGallery.ts:339; SkuRow.ts:36)",
-				"max_overshoot": 1.85
-			},
-			{
-				"name": "w192",
-				"width": 192,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 88
-				},
-				"fit": "pad",
-				"target_ratio": "1:1",
-				"pad_color": "#FFFFFF",
-				"serves": [
+					"R14 sepet SKU satırı",
 					"R3 PD galeri karosu",
 					"R7 PD mobil karo şeridi",
 					"R13 sepet ürün başlığı",
 					"R15 checkout özet şeridi",
 					"R16 sepet çekmecesi"
 				],
-				"derived_from": "hesap: max(checkout özet 64px @3x = 192; mobil karo 80px @2x = 160; PD karosu 70px @2x = 140; lightbox karosu 52px @2x = 104) = 192. Kutular: docs/reports/03-render-envanteri.md §3.8 (CartSummary.ts:20; MobileLayout.ts:198; ProductImageGallery.ts:86,103)",
-				"max_overshoot": 1.85
+				"derived_from": "KARAR 2026-09-30 (WebP merdiveni, 4 basamak): eski w96 basamağı kaldırıldı, işini w192 üstlendi. hesap: max(checkout özet 64px @3x = 192; mobil karo 80px @2x = 160; PD karosu 70px @2x = 140; lightbox karosu 52px @2x = 104; sepet SKU 40px @2x = 80) = 192. Kutular: docs/reports/03-render-envanteri.md §3.8 (CartSummary.ts:20; MobileLayout.ts:198; ProductImageGallery.ts:86,103,339; SkuRow.ts:36)",
+				"max_overshoot": 3.69,
+				"max_overshoot_note": "hesap: 192 / 52 (lightbox karosu @1x, eskiden w96'nın karşıladığı en küçük talep) = 3,69. w96 kaldırıldığı için bilinçli kabul edilen israf: 192 px kare WebP q80 birkaç KB."
 			},
 			{
 				"name": "w384",
 				"width": 384,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 61
+					"webp": 80
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3239,78 +3203,49 @@ export const SLOT_POLICIES = {
 				"max_overshoot": 1.83
 			},
 			{
-				"name": "w640",
-				"width": 640,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 61
-				},
-				"fit": "pad",
-				"target_ratio": "1:1",
-				"pad_color": "#FFFFFF",
-				"serves": [
-					"R1/R8/R9/R10/R11/R17/R18 kart ızgaraları @2x",
-					"R2 PD masaüstü ana görsel @1x"
-				],
-				"derived_from": "hesap: max(kart @2x 640 viewport = 592 (§3.1); PD masaüstü ana görsel ≥1536 viewport @1x = 502 (§3.5)) = 592 → üst basamak 640. Kaynak: docs/reports/03-render-envanteri.md §3.1, §3.5",
-				"max_overshoot": 1.66
-			},
-			{
 				"name": "w768",
 				"width": 768,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 61
+					"webp": 80
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
 				"pad_color": "#FFFFFF",
 				"serves": [
 					"R6 PD mobil ana görsel @1x (tablet dikey)",
-					"R1 kart @2x en geniş hâl"
+					"R1 kart @2x en geniş hâl",
+					"R1/R8/R9/R10/R11/R17/R18 kart ızgaraları @2x",
+					"R2 PD masaüstü ana görsel @1x"
 				],
-				"derived_from": "hesap: max(PD mobil ana görsel = tam viewport, 768px tablet dikey @1x = 768 (§3.6); kart @2x 1920 viewport = 685 (§3.4)) = 768. Kaynak: docs/reports/03-render-envanteri.md §3.6 satır 768, §3.4 satır 1920",
-				"max_overshoot": 1.16
+				"derived_from": "KARAR 2026-09-30 (WebP merdiveni, 4 basamak): eski w640 basamağı kaldırıldı, işini w768 üstlendi. hesap: max(PD mobil ana görsel = tam viewport, 768px tablet dikey @1x = 768 (§3.6); kart @2x 1920 viewport = 685 (§3.4); kart @2x 640 viewport = 592 (§3.1); PD masaüstü ana görsel ≥1536 viewport @1x = 502 (§3.5)) = 768. Kaynak: docs/reports/03-render-envanteri.md §3.1, §3.4, §3.5, §3.6",
+				"max_overshoot": 1.53,
+				"max_overshoot_note": "hesap: 768 / 502 (PD masaüstü ana görsel @1x, eskiden w640'ın karşıladığı en küçük talep) = 1,53."
 			},
 			{
 				"name": "w1280",
 				"width": 1280,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 61
+					"webp": 88
 				},
-				"fit": "contain",
+				"fit": "pad",
+				"target_ratio": "1:1",
+				"pad_color": "#FFFFFF",
 				"serves": [
 					"R6 PD mobil ana görsel @3x (360-390px telefon)",
 					"R4 lightbox ana görsel @2x",
-					"R1 kart @3x"
+					"R1 kart @3x",
+					"R2 masaüstü hover-zoom kaynağı (üst basamak)",
+					"R4 lightbox @3x (üst basamak)"
 				],
-				"derived_from": "hesap: max(lightbox ana görsel 636px @2x = 1272 (§3.8); PD mobil 360px @3x = 1080 (§3.6); kart @3x 1920 viewport = 1028 (§3.4)) = 1272 → üst basamak 1280. Kaynak: docs/reports/03-render-envanteri.md §3.8 satır 'PD lightbox ana görsel', §3.6, §3.4",
-				"max_overshoot": 1.59
-			},
-			{
-				"name": "w1920",
-				"width": 1920,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 61
-				},
-				"fit": "contain",
-				"serves": [
-					"R6 PD mobil ana görsel @3x (430px iPhone Pro Max) ve @2x (768px tablet)",
-					"R2 masaüstü hover-zoom kaynağı",
-					"R4 lightbox @3x"
-				],
-				"derived_from": "hesap: max(masaüstü hover-zoom ≥1536 viewport: 502px × 1.85 = 929 CSS @2x = 1858 (§3.5b); lightbox 636px @3x = 1908 (§3.8); tablet 768px @2x = 1536 (§3.6); iPhone Pro Max 430px @3x = 1290 (§3.6)) = 1908 → üst basamak 1920. Kaynak: docs/reports/03-render-envanteri.md §3.5b, §3.8, §3.6",
-				"max_overshoot": 1.49
+				"derived_from": "KARAR 2026-09-30 (WebP merdiveni, 4 basamak): eski w1920 basamağı kaldırıldı; en büyük basamak 1280. hesap: max(lightbox ana görsel 636px @2x = 1272 (§3.8); PD mobil 360px @3x = 1080 (§3.6); kart @3x 1920 viewport = 1028 (§3.4)) = 1272 → üst basamak 1280. Hover-zoom (1858) ve lightbox @3x (1908) talepleri artık bu basamakla KARŞILANMIYOR, 1280'e iner — kullanıcı kararıyla kabul edilen kalite/disk takası. Master (≤2000 px kare) ayrıca durur. fit 'contain' → 'pad': kare master için ikisi aynı pikseli verir; 'pad' kare olmayan eski bir master'da da kare çıktı garanti eder. Kaynak: docs/reports/03-render-envanteri.md §3.8, §3.6, §3.4",
+				"max_overshoot": 1.25,
+				"max_overshoot_note": "hesap: 1280 / 1028 (kart @3x 1920 viewport, w768'in üstündeki en küçük talep) = 1,25."
 			}
 		],
 		"content_rules": [
@@ -3458,15 +3393,15 @@ export const SLOT_POLICIES = {
 			"accept.max_bytes": "Global görsel tavanıyla aynı 25 MiB. 2.393 yerel ürün görselinde p99=2,66 MB, max=9,95 MB; mevcut veri bu tavanın altında (docs/reports/09-slot-bazinda-istatistik.md §4.1).",
 			"accept.max_megapixels_hard": "T-020 görev tanımı / kaynak tasarım dokümanı: 80 MP. Kod tabanında karşılığı YOK (grep 'MAX_IMAGE_PIXELS' → tradehub_core/ içinde 0 sonuç)",
 			"accept.allow_animated": "engine.py:111-112 — animasyonlu görsel işlenemiyor",
-			"require.min_short_edge": "T-020 görev tanımı / kaynak tasarım dokümanı: 1000 px. Çapraz kontrol: docs/reports/03-render-envanteri.md §3.6 — PD mobil ana görsel 360px telefonda @3x 1080 px istiyor; 1000 px'lik bir orijinal bu talebi bile karşılamıyor, yani 1000 gerçekten TABAN, hedef değil",
-			"require.min_area": "T-020 görev tanımı: 1.000.000 px. Karşılaştırma >= olmak zorunda: 1:1 oranda 1000×1000 = 1.000.000 tam sınırda buluşur, > kullanılsa min_short_edge ile çelişirdi",
-			"require.allowed_ratios": "T-020 görev tanımı: 1:1, 4:5, 3:4. Çapraz kontrol: render tarafındaki TÜM ürün kutuları kare (docs/reports/03-render-envanteri.md §2 — R1, R2, R4, R6, R8, R9, R10, R17, R18, R20 hepsi 'aspect-square'); 4:5 ve 3:4 kabul edildiği için profiles[] içinde 1:1 dolgu kararı verildi",
-			"require.ratio_tolerance": "T-020 görev tanımı: ±%2 → 0.02. Bantlar (hesap: |w/h − r| / r ≤ 0.02): 1:1 → 0.980-1.020; 4:5 → 0.784-0.816; 3:4 → 0.735-0.765. Bantlar çakışmıyor (0.816 < 0.980 ve 0.765 < 0.784), yani oran ataması tek anlamlı",
-			"require.max_count": "Yerel dağılım: 600 ilan; 1–3=458, 4–6=104, 7–12=27, 13+=11, max=21. 12 yeni yükleme tavanıdır; mevcut 11 ilan migration planında grandfather edilir (2026-08-23 DB ölçümü).",
-			"master.max_long_edge.mevcut_durum": "Bugün üç ayrı tavan var: to_webp yolu 1920 (engine.py:177, testi tests/test_engine_webp.py:33) — ürün görselleri fiilen bu yoldan geçiyor (api/seller_media.py:245-247, :292); optimize yolu varsayılan 2000 (presets.py:15); safe 2560 / aggressive 1600 (presets.py:14,16). Hiçbiri 2400 değil. Çelişkinin tartışması: docs/standards/product-image.md §5",
-			"master.max_long_edge": "hesap: docs/reports/03-render-envanteri.md §3.6 — PD mobil ana görsel kutusu tam viewport genişliği; en büyük gerçek cihaz sınıfı tablet dikey 768 CSS px, × DPR 3 = 2304 → üst basamak 2400. Çapraz kontrol: 1023 px viewport @2x = 2046 < 2400; masaüstü hover-zoom @2x = 1858 (§3.5b); lightbox @3x = 1908 (§3.8). Gerekçe ve mevcut koddaki 1920/2000 ile çelişkinin tartışması: docs/standards/product-image.md §5",
-			"master.min_long_edge": "T-020 görev tanımı: 2000. Bu bir RET eşiği değil: kaynak daha küçükse büyütülmez (engine.py:117 thumbnail yalnız küçültür), master 'under-spec' işaretlenir ve w1920 profili üretilmez",
-			"master.max_megapixels": "hesap: 2400 × 2400 = 5.760.000 px = 5.76 MP. max_long_edge ile tutarlı (invariant: 2400^2/1e6 = 5.76 >= 5.76)",
+			"require.min_short_edge": "KALDIRILDI 2026-09-29 (kare kuralı): eskiden T-020 görev tanımı 1000 px RET eşiğiydi. Ürüne bağlanan görsel artık kare 1000–2000 px beyaz dolguya otomatik çevrildiği için (media/kare.py) küçük/oransız girdiyi reddetmenin gerekçesi kalmadı — küçük kısa kenar artık RET değil, kare dönüşümüne girdi. Frontend `media.preflight.squareNote` ile bilgilendirir.",
+			"require.min_area": "KALDIRILDI 2026-09-29 (kare kuralı): eskiden T-020 görev tanımı 1.000.000 px alt sınırıydı (1000×1000). Aynı gerekçeyle (bkz. require.min_short_edge) RET kapısı olarak anlamını yitirdi. DİKKAT: kare dönüşümü (media/kare.py) TUVALİ 1000–2000 px'e tamamlar ama görseli BÜYÜTMEZ (`im.thumbnail` yalnız küçültür) — küçük alanlı bir orijinal, büyük beyaz tuvalin ortasında küçük kalır; RET kapısının kaldırılması bir kalite garantisi değildir, yalnız reddetmeme kararıdır.",
+			"require.allowed_ratios": "KALDIRILDI 2026-09-29 (kare kuralı): eskiden T-020 görev tanımı 1:1, 4:5, 3:4 idi. Kare dönüşüm motoru (media/kare.py) HER oranı beyaz dolguyla 1:1'e tamamladığı için oran RET kapısı gereksizleşti; oranı tutmayan bir girdi artık reddedilmek yerine dolgulanıyor.",
+			"require.ratio_tolerance": "KALDIRILDI 2026-09-29 (kare kuralı): eskiden T-020 görev tanımı ±%2 (0.02) idi. allowed_ratios ile birlikte kaldırıldı — toleranslı bir oran bandının artık bir RET işlevi yok, dönüşüm her oranı kabul ediyor.",
+			"require.max_count": "Yerel dağılım: 600 ilan; 1–3=458, 4–6=104, 7–12=27, 13+=11, max=21. 12 yeni yükleme tavanıdır; mevcut 11 ilan migration planında grandfather edilir (2026-08-23 DB ölçümü). Kare kuralından ETKİLENMEDİ: adet sınırı geometriden bağımsız.",
+			"master.max_long_edge.mevcut_durum": "KISMEN ESKİ (2026-09-29 öncesi ölçüm): Bugün üç ayrı tavan var: to_webp yolu 1920 (engine.py:177, testi tests/test_engine_webp.py:33) — ürün görselleri fiilen bu yoldan geçiyor (api/seller_media.py:245-247, :292); optimize yolu varsayılan 2000 (presets.py:15); safe 2560 / aggressive 1600 (presets.py:14,16). Hiçbiri eski 2400 değildi. Çelişkinin tartışması: docs/standards/product-image.md §5. 2026-09-29 kare kuralı max_long_edge'i 2000'e indirdi (aşağıya bakınız), optimize yolunun 2000 varsayılanıyla artık BİREBİR örtüşüyor.",
+			"master.max_long_edge": "GÜNCELLENDİ 2026-09-29 (kare kuralı): 2400 → 2000. Kare dönüşüm motoru (media/kare.py) master'ı 1000–2000 px kare tuvale beyaz dolguyla sabitliyor; uzun kenar artık render kutusu hesabından değil, kare tuvalin ÜST sınırından geliyor. Eski hesap (docs/reports/03-render-envanteri.md §3.6 — tablet dikey 768 CSS px × DPR 3 = 2304 → üst basamak 2400) kare kuralı ÖNCESİ geçerliydi; render talebi hâlâ dursa da artık kare tuvalin dışında ayrıca karşılanıyor (srcset/profiles[] üzerinden).",
+			"master.min_long_edge": "GÜNCELLENDİ 2026-09-29 (kare kuralı): 2000 → 1000. Bu bir RET eşiği DEĞİLDİR: kaynak daha küçükse büyütülmez (engine.py:117 thumbnail yalnız küçültür); kare tuvalin ALT sınırı 1000 px'e indi çünkü require.min_short_edge kaldırıldıktan sonra küçük girdi artık reddedilmiyor, dönüşüme giriyor — kare tuvalin kendisi 1000–2000 px bandını tanımlıyor.",
+			"master.max_megapixels": "GÜNCELLENDİ 2026-09-29 (kare kuralı): 5.76 → 4.0. hesap: 2000 × 2000 = 4.000.000 px = 4.0 MP. Yeni max_long_edge (2000) ile tutarlı (invariant: 2000^2/1e6 = 4.0 >= 4.0).",
 			"master.dpi_out": "T-020 görev tanımı: 72. Ekran medyasında piksel ölçüsünü etkilemez; 300 DPI etiketli baskı dosyalarının metadata'sını normalize eder",
 			"master.colorspace": "KARAR: sRGB. Faz 6 normalizer ICC profilli CMYK/AdobeRGB girdiyi LittleCMS ile dönüştürür; örnekli ΔE00 regresyonu docs/reports/59-t061-normalize.md içinde kayıtlıdır.",
 			"master.strip_metadata.icc": "false — engine.py:11-13 EXIF/ICC notu: convert('RGB') ICC'yi düşürüyor, bu yüzden profil bilinçli olarak çıktıya taşınıyor. Silmek renk yönetimini bozar",
@@ -3475,14 +3410,14 @@ export const SLOT_POLICIES = {
 			"quality.metric": "ÖLÇÜLMEDİ: kod tabanında hiçbir kalite ölçütü yok (grep 'ssim|butteraugli|dssim' → tradehub_core/ ve docs/ içinde 0 anlamlı sonuç)",
 			"quality.target_ssim_per_class": "Sınıf hedefleri kalite sözleşmesidir: metin ve düz renk quantization'a fotoğraftan daha duyarlı olduğu için text > graphic > fine_detail > photo. Faz 1 adaptif kalite ve Faz 6 golden regresyon koşumları hedefleri test eder; eşik değişikliği CR gerektirir.",
 			"quality.reencode_floor_saving_ratio": "tradehub_core/media/presets.py:25 MIN_SAVING_RATIO = 0.10 — mevcut Kapı 6 ile aynı değer",
-			"profiles": "Genişlikler docs/reports/03-render-envanteri.md §3.9'un aday kümesinden (96, 192, 384, 640, 768, 1080, 1280, 1600, 1920) seçildi; aralarındaki oran 1.25'in altında kalan çiftler birleştirildi (1080+1280 → 1280, 1600+1920 → 1920). Her profilin dayandığı kutu 'derived_from' alanında yazılı. Birleştirme gerekçesi: docs/standards/product-image.md §6",
-			"profiles[].encoder_quality.webp": "engine.py:148 to_webp(quality=80) — sistemin bugün fiilen kullandığı WebP kalitesi. presets.py:14-16 optimize yolunda 90/88/82 kullanıyor; ikisi ayrı yol, karıştırılmamalı",
-			"profiles[].encoder_quality.avif": "61 = T-013 adaptif kalite ölçümü; 10 anonimleştirilmiş gerçek Listing örneğinin 9 kayıplı örneğinde hedef SSIM 0.96 sağlandı, ortalama bayt q85'in %51,8'i oldu (docs/data/t013-adaptive-vs-q85.json). Grafik/alfa içerik ayrı kayıpsız kapıya gider.",
-			"profiles[].fit": "KARAR: 1:1 kutuya giden profiller (w96-w768) 'pad' → beyaz dolgu ile 1:1. Gerekçe: kartlarda 'object-cover' var (ListingCard.ts:163 aspect-square) ve 3:4 bir görsel cover ile yüksekliğinin %25'ini kaybeder. 1:1'e dolgulanmış görsel kare kutuda cover ile de tam görünür. w1280/w1920 'contain': bunlar detay ve zoom kaynağıdır, dolgu piksel bütçesini boşa harcar (docs/standards/product-image.md §7)",
+			"profiles": "KARAR 2026-09-30 (kullanıcı): ürün görseli türevleri yalnız WebP ve tam 4 genişlik: 192, 384, 768, 1280. Eski 7 basamaklı AVIF merdiveni (96, 192, 384, 640, 768, 1280, 1920; AVIF q88/61) kaldırıldı: w96'nın işini w192, w640'ın işini w768 üstlendi, w1920 yerine üst basamak 1280. Genişlik adayları hâlâ docs/reports/03-render-envanteri.md §3.9 kümesinden; her profilin karşıladığı kutu 'derived_from' alanında yazılı. Master (≤2000 px kare WebP, media/kare.py) değişmedi.",
+			"profiles[].encoder_quality.webp": "KARAR 2026-09-30: w192/w384/w768 = 80, w1280 = 88 (ikinci karar: 80'de w1280 SSIM 0,920 ölçüldü, foto hedefi 0,96'nın altında) — sabit kalite (bkz. quality.rendition_quality_mode='fixed'). engine.py:148 to_webp(quality=80) ile aynı değer, yani sistemin master yolunda fiilen kullandığı WebP kalitesi. presets.py:14-16 optimize yolunda 90/88/82 kullanıyor; ikisi ayrı yol, karıştırılmamalı.",
+			"profiles[].fit": "KARAR 2026-09-30: dört profilin hepsi 'pad' → beyaz dolgu ile 1:1. Gerekçe: kartlarda 'object-cover' var (ListingCard.ts:163 aspect-square); master zaten kare (media/kare.py) olduğu için pad yalnız kare olmayan eski master'larda devreye girer ve çıktının her durumda kare olmasını garanti eder. Eskiden w1280/w1920 'contain' idi (docs/standards/product-image.md §7).",
 			"profiles[].max_overshoot": "hesap: profil genişliği / o profilin karşıladığı EN KÜÇÜK talep (bir alt profil genişliğinin üstündeki en küçük CSS kutusu × DPR değeri). Talep listesi docs/reports/03-render-envanteri.md §3.1-3.8 tablolarından",
 			"on_violation.error_code_prefix": "tradehub_core/media/upload_policy.py:104-139 — mevcut kodlu ret sözleşmesi (14 kod + retryable). Yeni kodlar aynı biçimde üretilmeli: 'product_image_<message_key>'",
 			"on_violation.retryable": "upload_policy.py:97-100 kuralı: kullanıcının dosyasıyla ilgili hatalar tekrar denenmez",
-			"messages": "Metinler T-020 kapsamında yazıldı. Her metin NEDEN + NASIL içerir. Mevcut ret metinleriyle aynı ton: upload_policy.py:328-360 (ör. 'Dosya çok büyük: {0} MB. Bu tür için sınır {1} MB.')"
+			"messages": "Metinler T-020 kapsamında yazıldı. Her metin NEDEN + NASIL içerir. Mevcut ret metinleriyle aynı ton: upload_policy.py:328-360 (ör. 'Dosya çok büyük: {0} MB. Bu tür için sınır {1} MB.')",
+			"quality.rendition_quality_mode": "KARAR 2026-09-30: 'fixed' — türevler SSIM araması YAPILMADAN profildeki encoder_quality değeriyle (WebP 80) TEK encode edilir. SSIM her türevde yine ÖLÇÜLÜR ve türev kaydına (Media Rendition.ssim) yazılır; target_ssim_per_class hedefleri bu slotta ne üretimi ne kalite raporu kararını kapılar. Gerekçe: SSIM aramalı yolda text/graphic sınıfının 0,98-0,99 hedefi WebP'de çoğu zaman tutmuyor ve tek biçimli merdivende bu türevi DÜŞÜRÜYORDU (eksik matris); kullanıcı kararı sabit q80."
 		},
 		"compliance_measured": {
 			"measured_at": "2026-08-18",
@@ -3896,17 +3831,15 @@ export const SLOT_POLICIES = {
 			"max_count": 1
 		},
 		"master": {
-			"target_ratio": "1:1",
-			"fit": "pad",
-			"pad_color": "transparent",
+			"fit": "contain",
 			"allow_crop": false,
 			"allow_upscale": false,
-			"max_long_edge": 4096,
+			"max_long_edge": 2000,
 			"min_long_edge": 256,
 			"max_megapixels": 16.8,
 			"dpi_out": 72,
 			"format": "webp",
-			"encoding": "lossless",
+			"encoding": "lossy",
 			"colorspace": "srgb",
 			"orientation": "apply_exif",
 			"in_file_safe_area_percent": 0,
@@ -3926,8 +3859,9 @@ export const SLOT_POLICIES = {
 				"text": 0.99,
 				"fine_detail": 0.99
 			},
-			"reason": "Tek teslim biçimi AVIF. Grafik ve metin için q100 / 4:4:4 başlangıcı kullanılır; kayıpsızlık iddiası yerine SSIM ölçülür.",
-			"reencode_floor_saving_ratio": null
+			"reason": "KARAR 2026-09-30 (mağaza görselleri WebP): tek teslim biçimi WebP q90, sabit kalite (SSIM araması yok). Logo 30–140 px'te basılıyor; alfa WebP'de kayıpsız saklanır.",
+			"reencode_floor_saving_ratio": null,
+			"rendition_quality_mode": "fixed"
 		},
 		"profiles": [
 			{
@@ -3935,139 +3869,56 @@ export const SLOT_POLICIES = {
 				"width": 64,
 				"height": 64,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 100
+					"webp": 90
 				},
-				"fit": "pad",
-				"target_ratio": "1:1",
-				"pad_color": "transparent",
-				"max_bytes": 4096,
+				"fit": "contain",
 				"serves": [
-					"S11 marka sayfası satıcı rozeti @3x",
-					"S8 favoriler satırı @2x",
-					"S4/S6/S6b/S10 @1x-2x",
-					"S2/S5/S9/S12/S13/S16 @1x"
+					"ürün detay satıcı paneli logo 30px @2x",
+					"vitrin başlığı logo 38px @1x",
+					"favoriler 48px @1x",
+					"ürün detay Tedarikçi kartı 64px @1x"
 				],
-				"derived_from": "hesap: max(S11 16px @3x = 48; S8 32px @2x = 64; S5 64px @1x = 64) = 64. Kutular: docs/standards/logo.md §3.1 (brand.ts:138; FavoritesLayout.ts:368-370; product/CompanyProfile.ts:109)",
-				"max_overshoot": 1.33,
-				"byte_reference": "tradehubfront/icons/icon-48.webp 1332 B, icon-72.webp 2021 B (stat -f %z; file → gerçekte PNG) → 64 px ara değer ≈ 1700 B"
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): ölçüm (Playwright 2026-09-30): ürün detay satıcı paneli 30×30, Tedarikçi kartı 64×64, mağaza başlığı 38×38 (masaüstü) / 48×48 (mobil). Oran korunur: 64×64 kutuya SIĞDIRILIR (contain), dolgu yok, alfa korunur.",
+				"max_overshoot": 1.33
 			},
 			{
 				"name": "w128",
 				"width": 128,
 				"height": 128,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 100
+					"webp": 90
 				},
-				"fit": "pad",
-				"target_ratio": "1:1",
-				"pad_color": "transparent",
-				"max_bytes": 8192,
+				"fit": "contain",
 				"serves": [
-					"S8/S10/S4/S6/S6b @3x",
-					"S9/S12/S2/S13/S5/S16 @2x",
-					"S15/S7/S3 @1x"
+					"logo 30–48px @2x–3x",
+					"Tedarikçi kartı 64px @2x"
 				],
-				"derived_from": "hesap: max(S4 40px @3x = 120; S6 42px @3x = 126; S5 64px @2x = 128; S3 120px @1x = 120) = 128. Kutular: docs/standards/logo.md §3.2",
-				"max_overshoot": 1.07,
-				"byte_reference": "tradehubfront/icons/icon-128.webp 3600 B (file → gerçekte PNG 128×128 RGBA)"
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): hesap: max(mağaza başlığı 48px @2x = 96; Tedarikçi kartı 64px @2x = 128) = 128. Kutu 128×128 contain.",
+				"max_overshoot": 1.07
 			},
 			{
 				"name": "w256",
 				"width": 256,
 				"height": 256,
 				"formats": [
-					"avif"
+					"webp"
 				],
 				"encoder_quality": {
-					"avif": 100
+					"webp": 90
 				},
-				"fit": "pad",
-				"target_ratio": "1:1",
-				"pad_color": "transparent",
-				"max_bytes": 16384,
+				"fit": "contain",
 				"serves": [
-					"S9/S2/S13/S5/S16 @3x",
-					"S15 @2x-3x",
-					"S7/S3 @2x",
-					"S1/S14 @1x"
+					"üretici kartı 116px @2x",
+					"mağaza sayfası 120–140px @1x–2x"
 				],
-				"derived_from": "hesap: max(S13 56px @3x = 168; S16 64px @3x = 192; S15 80px @3x = 240; S7 116px @2x = 232; S3 120px @2x = 240; S14 160px @1x = 160) = 240 → üst basamak 256. Kutular: docs/standards/logo.md §3.2",
-				"max_overshoot": 1.6,
-				"byte_reference": "tradehubfront/icons/icon-256.webp 9159 B (file → gerçekte PNG 256×256 RGBA)"
-			},
-			{
-				"name": "w384",
-				"width": 384,
-				"height": 384,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 100
-				},
-				"fit": "pad",
-				"target_ratio": "1:1",
-				"pad_color": "transparent",
-				"max_bytes": 23040,
-				"serves": [
-					"S1 @2x (280 kutu)",
-					"348 ve 360 px talepleri"
-				],
-				"derived_from": "K3 kararı (logo.md §13-K3) ÖLÇÜMLE B'ye çevrildi, 2026-08-19. Tetik: 512 rung'unun gerçek baytı 40 KiB tavanına yaklaşırsa 5 rung. Ölçüm (18 gerçek logo, kayıpsız WebP): p50 27.162 B ≈ referans 27.128 B, p90 83.522 B, max 109.172 B; 9/18 referanstan ağır, 5/18 tavanı AŞIYOR. Tetik ateşledi. Bu rung en kötü aşırı-servisi 1,83× → 1,37× indirir.",
-				"max_overshoot": 1.37
-			},
-			{
-				"name": "w512",
-				"width": 512,
-				"height": 512,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 100
-				},
-				"fit": "pad",
-				"target_ratio": "1:1",
-				"pad_color": "transparent",
-				"max_bytes": 40960,
-				"serves": [
-					"S7/S3 @3x",
-					"S1 @2x-3x",
-					"S14 @2x-3x"
-				],
-				"derived_from": "hesap: max(S1 140px @3x = 420; S14 160px @3x = 480) = 480 → üst basamak 512. Kutular: docs/standards/logo.md §3.2 (seller-shop.ts:124-129; ProfileImageDropzone.vue:135)",
-				"max_overshoot": 1.83,
-				"max_overshoot_note": "En kötü durum S1 @2x (280 → 512 = 1,83× doğrusal / 3,35× piksel). K3 KAPANDI (2026-08-19, seçenek B): w384 rung'u eklendi ve bu değeri 1,37×'e indirdi — docs/standards/logo.md §13-K3.",
-				"byte_reference": "tradehubfront/public/icons/icon-512.png 27128 B (stat -f %z; file → PNG 512×512 RGBA kayıpsız)"
-			},
-			{
-				"name": "og1200x630",
-				"width": 1200,
-				"height": 630,
-				"formats": [
-					"avif"
-				],
-				"encoder_quality": {
-					"avif": 88
-				},
-				"fit": "pad",
-				"target_ratio": "1200:630",
-				"pad_color": "#FFFFFF",
-				"max_bytes": 122880,
-				"max_content_height": 453,
-				"serves": [
-					"og:image",
-					"twitter:image"
-				],
-				"derived_from": "seo/og_image.py:20-21 OG_WIDTH=1200, OG_HEIGHT=630. Bağlanma: seo/meta_builder.py:261 og_image_resolver=lambda r: ensure_og_image(r, source_field='logo'). max_content_height = 630 × 0,72 = 453,6 → 453 (%14 üst + %14 alt güvenli alan).",
-				"fixes": "seo/og_image.py:45-49 bugün COVER-CROP yapıyor: 1:1 logo için new_h=1200, top=(1200−630)//2=285, crop(0,285,1200,915) → logonun yüksekliğinin %47,5'i (570/1200) kesiliyor. Ayrıca :34 img.convert('RGB') alfayı belirsiz zemine düşürüyor, :51 JPEG q85 kayıplı. Bu profil üçünü de düzeltir: pad (crop değil) + açıkça beyaz zemin.",
-				"byte_reference": "tradehubfront/public/images/og-default.jpg 47649 B (file → JPEG 1200×630)"
+				"derived_from": "KARAR 2026-09-30 (mağaza görselleri WebP): hesap: max(üretici hero 116px @2x = 232; mağaza profil 120px @2x = 240) → 256. 140px @2x = 280 bu basamakla karşılanır (%9 eksik, bilinçli). Kutu 256×256 contain.",
+				"max_overshoot": 1.6
 			}
 		],
 		"content_rules": [

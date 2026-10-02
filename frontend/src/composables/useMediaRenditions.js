@@ -49,6 +49,11 @@ function toRow(r) {
     // yazmak, ölçüm yapılmadığını kalite sorunu gibi gösterirdi.
     ssim: Number(r.ssim) || 0,
     generation: r.generation || "",
+    // Çıktı DOSYASINDAN ölçülen künye (`Media Rendition.output_*`). Boş renk
+    // uzayı = henüz ölçülmedi; `dpi` 0 = dosyada DPI kaydı yok (ölçüm sonucu).
+    dpi: Number(r.output_dpi) || 0,
+    colorspace: r.output_colorspace || "",
+    hasAlpha: Boolean(r.output_has_alpha),
   };
 }
 
@@ -68,6 +73,13 @@ export function useMediaRenditions() {
    * bakılamaz — sunucu ikisini ayırt ettirmez).
    */
   const version = ref(null);
+  /**
+   * `manifest.source` — kaynak DOSYANIN ölçülen künyesi (dpi, renk uzayı,
+   * alfa; `status` ok | unreadable | missing). `version` içindeki dpi/renk
+   * uzayı normalize KARARIDIR, dosyanın kendisi değil; Kalite sekmesi bunu
+   * okur. `null` = ölçüm yok (görsel değil ya da dosya çözülmedi).
+   */
+  const source = ref(null);
 
   function clear() {
     rows.value = [];
@@ -75,6 +87,7 @@ export function useMediaRenditions() {
     error.value = "";
     denied.value = false;
     version.value = null;
+    source.value = null;
   }
 
   /**
@@ -101,6 +114,7 @@ export function useMediaRenditions() {
       }
 
       version.value = manifest.version || null;
+      source.value = manifest.source || null;
       rows.value = (manifest.renditions || []).map(toRow);
       if (!rows.value.length) {
         // Varlık kaydı var ama türev yok → "henüz üretilmedi"; varlık da
@@ -117,5 +131,5 @@ export function useMediaRenditions() {
     }
   }
 
-  return { rows, loading, emptyReason, error, denied, version, load, clear };
+  return { rows, loading, emptyReason, error, denied, version, source, load, clear };
 }

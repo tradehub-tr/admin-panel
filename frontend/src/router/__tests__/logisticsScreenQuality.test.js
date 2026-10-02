@@ -342,9 +342,7 @@ test("blockedBy etiketleri guest modülünü işaret etmiyor", () => {
 
   const kacaklar = etiketler.filter(
     (ad) =>
-      ad.startsWith("api.v1.logistics.") &&
-      !MISAFIR_UCLAR.includes(ad) &&
-      !(ad in BILINEN_BORCLAR)
+      ad.startsWith("api.v1.logistics.") && !MISAFIR_UCLAR.includes(ad) && !(ad in BILINEN_BORCLAR)
   );
   assert.deepEqual(kacaklar, [], "yetkili uç misafir modülünde etiketlenmiş");
 
@@ -420,8 +418,7 @@ test("mock'ların ürettiği alanlar sözleşmede tanımlı", () => {
   const bilinen = new Set();
   for (const spec of Object.values(sema.provisional)) {
     for (const f of [...spec.list_fields, ...spec.detail_fields]) bilinen.add(f.name);
-    for (const rows of Object.values(spec.child_tables))
-      for (const f of rows) bilinen.add(f.name);
+    for (const rows of Object.values(spec.child_tables)) for (const f of rows) bilinen.add(f.name);
   }
   for (const cat of Object.values(sema.catalogs ?? {}))
     for (const f of cat.fields ?? []) bilinen.add(typeof f === "string" ? f : f.name);

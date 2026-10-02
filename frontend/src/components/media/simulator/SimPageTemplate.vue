@@ -117,8 +117,8 @@
           <span class="simpage__name">{{ block.title }}</span>
           <span class="simpage__spec">
             ≥{{ block.bandMinVw }}px<template v-if="block.cols"> · {{ block.cols }}×</template
-            ><template v-else-if="block.perView"> · {{ block.perView }}×</template>
-            · {{ Math.round(block.boxPx) }}px
+            ><template v-else-if="block.perView"> · {{ block.perView }}×</template> ·
+            {{ Math.round(block.boxPx) }}px
           </span>
           <span v-if="block.lcpCandidate" class="simpage__lcp">LCP</span>
           <span v-if="block.overflows" class="simpage__over">
@@ -151,7 +151,7 @@
               v-for="i in block.count"
               :key="i"
               class="simpage__cell"
-              :class="{ 'simpage__pcard': isCard(block) }"
+              :class="{ simpage__pcard: isCard(block) }"
             >
               <div class="simpage__tile" :style="tileStyle(block)">
                 <!-- Gerçek türev dosyası: karo ölçüsü kutunun ölçüsüdür, görsel

@@ -217,16 +217,18 @@ test("kadraj boyutu canlı bölgeden duyurulur", async () => {
 });
 
 test("engelleyici bulgu hem listede hem canlı bölgede", async () => {
+  // Kırpılan profil company.cover_video/poster_1280 (1280×720); 2026-09-30'dan
+  // beri company.cover_image kırpılmıyor, orada bu engel doğmaz.
   const w = cropWarnings({
     sourceW: 4000,
     sourceH: 3000,
-    win: rect(0, 0, 400, 225.2),
-    slotKey: "company.cover_image",
+    win: rect(0, 0, 1000, 562.5),
+    slotKey: "company.cover_video",
   });
-  const html = await render(NOTICE, { warnings: w, pixelBox: [0, 0, 400, 225] });
+  const html = await render(NOTICE, { warnings: w, pixelBox: [0, 0, 1000, 563] });
   assert.ok(html.includes("cnotice__item--block"));
   assert.ok(html.includes("bu boyut profil için yetersiz"));
-  assert.ok(html.includes("1000×563"));
+  assert.ok(html.includes("1280×720"));
 });
 
 test("bilgi uyarısı engel gibi görünmez", async () => {
@@ -278,7 +280,7 @@ function tumUyarilar() {
       sourceW: 8000,
       sourceH: 6000,
       win: rect(0, 0, 400, 225),
-      slotKey: "company.cover_image",
+      slotKey: "company.cover_video",
       probe: { mode: "CMYK", hasAlpha: true },
       slotMismatch: true,
     }),
@@ -351,17 +353,24 @@ test("uyarı kimliklerinin her biri dört dilde de metne çözülüyor", async (
 // ── Önizleme şeridi boş durumu ────────────────────────────────────
 
 test("önizleme şeridi türev YOKKEN de anlamlı — kaynaktan üretiliyor", async () => {
-  const html = await render("/src/components/media/crop/CropPreviewStrip.vue", {
+  const ortak = { bitmap: null, win: rect(0, 0, 1000, 563), sourceW: 4000, sourceH: 3000 };
+  const kapak = await render("/src/components/media/crop/CropPreviewStrip.vue", {
+    ...ortak,
     profiles: slotProfiles("company.cover_image"),
-    bitmap: null,
-    win: rect(0, 0, 1000, 563),
-    sourceW: 4000,
-    sourceH: 3000,
   });
-  assert.ok(html.includes("Kaynaktan üretiliyor — sunucu türevi henüz yok."));
-  // 5 profilin 4'ü kırpılmıyor; kullanıcı bunu rozetten görmeli.
-  assert.equal((html.match(/kırpılmıyor/g) || []).length, 4);
-  assert.ok(html.includes("cover_16x9_1000"));
+  assert.ok(kapak.includes("Kaynaktan üretiliyor — sunucu türevi henüz yok."));
+  // Mağaza kapağı 2026-09-30'dan beri oranı korur: 5 `contain` profilinin
+  // HİÇBİRİ kırpılmıyor; kullanıcı bunu her kartın rozetinden görmeli.
+  assert.equal((kapak.match(/kırpılmıyor/g) || []).length, 5);
+  assert.ok(kapak.includes("cover_1920"));
+
+  // Kırpılan slotta rozet YOK — "kırpılmıyor" her karta yapışmıyor.
+  const video = await render("/src/components/media/crop/CropPreviewStrip.vue", {
+    ...ortak,
+    profiles: slotProfiles("company.cover_video"),
+  });
+  assert.equal((video.match(/kırpılmıyor/g) || []).length, 0);
+  assert.ok(video.includes("poster_1280"));
 });
 
 test("her kart sunucu türevinin YOKLUĞUNU kendi başına ilan eder", async () => {
@@ -391,29 +400,35 @@ test("sunucu türevi VARSA kart onu söyler — boş durum yanlışlıkla yapı�
     win: rect(0, 0, 1000, 563),
     sourceW: 4000,
     sourceH: 3000,
-    renditions: [{ profile: "cover_16x9_1000", format: "webp" }],
+    renditions: [{ profile: "cover_1280", format: "webp" }],
   });
   assert.ok(html.includes("sunucu türevi · webp"));
   assert.equal((html.match(/sunucu türevi yok/g) || []).length, 4);
 });
 
 test("güvenli alan bandı yalnız kuralı OLAN slotta ve kırpılan profilde çizilir", async () => {
-  const ortak = {
-    profiles: slotProfiles("company.cover_image"),
-    bitmap: null,
-    win: rect(0, 0, 1000, 563),
-    sourceW: 4000,
-    sourceH: 3000,
-  };
-  const bantli = await render("/src/components/media/crop/CropPreviewStrip.vue", {
-    ...ortak,
-    band: { rule: "safe_area_center_width_fraction", fraction: 0.417, axis: "x" },
-  });
-  // 5 profilin yalnız 1'i kırpılıyor → tek bant.
-  assert.equal((bantli.match(/cpreview__band/g) || []).length, 1);
+  const ortak = { bitmap: null, win: rect(0, 0, 1000, 563), sourceW: 4000, sourceH: 3000 };
+  const band = { rule: "safe_area_center_width_fraction", fraction: 0.417, axis: "x" };
+  const strip = "/src/components/media/crop/CropPreviewStrip.vue";
+
+  // Kırpılan profiller (company.cover_video: 3/3) + bant → her kırpılan
+  // profilde bir bant.
+  const kirpilan = slotProfiles("company.cover_video");
+  const bantli = await render(strip, { ...ortak, profiles: kirpilan, band });
+  assert.equal((bantli.match(/cpreview__band/g) || []).length, kirpilan.length);
   assert.ok(bantli.includes("%42"), "yüzde ipucu metninde görünmeli (0,417 → %42)");
 
-  const bantsiz = await render("/src/components/media/crop/CropPreviewStrip.vue", ortak);
+  // company.cover_image politikada güvenli alan kuralını HÂLÂ taşıyor
+  // (`safeBandFor` → 0,417, x) ama 2026-09-30'dan beri 5 profilin tamamı
+  // `contain` — kırpılmayan profilde kadraj kesilmez, bant ÇİZİLMEZ.
+  const kapak = await render(strip, {
+    ...ortak,
+    profiles: slotProfiles("company.cover_image"),
+    band,
+  });
+  assert.equal((kapak.match(/cpreview__band/g) || []).length, 0, "contain profilde bant yok");
+
+  const bantsiz = await render(strip, { ...ortak, profiles: kirpilan });
   assert.equal((bantsiz.match(/cpreview__band/g) || []).length, 0, "kuralsız slotta bant çizilmez");
 });
 

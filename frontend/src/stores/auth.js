@@ -163,6 +163,18 @@ export const useAuthStore = defineStore("auth", () => {
       } catch {
         /* ignore */
       }
+      // Yükleme tepsisi uygulama boyu yaşıyor; sonraki kullanıcı önceki
+      // kullanıcının dosya adlarını görmesin.
+      try {
+        const [{ disposeSharedMediaUpload }, { useMediaStore }] = await Promise.all([
+          import("@/composables/useMediaUpload.js"),
+          import("@/stores/media.js"),
+        ]);
+        disposeSharedMediaUpload();
+        useMediaStore().$patch({ uploads: [] });
+      } catch {
+        /* ignore */
+      }
     }
   }
 

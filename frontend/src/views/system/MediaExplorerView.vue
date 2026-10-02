@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onMounted, ref, watch } from "vue";
+  import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
 
@@ -12,6 +12,7 @@
   import MediaRenditionList from "@/components/media/MediaRenditionList.vue";
   import api from "@/utils/api";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
+  import { focusRegionIfLost } from "@/lib/media/regionFocus";
   import { useMediaAccess } from "@/composables/useMediaAccess";
   import { useToast } from "@/composables/useToast";
 
@@ -52,9 +53,43 @@
     atFileLevel.value ? total.value : folders.value.reduce((s, f) => s + (f.count || 0), 0)
   );
 
+  // ── Klasör geçişi ─────────────────────────────────────────────────
+  // Yükleme kartı yalnız İLK yüklemede. Sonraki klasör değişimlerinde eski
+  // içerik yerinde kalır (yükleme 150ms'yi aşarsa soluklaşır), yeni içerik
+  // gelince `shownKey` değişir ve sarmalayıcı yumuşak bir geçişle değişir.
+  const hasLoaded = ref(false);
+  const slowLoad = ref(false);
+  const shownKey = ref("");
+  let slowTimer = 0;
+  // Eski içerik artık yükleme sırasında da görünüyor; hızlı art arda
+  // tıklamada geç dönen eski yanıt yenisinin üstüne yazmasın.
+  let loadSeq = 0;
+  // Kullanıcı klasör/sayfa değiştirdi: veri gelince odak (kaybolduysa)
+  // içerik bölgesine taşınır. İlk açılışta ve aramada bayrak kalkmaz.
+  let focusAfterLoad = false;
+  const regionEl = useTemplateRef("region");
+
+  function settleFocus() {
+    if (!focusAfterLoad) return;
+    focusAfterLoad = false;
+    nextTick(() => focusRegionIfLost(regionEl.value));
+  }
+
+  watch(loading, (on) => {
+    clearTimeout(slowTimer);
+    slowLoad.value = false;
+    if (on && hasLoaded.value) slowTimer = setTimeout(() => (slowLoad.value = true), 150);
+  });
+  onBeforeUnmount(() => clearTimeout(slowTimer));
+
+  /** Giden içerik beklemeden kalkar; yalnız gelen içerik belirir. */
+  const leaveNow = (_el, done) => done();
+
   async function load() {
+    const seq = ++loadSeq;
     loading.value = true;
-    loadFailed.value = false;
+    // `loadFailed` burada sıfırlanmıyor: tekrar denerken hata kartı sonuç
+    // gelene kadar yerinde kalır, araya boş klasör görüntüsü girmez.
     try {
       const p = path.value;
       const res = await api.callMethodGET(`${M}.browse_media`, {
@@ -68,6 +103,7 @@
         page_size: pageSize.value,
         search: search.value,
       });
+      if (seq !== loadSeq) return;
       const data = res.message;
       if (!data || (!Array.isArray(data.folders) && !Array.isArray(data.items))) {
         throw new Error(t("mediaExplorer.loadFailed"));
@@ -76,6 +112,8 @@
       folders.value = data.folders || [];
       files.value = data.items || [];
       total.value = data.total || 0;
+      loadFailed.value = false;
+      shownKey.value = JSON.stringify([p, page.value]);
       if (!path.value.scope) {
         rootStatsReady.value = true;
         const byId = Object.fromEntries((data.folders || []).map((f) => [f.id, f.count || 0]));
@@ -86,15 +124,26 @@
         };
       }
     } catch {
+      if (seq !== loadSeq) return;
       loadFailed.value = true;
       folders.value = [];
       files.value = [];
     } finally {
-      loading.value = false;
+      if (seq === loadSeq) {
+        loading.value = false;
+        hasLoaded.value = true;
+        settleFocus();
+      }
     }
   }
 
   onMounted(load);
+
+  /** Kullanıcının başlattığı yükleme — bitince odak yeni içeriğe geçebilir. */
+  function userLoad() {
+    focusAfterLoad = true;
+    return load();
+  }
 
   function specialLabel(folder) {
     if (folder.id === "public") return t("mediaExplorer.folder.public");
@@ -153,7 +202,7 @@
     path.value = p;
     page.value = 1;
     search.value = "";
-    load();
+    userLoad();
   }
 
   // ── Breadcrumb ────────────────────────────────────────────────────
@@ -217,7 +266,7 @@
     path.value = p;
     page.value = 1;
     search.value = "";
-    load();
+    userLoad();
   }
 
   function enterAndRemember(folder) {
@@ -329,7 +378,7 @@
     path.value = { scope: id, store: "", category: "", group: "", sub: "", docField: "" };
     page.value = 1;
     search.value = "";
-    load();
+    userLoad();
   }
 
   // ── Denetçi: seçili dosya ─────────────────────────────────────────
@@ -370,7 +419,7 @@
 
   function setPage(p) {
     page.value = p;
-    load();
+    userLoad();
   }
 </script>
 
@@ -475,170 +524,198 @@
         <!-- Klasör değişimi sayfa yenilemiyor; duyuru bu bölgeden gider. -->
         <p class="mx__sr" role="status" aria-live="polite">{{ statusText }}</p>
 
-        <div v-if="loading" class="card mx__empty-card">{{ t("mediaExplorer.loading") }}</div>
-
-        <div v-else-if="loadFailed" class="card mx__empty-card" role="alert">
-          <p>{{ t("mediaExplorer.loadFailed") }}</p>
-          <button type="button" class="hdr-btn-outlined mt-3" @click="load">
-            <AppIcon name="refresh-cw" :size="13" />
-            {{ t("mediaExplorer.retry") }}
-          </button>
-        </div>
-
-        <!-- ── Klasör ızgarası ── -->
-        <MediaFolderGrid
-          v-else-if="!atFileLevel"
-          :items="gridItems"
-          :empty-text="t('mediaExplorer.empty')"
-          :aria-label="t('mediaExplorer.folderGridAria')"
-          @select="enterAndRemember"
-        />
-
-        <!-- ── Dosya seviyesi: mozaik + denetçi ── -->
-        <template v-else>
-          <div class="mx__workspace">
-            <div class="mx__mosaic-col">
-              <div v-if="files.length" class="mx__mosaic">
-                <button
-                  v-for="item in files"
-                  :key="item.name"
-                  type="button"
-                  class="mx__tile"
-                  :class="{ 'mx__tile--on': selected?.name === item.name }"
-                  :title="item.file_name || item.file_url"
-                  @click="pick(item)"
-                >
-                  <MediaImage
-                    v-if="canThumb(item)"
-                    class="mx__tile-img"
-                    :src="item.thumb_url || item.file_url"
-                    :alt="item.file_name"
-                    :width="160"
-                    :height="160"
-                  />
-                  <span v-else class="mx__tile-ph" :class="`mx__tile-ph--${tileTone(item)}`">
-                    <AppIcon v-if="tileTone(item) === 'video'" name="circle-play" :size="18" />
-                    {{ extOf(item) }}
-                  </span>
-                  <span v-if="item.is_private" class="mx__tile-lock" aria-hidden="true">
-                    <AppIcon name="lock" :size="10" />
-                  </span>
-                  <span class="mx__tile-strip">{{ item.file_name || item.file_url }}</span>
-                </button>
-              </div>
-              <p v-else class="card mx__empty">{{ t("mediaExplorer.empty") }}</p>
-
-              <div class="mpage__pagination">
-                <ListPagination
-                  v-if="total > pageSize"
-                  :model-value="page"
-                  :total="total"
-                  :page-size="pageSize"
-                  @update:model-value="setPage"
-                />
-              </div>
+        <!-- İçerik bölgesi: ilk yüklemeden sonra eski içerik yeni klasör
+             gelene kadar yerinde kalır; bu sırada etkileşime kapalı (`inert`),
+             yoksa eski bir klasöre tıklamak yeni yolun üstüne eklenirdi. -->
+        <div
+          ref="region"
+          class="mx__region"
+          role="region"
+          tabindex="-1"
+          :aria-label="breadcrumb[breadcrumb.length - 1].label"
+          :class="{ 'mx__region--dim': slowLoad }"
+          :aria-busy="loading ? 'true' : 'false'"
+          :inert="loading && hasLoaded ? true : undefined"
+        >
+          <Transition name="mx-swap" @leave="leaveNow">
+            <div v-if="!hasLoaded" key="boot" class="card mx__empty-card">
+              {{ t("mediaExplorer.loading") }}
             </div>
 
-            <!-- Denetçi: seçili dosyanın kimliği ve eylemleri -->
-            <aside v-if="selected" class="card mx__insp">
-              <div class="mx__insp-prev">
-                <MediaImage
-                  v-if="canThumb(selected)"
-                  class="mx__insp-img"
-                  :src="selected.preview_url || selected.file_url"
-                  :alt="selected.file_name"
-                  :width="480"
-                  :height="330"
-                />
-                <span
-                  v-else
-                  class="mx__tile-ph mx__insp-ph"
-                  :class="`mx__tile-ph--${tileTone(selected)}`"
-                >
-                  <AppIcon v-if="tileTone(selected) === 'video'" name="circle-play" :size="26" />
-                  {{ extOf(selected) }}
-                </span>
-              </div>
-              <div class="mx__insp-body">
-                <div class="mx__insp-name" :title="selected.file_name || selected.file_url">
-                  {{ selected.file_name || selected.file_url }}
+            <div v-else-if="loadFailed" key="error" class="card mx__empty-card" role="alert">
+              <p>{{ t("mediaExplorer.loadFailed") }}</p>
+              <button type="button" class="hdr-btn-outlined mt-3" @click="userLoad">
+                <AppIcon name="refresh-cw" :size="13" />
+                {{ t("mediaExplorer.retry") }}
+              </button>
+            </div>
+
+            <div v-else :key="shownKey" class="mx__swap">
+              <!-- ── Klasör ızgarası ── -->
+              <MediaFolderGrid
+                v-if="!atFileLevel"
+                :items="gridItems"
+                :empty-text="t('mediaExplorer.empty')"
+                :aria-label="t('mediaExplorer.folderGridAria')"
+                @select="enterAndRemember"
+              />
+
+              <!-- ── Dosya seviyesi: mozaik + denetçi ── -->
+              <template v-else>
+                <div class="mx__workspace">
+                  <div class="mx__mosaic-col">
+                    <div v-if="files.length" class="mx__mosaic">
+                      <button
+                        v-for="item in files"
+                        :key="item.name"
+                        type="button"
+                        class="mx__tile"
+                        :class="{ 'mx__tile--on': selected?.name === item.name }"
+                        :title="item.file_name || item.file_url"
+                        @click="pick(item)"
+                      >
+                        <MediaImage
+                          v-if="canThumb(item)"
+                          class="mx__tile-img"
+                          :src="item.thumb_url || item.file_url"
+                          :alt="item.file_name"
+                          :width="160"
+                          :height="160"
+                        />
+                        <span v-else class="mx__tile-ph" :class="`mx__tile-ph--${tileTone(item)}`">
+                          <AppIcon
+                            v-if="tileTone(item) === 'video'"
+                            name="circle-play"
+                            :size="18"
+                          />
+                          {{ extOf(item) }}
+                        </span>
+                        <span v-if="item.is_private" class="mx__tile-lock" aria-hidden="true">
+                          <AppIcon name="lock" :size="10" />
+                        </span>
+                        <span class="mx__tile-strip">{{ item.file_name || item.file_url }}</span>
+                      </button>
+                    </div>
+                    <p v-else class="card mx__empty">{{ t("mediaExplorer.empty") }}</p>
+
+                    <div class="mpage__pagination">
+                      <ListPagination
+                        v-if="total > pageSize"
+                        :model-value="page"
+                        :total="total"
+                        :page-size="pageSize"
+                        @update:model-value="setPage"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Denetçi: seçili dosyanın kimliği ve eylemleri -->
+                  <aside v-if="selected" class="card mx__insp">
+                    <div class="mx__insp-prev">
+                      <MediaImage
+                        v-if="canThumb(selected)"
+                        class="mx__insp-img"
+                        :src="selected.preview_url || selected.file_url"
+                        :alt="selected.file_name"
+                        :width="480"
+                        :height="330"
+                      />
+                      <span
+                        v-else
+                        class="mx__tile-ph mx__insp-ph"
+                        :class="`mx__tile-ph--${tileTone(selected)}`"
+                      >
+                        <AppIcon
+                          v-if="tileTone(selected) === 'video'"
+                          name="circle-play"
+                          :size="26"
+                        />
+                        {{ extOf(selected) }}
+                      </span>
+                    </div>
+                    <div class="mx__insp-body">
+                      <div class="mx__insp-name" :title="selected.file_name || selected.file_url">
+                        {{ selected.file_name || selected.file_url }}
+                      </div>
+                      <dl class="mx__insp-meta">
+                        <div class="mx__insp-row">
+                          <dt>{{ t("mediaExplorer.insp.size") }}</dt>
+                          <dd>{{ formatSize(selected.file_size || 0) }}</dd>
+                        </div>
+                        <div class="mx__insp-row">
+                          <dt>{{ t("mediaExplorer.insp.date") }}</dt>
+                          <dd>{{ fmtDate(selected.creation) }}</dd>
+                        </div>
+                        <div class="mx__insp-row">
+                          <dt>{{ t("mediaExplorer.insp.access") }}</dt>
+                          <dd>{{ accessLabel(selected) }}</dd>
+                        </div>
+                        <!-- Sohbet eki: dosya dış serviste — kim gönderdi + hangi konuşma. -->
+                        <div v-if="selected.chat" class="mx__insp-row">
+                          <dt>{{ t("mediaExplorer.chatSender") }}</dt>
+                          <dd>{{ selected.sender }} · #{{ selected.conversation_id }}</dd>
+                        </div>
+                      </dl>
+                      <span
+                        v-if="selected.pii"
+                        class="mx__pill mx__pill--warn"
+                        :title="t('mediaAccess.badge.piiHint')"
+                      >
+                        {{ t("mediaAccess.badge.pii") }}
+                      </span>
+                      <div class="mx__insp-acts">
+                        <template v-if="selected.is_private && !selected.chat">
+                          <button
+                            type="button"
+                            class="mx__link"
+                            :disabled="access.busy.value"
+                            :title="t('mediaAccess.action.signedLinkHint')"
+                            @click="copySignedLink(selected)"
+                          >
+                            {{ t("mediaAccess.action.signedLink") }}
+                          </button>
+                          <button
+                            v-if="!selected.pii"
+                            type="button"
+                            class="mx__link"
+                            :disabled="access.busy.value"
+                            @click="accessConfirm = { item: selected, makePrivate: false }"
+                          >
+                            {{ t("mediaAccess.action.makePublic") }}
+                          </button>
+                        </template>
+                        <button
+                          v-else-if="!selected.chat"
+                          type="button"
+                          class="mx__link"
+                          :disabled="access.busy.value"
+                          :title="t('mediaAccess.action.makePrivateHint')"
+                          @click="accessConfirm = { item: selected, makePrivate: true }"
+                        >
+                          {{ t("mediaAccess.action.makePrivate") }}
+                        </button>
+                        <!-- Sohbet ekinin dosyası bizde değil; türev de üretilmez. -->
+                        <button
+                          v-if="!selected.chat"
+                          type="button"
+                          class="mx__link"
+                          :aria-expanded="renditionsOpen"
+                          aria-controls="mx-insp-rend"
+                          @click="renditionsOpen = !renditionsOpen"
+                        >
+                          {{ t("mediaExplorer.action.renditions") }}
+                        </button>
+                      </div>
+                      <div v-if="renditionsOpen" id="mx-insp-rend" class="mx__insp-rend">
+                        <MediaRenditionList :file-name="selected.name" />
+                      </div>
+                    </div>
+                  </aside>
                 </div>
-                <dl class="mx__insp-meta">
-                  <div class="mx__insp-row">
-                    <dt>{{ t("mediaExplorer.insp.size") }}</dt>
-                    <dd>{{ formatSize(selected.file_size || 0) }}</dd>
-                  </div>
-                  <div class="mx__insp-row">
-                    <dt>{{ t("mediaExplorer.insp.date") }}</dt>
-                    <dd>{{ fmtDate(selected.creation) }}</dd>
-                  </div>
-                  <div class="mx__insp-row">
-                    <dt>{{ t("mediaExplorer.insp.access") }}</dt>
-                    <dd>{{ accessLabel(selected) }}</dd>
-                  </div>
-                  <!-- Sohbet eki: dosya dış serviste — kim gönderdi + hangi konuşma. -->
-                  <div v-if="selected.chat" class="mx__insp-row">
-                    <dt>{{ t("mediaExplorer.chatSender") }}</dt>
-                    <dd>{{ selected.sender }} · #{{ selected.conversation_id }}</dd>
-                  </div>
-                </dl>
-                <span
-                  v-if="selected.pii"
-                  class="mx__pill mx__pill--warn"
-                  :title="t('mediaAccess.badge.piiHint')"
-                >
-                  {{ t("mediaAccess.badge.pii") }}
-                </span>
-                <div class="mx__insp-acts">
-                  <template v-if="selected.is_private && !selected.chat">
-                    <button
-                      type="button"
-                      class="mx__link"
-                      :disabled="access.busy.value"
-                      :title="t('mediaAccess.action.signedLinkHint')"
-                      @click="copySignedLink(selected)"
-                    >
-                      {{ t("mediaAccess.action.signedLink") }}
-                    </button>
-                    <button
-                      v-if="!selected.pii"
-                      type="button"
-                      class="mx__link"
-                      :disabled="access.busy.value"
-                      @click="accessConfirm = { item: selected, makePrivate: false }"
-                    >
-                      {{ t("mediaAccess.action.makePublic") }}
-                    </button>
-                  </template>
-                  <button
-                    v-else-if="!selected.chat"
-                    type="button"
-                    class="mx__link"
-                    :disabled="access.busy.value"
-                    :title="t('mediaAccess.action.makePrivateHint')"
-                    @click="accessConfirm = { item: selected, makePrivate: true }"
-                  >
-                    {{ t("mediaAccess.action.makePrivate") }}
-                  </button>
-                  <!-- Sohbet ekinin dosyası bizde değil; türev de üretilmez. -->
-                  <button
-                    v-if="!selected.chat"
-                    type="button"
-                    class="mx__link"
-                    :aria-expanded="renditionsOpen"
-                    aria-controls="mx-insp-rend"
-                    @click="renditionsOpen = !renditionsOpen"
-                  >
-                    {{ t("mediaExplorer.action.renditions") }}
-                  </button>
-                </div>
-                <div v-if="renditionsOpen" id="mx-insp-rend" class="mx__insp-rend">
-                  <MediaRenditionList :file-name="selected.name" />
-                </div>
-              </div>
-            </aside>
-          </div>
-        </template>
+              </template>
+            </div>
+          </Transition>
+        </div>
       </div>
     </div>
 
@@ -747,6 +824,41 @@
     min-width: 0;
   }
 
+  // ── İçerik geçişi ─────────────────────────────────────────────────
+  // Yalnız opacity. Giden içerik ANINDA kalkar (`leaveNow`), gelen 160ms'de
+  // belirir — geçiş yeni içeriği hiç bekletmez.
+  .mx__region {
+    transition: opacity $d-fast $ease-out;
+
+    // Klasör değişince odak buraya taşınabilir (`focusRegionIfLost`):
+    // klavye kullanıcısı nerede olduğunu görsün. Fareyle gelende çizilmez.
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 3px solid $brand-text;
+      outline-offset: 2px;
+      border-radius: 0.6rem;
+
+      @include dark {
+        outline-color: $brand-light;
+      }
+    }
+  }
+
+  .mx__region--dim {
+    opacity: 0.6;
+  }
+
+  .mx-swap-enter-active {
+    transition: opacity 160ms $ease-out;
+  }
+
+  .mx-swap-enter-from {
+    opacity: 0;
+  }
+
   .mx__tr {
     display: flex;
     align-items: center;
@@ -762,6 +874,10 @@
     color: $l-text-700;
     text-align: start;
     cursor: pointer;
+    // Etkin satır değişimi: renk geçişi, hareket yok.
+    transition:
+      background-color $d-fast ease,
+      color $d-fast ease;
     @include media.focus-ring;
 
     @include dark {

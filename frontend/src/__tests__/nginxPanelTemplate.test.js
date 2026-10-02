@@ -44,5 +44,7 @@ test("ölü Tailwind CDN izni CSP'ye geri dönmesin", () => {
 test("CSP'nin kalanı yerinde: frame-ancestors 'none' + connect-src backend", () => {
   // #3 yalnız Tailwind iznini kaldırır; CSP'nin geri kalanına dokunulmaz.
   assert.ok(template.includes("frame-ancestors 'none'"));
-  assert.ok(template.includes("connect-src 'self' https://${BACKEND_DOMAIN} wss://${BACKEND_DOMAIN}"));
+  assert.ok(
+    template.includes("connect-src 'self' https://${BACKEND_DOMAIN} wss://${BACKEND_DOMAIN}")
+  );
 });

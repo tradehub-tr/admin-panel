@@ -64,7 +64,7 @@
             t(
               "media.bulkFields.privateHint",
               {},
-              "Private geçişi dosyayı diskte taşımayı gerektirir; erişim seviyesi aracını kullanın.",
+              "Private geçişi dosyayı diskte taşımayı gerektirir; erişim seviyesi aracını kullanın."
             )
           }}
         </p>
@@ -94,7 +94,7 @@
             t(
               "media.bulkFields.emptyHint",
               {},
-              "Boş bırakılan alan yazılmaz; dolu alan seçili tüm dosyalara uygulanır.",
+              "Boş bırakılan alan yazılmaz; dolu alan seçili tüm dosyalara uygulanır."
             )
           }}
         </p>
@@ -121,7 +121,7 @@
             t(
               "media.bulkFields.patternHint",
               {},
-              "Yer tutucular: {ad} mevcut ad, {sira} veya {sira:3} sayaç, {uzanti} uzantı. Dosya adresi DEĞİŞMEZ.",
+              "Yer tutucular: {ad} mevcut ad, {sira} veya {sira:3} sayaç, {uzanti} uzantı. Dosya adresi DEĞİŞMEZ."
             )
           }}
         </p>
@@ -248,7 +248,7 @@
     const uzanti = nokta > 0 ? ad.slice(nokta) : "";
     let cikti = pattern.value.replace(/\{ad\}/g, taban).replace(/\{uzanti\}/g, uzanti);
     cikti = cikti.replace(/\{sira(?::(\d+))?\}/g, (_m, pad) =>
-      String(start.value || 1).padStart(Number(pad || 0), "0"),
+      String(start.value || 1).padStart(Number(pad || 0), "0")
     );
     if (uzanti && !cikti.toLowerCase().endsWith(uzanti.toLowerCase())) cikti += uzanti;
     return cikti.slice(0, 140);
@@ -281,7 +281,7 @@
   function onKeydown(e) {
     if (e.key !== "Tab" || !panelRef.value) return;
     const odaklanabilir = panelRef.value.querySelectorAll(
-      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
     );
     if (!odaklanabilir.length) return;
     const ilk = odaklanabilir[0];

@@ -112,8 +112,8 @@
             <div class="flex flex-wrap items-center gap-2">
               <code class="font-mono text-sm font-semibold">{{ pallet.pallet_code }}</code>
               <AppSelect
-                :aria-label="t('logistics.pallet.typeLabel')"
                 v-if="canWrite"
+                :aria-label="t('logistics.pallet.typeLabel')"
                 :model-value="pallet.pallet_type"
                 :options="palletTypeOptions"
                 class="max-w-[170px]"

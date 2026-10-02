@@ -370,12 +370,50 @@ export default {
     // gerekçe: XSS token'ı okuyup CSRF korumasını anlamsız kılıyordu).
     _csrfToken = token;
   },
-  async uploadFile(file, folder = "Home") {
+  async uploadFile(file, folder = "Home", options = {}) {
     const csrfToken = await this.getCsrfToken();
     const fd = new FormData();
     fd.append("file", file);
     fd.append("is_private", "0");
     fd.append("folder", folder);
+    // Opt-in measured upload progress. Existing callers retain their URL
+    // return value and fetch transport; no timer-generated percentage.
+    if (options.onProgress) {
+      const data = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${BASE_URL}/api/method/upload_file`);
+        xhr.withCredentials = true;
+        xhr.setRequestHeader("X-Frappe-CSRF-Token", csrfToken);
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable && event.total > 0)
+            options.onProgress(Math.round((event.loaded / event.total) * 100));
+        };
+        xhr.onload = () => {
+          try {
+            const body = JSON.parse(xhr.responseText);
+            if (xhr.status < 200 || xhr.status >= 300) {
+              const message = body._server_messages
+                ? JSON.parse(JSON.parse(body._server_messages)[0])?.message
+                : body.message || `HTTP ${xhr.status}`;
+              reject(buildError(message, body, xhr.status));
+            } else resolve(body);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.onabort = () => reject(new DOMException("Upload aborted", "AbortError"));
+        const abort = () => xhr.abort();
+        xhr.onloadend = () => options.signal?.removeEventListener("abort", abort);
+        if (options.signal?.aborted) {
+          reject(new DOMException("Upload aborted", "AbortError"));
+          return;
+        }
+        options.signal?.addEventListener("abort", abort, { once: true });
+        xhr.send(fd);
+      });
+      return options.details ? data.message : data.message?.file_url || "";
+    }
     const res = await fetch(`${BASE_URL}/api/method/upload_file`, {
       method: "POST",
       body: fd,
@@ -393,7 +431,7 @@ export default {
       // iki farklı biçimde görünürdü.
       throw buildError(msg, data, res.status);
     }
-    return data.message?.file_url || "";
+    return options.details ? data.message : data.message?.file_url || "";
   },
   async uploadCertDocument(file) {
     // Sertifika belgesi yükleme — base64 JSON POST.

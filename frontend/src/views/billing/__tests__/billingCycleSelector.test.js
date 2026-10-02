@@ -89,7 +89,8 @@ async function render({ ua, accessState, props } = {}) {
 
 // Zaman-bombası denetimi gereği gelecek tarih SABİT yazılamaz; koşuma göre
 // ileri tarihler hesaplanır (assertion'lar tarih metnine bağlı değil).
-const gunSonra = (n) => `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
+const gunSonra = (n) =>
+  `${new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)} 00:00:00`;
 
 const LOCKED_STATE = { access: "locked", reason: "no_subscription" };
 
@@ -249,8 +250,5 @@ test("pending blok (E4): amount_updated=true → tutar tazeleme bilgi notu", asy
     accessState: LOCKED_STATE,
     props: { initialPending: { ...PENDING_MONTHLY, amount_updated: true } },
   });
-  assert.ok(
-    html.includes("güncel fiyata göre güncellendi"),
-    "E4 bilgi notu gösterilmeli"
-  );
+  assert.ok(html.includes("güncel fiyata göre güncellendi"), "E4 bilgi notu gösterilmeli");
 });

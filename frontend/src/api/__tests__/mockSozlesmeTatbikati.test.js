@@ -105,11 +105,7 @@ test("K5 · mock'un ürettiği şekil sözleşmeyle örtüşüyor", async () => 
       const gereksiz = mockFazlaligi.filter(
         (k) => !(k in ornekSatir) || [...Object.values(dizi)].some((s) => s.has(k))
       );
-      assert.deepEqual(
-        gereksiz,
-        [],
-        `${uc}: bu alanlar artık fazlalık değil — listeden düş`
-      );
+      assert.deepEqual(gereksiz, [], `${uc}: bu alanlar artık fazlalık değil — listeden düş`);
     }
   }
 });

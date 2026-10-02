@@ -194,10 +194,17 @@ describe("KD-F02/2 · hata kodu paritesi (istemci ↔ sunucu)", () => {
   it("ayrışma YALNIZ cover_video slotunda — diğer slotlarda kod paritesi duruyor", () => {
     // `validation_codes` yalnız video slotlarında var; görsel slotlarında
     // iki taraf da `${prefix}_${rule}` üretiyor.
-    const k = evaluate("product.image", gorselKunye({ width: 400, height: 400 }), "seller");
-    const v = k.violations.find((x) => x.rule === "short_edge_too_small");
+    //
+    // GÜNCELLENDİ 2026-09-29 (kare kuralı): 400×400 artık `product.image`'da
+    // `short_edge_too_small` üretmiyor (`require.min_short_edge` kaldırıldı —
+    // ürüne bağlanan görsel artık kare 1000–2000 px beyaz dolguya otomatik
+    // çevriliyor, media/kare.py). Kod-parite iddiası hâlâ geçerli bir kuralla
+    // (`too_many_pixels`, product.image `accept.max_megapixels_hard=80`
+    // tavanı — bu görevin kapsamı DIŞINDA, dokunulmadı) doğrulanıyor.
+    const k = evaluate("product.image", gorselKunye({ width: 9000, height: 9000 }), "seller");
+    const v = k.violations.find((x) => x.rule === "too_many_pixels");
     assert.ok(v);
-    assert.equal(v.code, "product_image_short_edge_too_small");
+    assert.equal(v.code, "product_image_too_many_pixels");
   });
 });
 
@@ -213,19 +220,27 @@ describe("KD-F02/3 · ikiz motor karar sözleşmesi", () => {
   });
 
   it("reddedilen dosyada hedef ÜRETİLMEZ", () => {
-    const k = evaluate("product.image", gorselKunye({ width: 200, height: 200 }), "seller");
+    // GÜNCELLENDİ 2026-09-29 (kare kuralı): 200×200 artık `product.image`'da
+    // KABUL ediliyor (kısa kenar/alan RET kapısı kaldırıldı — ürüne bağlanan
+    // görsel artık kare 1000–2000 px beyaz dolguya otomatik çevriliyor,
+    // media/kare.py). Test hâlâ geçerli bir reddi kullanıyor: `too_many_pixels`
+    // (bu görevin kapsamı DIŞINDA, dokunulmadı).
+    const k = evaluate("product.image", gorselKunye({ width: 9000, height: 9000 }), "seller");
     assert.equal(k.allow, false);
     assert.deepEqual(k.normalized_targets, {});
   });
 
-  it("SINIR · kısa kenar tam 1000 geçer, 999 düşer", () => {
+  it("SINIR · kısa kenar tam 1000 geçer, 999 de artık geçer — 2026-09-29 kare kuralı: reddetme yok", () => {
+    // ÖNCEDEN: 999 REDDEDİLİRDİ (`require.min_short_edge=1000`). `require`'dan
+    // kaldırıldı; ürüne bağlanan görsel artık kare 1000–2000 px beyaz dolguya
+    // otomatik çevriliyor (media/kare.py). İkisi de artık KABUL.
     assert.equal(
       evaluate("product.image", gorselKunye({ width: 1000, height: 1000 }), "seller").allow,
       true
     );
     assert.equal(
       evaluate("product.image", gorselKunye({ width: 999, height: 999 }), "seller").allow,
-      false
+      true
     );
   });
 
@@ -405,9 +420,14 @@ describe("KD-F02/5 · preflight değerlendirmesi", () => {
     assert.equal(sunucu.allow, false, "sunucu ikizi artık reddetmiyorsa F-16 kapandı");
   });
 
-  it("SINIR · çok küçük görsel engellenir", () => {
-    const r = preflightEvaluate(olcum({ width: 100, height: 100 }), { slotKey: "product.image" });
-    assert.equal(hasBlocker(r.findings), true);
+  it("SINIR · çok büyük görsel (megapiksel tavanı) engellenir", () => {
+    // GÜNCELLENDİ 2026-09-29 (kare kuralı): 100×100 artık `product.image`
+    // ön kontrolünde ENGELLENMİYOR (`require.min_short_edge`/`min_area`
+    // kaldırıldı, istemci vendor kopyası `node src/lib/media/upload/sync.mjs`
+    // ile yeniden üretildi). Sınır testi hâlâ geçerli bir engelle
+    // (`accept.max_megapixels_hard=80`, bu görevin kapsamı DIŞINDA) kuruluyor.
+    const r = preflightEvaluate(olcum({ width: 9000, height: 9000 }), { slotKey: "product.image" });
+    assert.equal(hasBlocker(r.findings), true, JSON.stringify(r.findings));
   });
 
   it("SINIR · adet aşımı engellenir", () => {

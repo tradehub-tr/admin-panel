@@ -8,8 +8,10 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
+  import MediaProductOptimizeCard from "@/components/media/MediaProductOptimizeCard.vue";
   import MediaRecordDialog from "@/components/media/MediaRecordDialog.vue";
   import MediaRetroRenameCard from "@/components/media/MediaRetroRenameCard.vue";
+  import MediaSquareCard from "@/components/media/MediaSquareCard.vue";
   import MediaUsageDialog from "@/components/media/MediaUsageDialog.vue";
   import MediaDensityToggle from "@/components/media/MediaDensityToggle.vue";
   import { useCardGridWindow } from "@/components/media/useCardGridWindow";
@@ -878,6 +880,10 @@
       </div>
     </header>
 
+    <!-- 2026-09-30: tüm ürün görseli dönüşümleri tek kartta, tek düğmeyle (yalnız
+         System Manager; backend `_guard_destructive` aynı rolü istiyor). -->
+    <MediaProductOptimizeCard v-if="auth.userRoles?.includes('System Manager')" />
+
     <!-- ── Özet kartları: koyu kahraman (kazanç) + 4 beyaz kart ── -->
     <div class="mo__stats">
       <div class="mo__hero">
@@ -1259,7 +1265,19 @@
          başlatıyor (backend `_guard_destructive` de aynı rolü istiyor).
          `auth.isAdmin` `is_admin` bayrağına bakıyordu ve Marketplace Admin
          gibi rolleri de içeriye alabiliyordu — kapı rol listesine indirildi. -->
-    <MediaRetroRenameCard v-if="auth.userRoles?.includes('System Manager')" />
+    <!-- Tek tek adım kartları: tek düğme kartının altında, katlanmış. -->
+    <details
+      v-if="auth.userRoles?.includes('System Manager')"
+      class="mo__advanced"
+      data-testid="media-advanced-tools"
+    >
+      <summary class="mo__advanced-summary">
+        {{ t("media.optimizeAll.advanced") }}
+        <span class="mo__advanced-hint">{{ t("media.optimizeAll.advancedHint") }}</span>
+      </summary>
+      <MediaRetroRenameCard v-if="auth.userRoles?.includes('System Manager')" />
+      <MediaSquareCard v-if="auth.userRoles?.includes('System Manager')" />
+    </details>
 
     <!-- ── İş ilerlemesi ── -->
     <div
@@ -1316,224 +1334,228 @@
     </div>
 
     <!-- ── Liste (varsayılan) ── -->
-    <div v-if="effectiveMode === 'list'" class="card mo__list" :class="{ 'mo__list--windowed': listWindowed }">
+    <div
+      v-if="effectiveMode === 'list'"
+      class="card mo__list"
+      :class="{ 'mo__list--windowed': listWindowed }"
+    >
       <!-- Pencereleme padding'i iç gövdeye: `.card`'ın kendi 20px'i bozulmasın -->
       <div ref="listEl" class="mo__list-body" :style="listPadStyle">
-      <div
-        v-for="(item, i) in listVisible"
-        :key="item.name"
-        class="mo__row"
-        :class="{ 'mo__row--on': selected.has(item.name) }"
-        :data-cell="listOffset + i"
-        :aria-setsize="m.items.value.length"
-        :aria-posinset="listOffset + i + 1"
-        @click="rowToggle($event, item)"
-      >
-        <!-- `@click.stop`: kutunun kendi tıklaması satıra ulaşırsa seçim iki
+        <div
+          v-for="(item, i) in listVisible"
+          :key="item.name"
+          class="mo__row"
+          :class="{ 'mo__row--on': selected.has(item.name) }"
+          :data-cell="listOffset + i"
+          :aria-setsize="m.items.value.length"
+          :aria-posinset="listOffset + i + 1"
+          @click="rowToggle($event, item)"
+        >
+          <!-- `@click.stop`: kutunun kendi tıklaması satıra ulaşırsa seçim iki
              kez dönüp hiç değişmemiş görünür. `change` yine çalışıyor, yani
              klavyeyle boşluk tuşu yolu bozulmuyor. -->
-        <input
-          type="checkbox"
-          :checked="selected.has(item.name)"
-          :disabled="running"
-          :title="skipHint(item)"
-          @click.stop
-          @change="toggle(item.name)"
-        />
-        <!-- Görünmez kap: masaüstünde `display: contents` — fotoğraf satırın
+          <input
+            type="checkbox"
+            :checked="selected.has(item.name)"
+            :disabled="running"
+            :title="skipHint(item)"
+            @click.stop
+            @change="toggle(item.name)"
+          />
+          <!-- Görünmez kap: masaüstünde `display: contents` — fotoğraf satırın
              doğrudan çocuğuymuş gibi davranır, yerleşim birebir aynı kalır.
              Dokunmatikte gerçek bir kutuya dönüşüp sol sütunu boydan boya
              doldurur. Kap ŞART: `img` yerine geçen bir öğe ve kendi en-boy
              oranı olduğu için ızgara uzatması (`align-self: stretch`) ona
              hiç uygulanmıyor — ölçüldü, 82px'lik alanda 56px kalıyordu. -->
-        <span class="mo__thumb-wrap">
-          <img
-            v-if="canThumb(item)"
-            class="mo__thumb"
-            :src="previewUrl(item)"
-            :alt="item.file_name"
-            loading="lazy"
-            decoding="async"
-            @error="thumbFallback($event, item)"
-          />
-          <span v-else class="mo__thumb mo__thumb--ph">{{ extOf(item) }}</span>
-        </span>
-
-        <div class="mo__row-main">
-          <span class="mo__file-name">{{ item.file_name }}</span>
-          <!-- Meta satırında yalnız uyarı kalır ("2 kez yüklenmiş" gibi);
-               boyut/kazanç sağdaki sayı sütununda, kullanım sayısı çipte. -->
-          <span v-if="item.usage_kind !== 'single'" class="mo__row-sub">
-            {{ usageLabel(item) }}
+          <span class="mo__thumb-wrap">
+            <img
+              v-if="canThumb(item)"
+              class="mo__thumb"
+              :src="previewUrl(item)"
+              :alt="item.file_name"
+              loading="lazy"
+              decoding="async"
+              @error="thumbFallback($event, item)"
+            />
+            <span v-else class="mo__thumb mo__thumb--ph">{{ extOf(item) }}</span>
           </span>
-        </div>
 
-        <!-- Boyut + kazanç: sağa yaslı sayı sütunu — dikeyde taranır. -->
-        <!-- Meta şeridi TEK kap içinde: boyut, kullanım çipi ve rozetler.
+          <div class="mo__row-main">
+            <span class="mo__file-name">{{ item.file_name }}</span>
+            <!-- Meta satırında yalnız uyarı kalır ("2 kez yüklenmiş" gibi);
+               boyut/kazanç sağdaki sayı sütununda, kullanım sayısı çipte. -->
+            <span v-if="item.usage_kind !== 'single'" class="mo__row-sub">
+              {{ usageLabel(item) }}
+            </span>
+          </div>
+
+          <!-- Boyut + kazanç: sağa yaslı sayı sütunu — dikeyde taranır. -->
+          <!-- Meta şeridi TEK kap içinde: boyut, kullanım çipi ve rozetler.
              Masaüstünde `display: contents` ile kap görünmez — çocuklar satırın
              doğrudan çocuğuymuş gibi davranır, yerleşim birebir aynı kalır.
              Dokunmatikte gerçek bir kutuya dönüşüp hepsini tek şeritte tutar;
              doğrudan çocuk kaldıklarında her rozet ayrı satıra dağılıyordu. -->
-        <span class="mo__row-meta">
-          <span class="mo__row-size">
-            {{ formatSize(item.file_size) }}
-            <small v-if="item.saved_bytes" class="mo__row-size-gain">
-              −{{ formatSize(item.saved_bytes) }}
-            </small>
-          </span>
+          <span class="mo__row-meta">
+            <span class="mo__row-size">
+              {{ formatSize(item.file_size) }}
+              <small v-if="item.saved_bytes" class="mo__row-size-gain">
+                −{{ formatSize(item.saved_bytes) }}
+              </small>
+            </span>
 
-          <span class="mo__usechip" :title="usageTitle(item)">
-            <span class="mo__dot" :class="usageDot(item) && `mo__dot--${usageDot(item)}`" />
-            <span class="mo__usechip-n">{{ usageCount(item) }}</span>
-          </span>
+            <span class="mo__usechip" :title="usageTitle(item)">
+              <span class="mo__dot" :class="usageDot(item) && `mo__dot--${usageDot(item)}`" />
+              <span class="mo__usechip-n">{{ usageCount(item) }}</span>
+            </span>
 
-          <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
+            <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
                "hazır" olağan durumdur, rozetlemek gürültü. -->
-          <span
-            v-if="item.video_status === 'processing' || item.video_status === 'failed'"
-            class="mo__badge"
-            :class="`mo__badge--v-${item.video_status}`"
-          >
-            {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
-          </span>
-          <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. Karantinadaki
+            <span
+              v-if="item.video_status === 'processing' || item.video_status === 'failed'"
+              class="mo__badge"
+              :class="`mo__badge--v-${item.video_status}`"
+            >
+              {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
+            </span>
+            <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. Karantinadaki
                dosya diskte public ağaçtan çıkmıştır ama `File` kaydı durduğu için
                bu listede görünür — yöneticinin bulguyu göreceği yer burası. -->
-          <span
-            v-if="['infected', 'failed', 'pending'].includes(item.scan_status)"
-            class="mo__badge"
-            :class="`mo__badge--s-${item.scan_status}`"
-          >
-            {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
+            <span
+              v-if="['infected', 'failed', 'pending'].includes(item.scan_status)"
+              class="mo__badge"
+              :class="`mo__badge--s-${item.scan_status}`"
+            >
+              {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
+            </span>
+            <span
+              v-if="isPrivateView && item.pii"
+              class="mo__badge mo__badge--skip"
+              :title="t('mediaAccess.badge.piiHint')"
+            >
+              {{ t("mediaAccess.badge.pii") }}
+            </span>
+            <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
           </span>
-          <span
-            v-if="isPrivateView && item.pii"
-            class="mo__badge mo__badge--skip"
-            :title="t('mediaAccess.badge.piiHint')"
-          >
-            {{ t("mediaAccess.badge.pii") }}
-          </span>
-          <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
-        </span>
-        <div class="mo__stat-menu" @keydown.escape="statMenu = null">
-          <button
-            type="button"
-            class="mo__stat-menu-btn"
-            :aria-label="t('mediaOptimize.stat.actionsAria')"
-            :aria-expanded="statMenu === `list:${item.name}`"
-            @click.stop="toggleStatMenu(`list:${item.name}`)"
-          >
-            <AppIcon name="more-vertical" :size="14" />
-          </button>
-          <ul
-            v-if="statMenu === `list:${item.name}`"
-            class="mo__stat-menu-list"
-            role="menu"
-            @click.stop
-          >
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                class="mo__stat-menu-item"
-                @click="statMenuRun(() => openUsage(item))"
-              >
-                <AppIcon name="eye" :size="14" />
-                {{ t("mediaOptimize.action.viewUsage") }}
-              </button>
-            </li>
-            <template v-if="isTrashView">
+          <div class="mo__stat-menu" @keydown.escape="statMenu = null">
+            <button
+              type="button"
+              class="mo__stat-menu-btn"
+              :aria-label="t('mediaOptimize.stat.actionsAria')"
+              :aria-expanded="statMenu === `list:${item.name}`"
+              @click.stop="toggleStatMenu(`list:${item.name}`)"
+            >
+              <AppIcon name="more-vertical" :size="14" />
+            </button>
+            <ul
+              v-if="statMenu === `list:${item.name}`"
+              class="mo__stat-menu-list"
+              role="menu"
+              @click.stop
+            >
               <li role="none">
                 <button
                   type="button"
                   role="menuitem"
                   class="mo__stat-menu-item"
-                  @click="statMenuRun(() => untrashOne(item))"
+                  @click="statMenuRun(() => openUsage(item))"
+                >
+                  <AppIcon name="eye" :size="14" />
+                  {{ t("mediaOptimize.action.viewUsage") }}
+                </button>
+              </li>
+              <template v-if="isTrashView">
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    @click="statMenuRun(() => untrashOne(item))"
+                  >
+                    <AppIcon name="rotate-ccw" :size="14" />
+                    {{ t("mediaOptimize.action.untrash") }}
+                  </button>
+                </li>
+                <li class="mo__stat-menu-sep" role="separator" aria-hidden="true"></li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item mo__stat-menu-item--danger"
+                    @click="statMenuRun(() => askDeleteOne(item))"
+                  >
+                    <AppIcon name="trash-2" :size="14" />
+                    {{ t("mediaOptimize.action.deleteOne") }}
+                  </button>
+                </li>
+              </template>
+              <li v-else-if="item.video_status === 'failed'" role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="mo__stat-menu-item"
+                  :disabled="running"
+                  @click="statMenuRun(() => m.retryTranscode(item.file_url))"
                 >
                   <AppIcon name="rotate-ccw" :size="14" />
-                  {{ t("mediaOptimize.action.untrash") }}
+                  {{ t("mediaOptimize.action.retryVideo") }}
                 </button>
               </li>
-              <li class="mo__stat-menu-sep" role="separator" aria-hidden="true"></li>
-              <li role="none">
-                <button
-                  type="button"
-                  role="menuitem"
-                  class="mo__stat-menu-item mo__stat-menu-item--danger"
-                  @click="statMenuRun(() => askDeleteOne(item))"
-                >
-                  <AppIcon name="trash-2" :size="14" />
-                  {{ t("mediaOptimize.action.deleteOne") }}
-                </button>
-              </li>
-            </template>
-            <li v-else-if="item.video_status === 'failed'" role="none">
-              <button
-                type="button"
-                role="menuitem"
-                class="mo__stat-menu-item"
-                :disabled="running"
-                @click="statMenuRun(() => m.retryTranscode(item.file_url))"
-              >
-                <AppIcon name="rotate-ccw" :size="14" />
-                {{ t("mediaOptimize.action.retryVideo") }}
-              </button>
-            </li>
-            <li v-else-if="item.state === 'optimized'" role="none">
-              <button
-                type="button"
-                role="menuitem"
-                class="mo__stat-menu-item"
-                :disabled="running"
-                @click="statMenuRun(() => askRestore(item.name))"
-              >
-                <AppIcon name="rotate-ccw" :size="14" />
-                {{ t("mediaOptimize.action.restore") }}
-              </button>
-            </li>
-            <li v-if="!isTrashView && !isPrivateView" role="none">
-              <button
-                type="button"
-                role="menuitem"
-                class="mo__stat-menu-item"
-                :disabled="running || access.busy.value"
-                :title="t('mediaAccess.action.makePrivateHint')"
-                @click="statMenuRun(() => askMakePrivate(item))"
-              >
-                <AppIcon name="lock" :size="14" />
-                {{ t("mediaAccess.action.makePrivate") }}
-              </button>
-            </li>
-            <template v-if="isPrivateView">
-              <li role="none">
+              <li v-else-if="item.state === 'optimized'" role="none">
                 <button
                   type="button"
                   role="menuitem"
                   class="mo__stat-menu-item"
-                  :disabled="access.busy.value"
-                  :title="t('mediaAccess.action.signedLinkHint')"
-                  @click="statMenuRun(() => copySignedLink(item))"
+                  :disabled="running"
+                  @click="statMenuRun(() => askRestore(item.name))"
                 >
-                  <AppIcon name="link" :size="14" />
-                  {{ t("mediaAccess.action.signedLink") }}
+                  <AppIcon name="rotate-ccw" :size="14" />
+                  {{ t("mediaOptimize.action.restore") }}
                 </button>
               </li>
-              <li v-if="!item.pii" role="none">
+              <li v-if="!isTrashView && !isPrivateView" role="none">
                 <button
                   type="button"
                   role="menuitem"
                   class="mo__stat-menu-item"
-                  :disabled="access.busy.value"
-                  @click="statMenuRun(() => askMakePublic(item))"
+                  :disabled="running || access.busy.value"
+                  :title="t('mediaAccess.action.makePrivateHint')"
+                  @click="statMenuRun(() => askMakePrivate(item))"
                 >
-                  <AppIcon name="globe" :size="14" />
-                  {{ t("mediaAccess.action.makePublic") }}
+                  <AppIcon name="lock" :size="14" />
+                  {{ t("mediaAccess.action.makePrivate") }}
                 </button>
               </li>
-            </template>
-          </ul>
+              <template v-if="isPrivateView">
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    :disabled="access.busy.value"
+                    :title="t('mediaAccess.action.signedLinkHint')"
+                    @click="statMenuRun(() => copySignedLink(item))"
+                  >
+                    <AppIcon name="link" :size="14" />
+                    {{ t("mediaAccess.action.signedLink") }}
+                  </button>
+                </li>
+                <li v-if="!item.pii" role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    :disabled="access.busy.value"
+                    @click="statMenuRun(() => askMakePublic(item))"
+                  >
+                    <AppIcon name="globe" :size="14" />
+                    {{ t("mediaAccess.action.makePublic") }}
+                  </button>
+                </li>
+              </template>
+            </ul>
+          </div>
         </div>
-      </div>
       </div>
       <p v-if="!m.items.value.length" class="mo__empty">{{ t("mediaOptimize.empty") }}</p>
     </div>
@@ -3482,5 +3504,22 @@
       display: block;
       min-height: 2.4em;
     }
+  }
+
+  .mo__advanced {
+    margin-bottom: 0.75rem;
+  }
+
+  .mo__advanced-summary {
+    cursor: pointer;
+    padding: 0.5rem 0;
+    font-weight: 600;
+  }
+
+  .mo__advanced-hint {
+    margin-inline-start: 0.5rem;
+    font-weight: 400;
+    font-size: 0.75rem;
+    opacity: 0.7;
   }
 </style>

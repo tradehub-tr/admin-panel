@@ -458,7 +458,8 @@
       </div>
 
       <!-- 5 sayısal kart -->
-      <div class="bid-stats grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5" data-tour="bid-summary">
+      <p class="bulk-media-note">{{ t("mediaFlow.bulkMedia") }}</p>
+      <div class="bid-stats bulk-media-stats grid gap-3 mb-5" data-tour="bid-summary">
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-gray-700 dark:text-gray-200">
             {{ job.total || 0 }}
@@ -662,6 +663,41 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+
+  .bulk-import-wizard,
+  .bulk-import-detail {
+    container-type: inline-size;
+  }
+  .bulk-media-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bulk-media-stats > * {
+    min-width: 0;
+    padding: 12px;
+  }
+  .bulk-media-stats > * > * {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .bulk-media-stats .font-bold {
+    font-size: clamp(18px, 3cqi, 24px);
+    font-variant-numeric: tabular-nums;
+  }
+  .bulk-media-note {
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  @container (min-width: 560px) {
+    .bulk-media-stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
 
   .bulk-import-detail {
     max-width: 1100px;

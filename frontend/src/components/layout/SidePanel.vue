@@ -32,11 +32,15 @@
     <!-- Panel Content (overflow-x-hidden: uzun başlıklar x-scroll oluşturmasın) -->
     <div class="flex-1 overflow-y-auto overflow-x-hidden panel-scroll py-3">
       <template v-for="(group, idx) in nav.currentGroups" :key="idx">
-        <!-- Group Title (clickable accordion header) -->
-        <div
+        <!-- Group Title (accordion header) — gerçek <button>: klavyeyle açılır,
+             aria-expanded ekran okuyucuya durumu söyler. -->
+        <button
           v-if="group.title"
+          type="button"
           class="panel-group-title"
           :style="{ '--group-color': group.color || '#d39c00' }"
+          :aria-expanded="nav.isGroupOpen(group.title) ? 'true' : 'false'"
+          :aria-controls="`panel-group-${idx}`"
           @click="nav.toggleGroup(group.title)"
         >
           <div class="panel-group-title-left">
@@ -52,37 +56,43 @@
               :size="16"
               class="panel-group-chevron"
               :class="{ open: nav.isGroupOpen(group.title) }"
+              aria-hidden="true"
             />
           </div>
-        </div>
+        </button>
 
-        <!-- Group Items -->
+        <!-- Group Items — grid-rows 0fr↔1fr ile katlanır (sidebar.scss). Kapalı
+             grup `inert`: Tab içine giremez, ekran okuyucu atlar. -->
         <div
+          :id="`panel-group-${idx}`"
           class="panel-group"
           :class="{
             collapsible: !!group.title,
             open: !group.title || nav.isGroupOpen(group.title),
           }"
+          :inert="!!group.title && !nav.isGroupOpen(group.title)"
         >
-          <router-link
-            v-for="item in group.items"
-            :key="item.label"
-            :to="getItemRoute(item)"
-            class="panel-item"
-            :class="{ active: isItemActive(item) }"
-            :data-tour-item="item.route || item.doctype || item.report || item.label"
-            @click="handleItemClick(item)"
-          >
-            <AppIcon :name="item.icon" :size="15" class="panel-item-icon" />
-            <span class="panel-item-label">{{ t(item.label) }}</span>
-            <AppIcon
-              v-if="item.locked"
-              name="lock"
-              :size="12"
-              class="panel-item-lock"
-              :title="t(lockedHintKey)"
-            />
-          </router-link>
+          <div class="panel-group-inner">
+            <router-link
+              v-for="item in group.items"
+              :key="item.label"
+              :to="getItemRoute(item)"
+              class="panel-item"
+              :class="{ active: isItemActive(item) }"
+              :data-tour-item="item.route || item.doctype || item.report || item.label"
+              @click="handleItemClick(item)"
+            >
+              <AppIcon :name="item.icon" :size="15" class="panel-item-icon" />
+              <span class="panel-item-label">{{ t(item.label) }}</span>
+              <AppIcon
+                v-if="item.locked"
+                name="lock"
+                :size="12"
+                class="panel-item-lock"
+                :title="t(lockedHintKey)"
+              />
+            </router-link>
+          </div>
         </div>
       </template>
     </div>

@@ -161,6 +161,9 @@ test("türevler ekranın beklediği şekle çevrilir", async () => {
     bytes: 24576,
     ssim: 0.987,
     generation: "eager",
+    dpi: 0,
+    colorspace: "",
+    hasAlpha: false,
   });
   // Ölçülmemiş SSIM 0 kalır; ekran onu "—" diye gösterir, "0,000" diye değil.
   assert.equal(r.rows.value[1].ssim, 0);
