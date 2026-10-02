@@ -1,11 +1,30 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mediaPhase, byteReduction } from "../status.js";
+import { mediaPhase, byteReduction, phaseTone } from "../status.js";
 
 test("HTTP acceptance and missing scan data never imply readiness", () => {
   assert.equal(mediaPhase(null, "document"), "uploaded");
   assert.equal(mediaPhase({ video_status: "ready" }, "video"), "unverified");
-  assert.equal(mediaPhase({ scan_status: "clean" }, "image"), "uploaded");
+  // Taranmamış dosyanın hazırlaması sürüyorsa hâlâ süren iş (kullanıcı için bitmedi).
+  assert.equal(mediaPhase({ asset_states: ["processing"] }, "image"), "processing");
+});
+test("clean scan without confirmed derivatives is done for the user (2026-10-02)", () => {
+  // Prod: türev kuyruğu yokken tepsi %75'te kalıyordu; temiz tarama = kullanıcı için bitti.
+  assert.equal(mediaPhase({ scan_status: "clean" }, "image"), "readyBackground");
+  assert.equal(mediaPhase({ scan_status: "clean", asset_states: [] }, "image"), "readyBackground");
+  assert.equal(
+    mediaPhase({ scan_status: "clean", video_status: "processing" }, "video"),
+    "readyBackground"
+  );
+  assert.equal(phaseTone("readyBackground"), "success");
+  // Gerçek sorunlar öne çıkmaya devam eder.
+  assert.equal(mediaPhase({ scan_status: "pending" }, "image"), "scanning");
+  assert.equal(mediaPhase({ scan_status: "infected" }, "image"), "blocked");
+  assert.equal(mediaPhase({ scan_status: "failed" }, "image"), "scanFailed");
+  assert.equal(
+    mediaPhase({ scan_status: "clean", asset_states: ["failed"] }, "image"),
+    "processingFailed"
+  );
 });
 test("security outranks completed derivatives and separates malware from scanner errors", () => {
   for (const [scan, phase] of [
@@ -22,7 +41,7 @@ test("documents need no derivative stage; images require all current assets read
   assert.equal(mediaPhase({ scan_status: "clean" }, "document"), "ready");
   assert.equal(
     mediaPhase({ scan_status: "clean", asset_states: ["ready", "processing"] }),
-    "processing"
+    "readyBackground"
   );
   assert.equal(
     mediaPhase({ scan_status: "clean", asset_states: ["ready", "failed"] }),

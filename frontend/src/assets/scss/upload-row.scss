@@ -99,6 +99,21 @@ $ok: $c-success-text; // beyazda 7.9:1
       color: $d-text;
     }
   }
+  // Kullanıcı için bitmiş satırın nötr ikinci satırı ("arka planda hazırlanıyor"):
+  // durum tonundan bağımsız, sakin renk — sorun ya da süren iş gibi okunmasın.
+  .utray-row__note {
+    display: block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    line-height: 16px;
+    color: $l-text-600;
+    @include dark {
+      color: $d-text;
+    }
+  }
   .utray-row__label {
     font-weight: 600;
     color: $l-text-900;

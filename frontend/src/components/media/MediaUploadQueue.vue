@@ -8,9 +8,12 @@
   import { useMediaStatus } from "@/composables/useMediaStatus.js";
   import { useScrollLock } from "@/composables/useScrollLock.js";
   import { restoreFocus, trapTabKey } from "@/components/common/focusTrap";
-  import { byteReduction, uploadPhase, uploadedKey } from "@/lib/media/status.js";
+  import { READY_BACKGROUND, byteReduction, uploadPhase, uploadedKey } from "@/lib/media/status.js";
   import {
+    BACKGROUND_POLL_MAX_MS,
+    BACKGROUND_POLL_MS,
     CLEARABLE_PHASES,
+    backgroundNoteKey,
     hasShimmer,
     overallPercent,
     pageTrays,
@@ -42,26 +45,59 @@
   // (hazır / engellendi / başarısız) künye `settled` içinde saklanır ve bir daha
   // sorgulanmaz. Eskiden 10 sn'lik döngü hazır dosyaları da sonsuza dek soruyordu.
   const SETTLED = ["ready", "blocked", "scanFailed", "processingFailed"];
+  // Saniyelik saat: yeniden deneme geri sayımı + arka plan kontrolünün süresi.
+  const tick = ref(Date.now());
   const settled = ref({});
+  // Kullanıcı için bitmiş (temiz tarama) ama türevi doğrulanmamış dosyalar:
+  // hızlı döngüden çıkar, 30 sn'de bir en çok 10 dk sorulur — türev hazır
+  // olunca satırın "arka planda" notu kalkar. `{ fact, since }`.
+  const background = ref({});
+  const doneKeys = () =>
+    props.facts === null
+      ? props.uploads
+          .filter((u) => u.status === "done")
+          .map(uploadedKey)
+          .filter((k) => k && !settled.value[k])
+      : [];
   const { facts: polledFacts, unavailable: pollUnavailable } = useMediaStatus(
-    () =>
-      props.facts === null
-        ? props.uploads
-            .filter((u) => u.status === "done")
-            .map(uploadedKey)
-            .filter((k) => k && !settled.value[k])
-        : [],
+    () => doneKeys().filter((k) => !background.value[k]),
     { interval: 3000 }
   );
-  watch(polledFacts, (next) => {
+  const { facts: slowFacts } = useMediaStatus(
+    () =>
+      doneKeys().filter(
+        (k) =>
+          background.value[k] && tick.value - background.value[k].since < BACKGROUND_POLL_MAX_MS
+      ),
+    { interval: BACKGROUND_POLL_MS }
+  );
+  function absorb(next) {
     const done = {};
+    const bg = {};
     for (const u of props.uploads) {
       const k = uploadedKey(u);
-      if (next[k] && SETTLED.includes(uploadPhase(u, next[k]))) done[k] = next[k];
+      if (!next[k]) continue;
+      const phase = uploadPhase(u, next[k]);
+      if (SETTLED.includes(phase)) done[k] = next[k];
+      else if (phase === READY_BACKGROUND)
+        bg[k] = { fact: next[k], since: background.value[k]?.since ?? Date.now() };
     }
-    if (Object.keys(done).length) settled.value = { ...settled.value, ...done };
-  });
-  const facts = computed(() => props.facts ?? { ...polledFacts.value, ...settled.value });
+    if (Object.keys(done).length) {
+      settled.value = { ...settled.value, ...done };
+      const rest = { ...background.value };
+      for (const k of Object.keys(done)) delete rest[k];
+      background.value = rest;
+    }
+    if (Object.keys(bg).length) background.value = { ...background.value, ...bg };
+  }
+  watch(polledFacts, absorb);
+  watch(slowFacts, absorb);
+  const backgroundFacts = computed(() =>
+    Object.fromEntries(Object.entries(background.value).map(([k, v]) => [k, v.fact]))
+  );
+  const facts = computed(
+    () => props.facts ?? { ...polledFacts.value, ...backgroundFacts.value, ...settled.value }
+  );
   const unavailable = computed(() => props.unavailable || pollUnavailable.value);
 
   // ── Ekran sınıfı ──────────────────────────────────────────────
@@ -125,7 +161,6 @@
   const hidden = computed(() => props.suspended || (props.ambient && pageTrays.value > 0));
 
   // ── Zamanlayıcı (yeniden deneme geri sayımı) ─────────────────
-  const tick = ref(Date.now());
   let timer = null;
   onMounted(() => {
     timer = setInterval(() => (tick.value = Date.now()), 1000);
@@ -251,6 +286,7 @@
   }
   function preparationText(phase) {
     if (phase === "ready") return t("mediaFlow.phase.ready");
+    if (phase === READY_BACKGROUND) return t("mediaFlow.background");
     if (["processing", "preparing"].includes(phase)) return t("mediaFlow.phase.processing");
     if (phase === "processingFailed") return t("mediaFlow.phase.processingFailed");
     return t("mediaFlow.unknown");
@@ -432,6 +468,9 @@
                       · {{ t("mediaFlow.tray.percent", { percent: row.progress }) }}</span
                     ></span
                   >
+                  <span v-if="backgroundNoteKey(row.phase)" class="utray-row__note">{{
+                    t(backgroundNoteKey(row.phase))
+                  }}</span>
                 </button>
                 <div
                   v-if="row.phase === 'uploading'"
