@@ -5,7 +5,7 @@
  * sayımların ve yüzdenin Vue kurmadan test edilebilmesi.
  */
 import { ref } from "vue";
-import { phaseTone } from "./status.js";
+import { DONE_FOR_USER_PHASES, READY_BACKGROUND, phaseTone } from "./status.js";
 
 /** Henüz sonuçlanmamış satırlar: başlıktaki "N dosya işleniyor"un N'i. */
 export const ACTIVE_PHASES = [
@@ -21,13 +21,14 @@ export const ACTIVE_PHASES = [
 export const ISSUE_PHASES = ["uploadFailed", "blocked", "scanFailed", "processingFailed"];
 
 /** Temizlenebilir satırlar — eski `canClear` politikasıyla aynı. */
-export const CLEARABLE_PHASES = ["ready", "cancelled", ...ISSUE_PHASES];
+export const CLEARABLE_PHASES = [...DONE_FOR_USER_PHASES, "cancelled", ...ISSUE_PHASES];
 
 export function trayCounts(phases) {
   return {
     total: phases.length,
     active: phases.filter((p) => ACTIVE_PHASES.includes(p)).length,
-    ready: phases.filter((p) => p === "ready").length,
+    // Türevi arka planda süren (temiz taranmış) dosya da kullanıcı için hazır.
+    ready: phases.filter((p) => DONE_FOR_USER_PHASES.includes(p)).length,
     issues: phases.filter((p) => ISSUE_PHASES.includes(p)).length,
   };
 }
@@ -61,7 +62,7 @@ export function overlayFor(phase, progress) {
   if (phase === "queued") return "queued";
   if (phase === "preparing" || phase === "processing") return "stack";
   if (phase === "uploaded" || phase === "scanning") return "shield";
-  if (phase === "ready") return "check";
+  if (DONE_FOR_USER_PHASES.includes(phase)) return "check";
   if (phase === "blocked") return "lock";
   if (["uploadFailed", "scanFailed", "processingFailed"].includes(phase)) return "error";
   if (phase === "review" || phase === "unverified") return "warn";
@@ -75,6 +76,19 @@ export function overlayFor(phase, progress) {
 export function rowTone(phase) {
   return ACTIVE_PHASES.includes(phase) ? "active" : phaseTone(phase);
 }
+
+/**
+ * Kullanıcı için bitmiş satırın nötr ikinci satırı (i18n anahtarı) ya da `""`.
+ * Türevler arka planda sürüyor: dönen çark/kayan çizgi YOK, yalnız bu not.
+ */
+export function backgroundNoteKey(phase) {
+  return phase === READY_BACKGROUND ? "mediaFlow.hint.readyBackground" : "";
+}
+
+// Arka plan kontrolü: kullanıcı için biten ama türevi doğrulanmamış dosya
+// yavaş aralıkla ve sınırlı süre sorulur — not, türevler hazır olunca kalkar.
+export const BACKGROUND_POLL_MS = 30_000;
+export const BACKGROUND_POLL_MAX_MS = 10 * 60_000;
 
 /** Süresi bilinmeyen beklemede satır altında ince kayan çizgi. */
 export function hasShimmer(phase, progress) {

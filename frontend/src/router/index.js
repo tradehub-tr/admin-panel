@@ -14,6 +14,11 @@ import {
   readyScreens,
 } from "@/router/logisticsScreens";
 import { useToast } from "@/composables/useToast";
+import { notificationTemplatesAvailable } from "@/api/notificationTemplatesGate";
+import {
+  accessTags as notificationTemplateAccessTags,
+  isNotificationTemplatesPath,
+} from "@/utils/notificationTemplates/permissions";
 import { i18n } from "@/i18n";
 
 // Views (lazy-loaded)
@@ -191,6 +196,56 @@ function kapaliLogisticsRoutes() {
     redirect: () => {
       useToast().info(i18n.global.t("logistics.screenNotOpenHere"));
       return { path: kapaliEkranHedefi(screen) };
+    },
+  }));
+}
+
+/**
+ * Bildirim şablonları: olaylar, düzenleyici, sürüm geçmişi (gerçek uç, B4).
+ *
+ * Kapı (`api/notificationTemplatesGate.js`) kapatılırsa üç ekran route'tan düşer ve
+ * adresine gelen kullanıcı nedenini okuyup ana sayfaya yönlenir. `meta.roles` menüdeki
+ * `requires` ile aynı etiketler; `meta.notificationTemplates` yalnız içerik rolü olan
+ * kullanıcının girebildiği rotaları işaretler (guard). Asıl yetki sunucuda.
+ */
+function notificationTemplateRoutes() {
+  const roles = notificationTemplateAccessTags();
+  const screens = [
+    {
+      path: "bildirim-sablonlari",
+      name: "NotificationEvents",
+      component: () => import("@/views/notifications/NotificationEventsView.vue"),
+      title: "Bildirim şablonları",
+    },
+    {
+      path: "bildirim-sablonlari/:key",
+      name: "NotificationTemplateEditor",
+      component: () => import("@/views/notifications/NotificationTemplateEditorView.vue"),
+      title: "Şablon düzenleyici",
+    },
+    {
+      path: "bildirim-sablonlari/:key/gecmis",
+      name: "NotificationTemplateHistory",
+      component: () => import("@/views/notifications/NotificationTemplateHistoryView.vue"),
+      title: "Sürüm geçmişi",
+    },
+  ];
+  if (!notificationTemplatesAvailable())
+    return screens.map(({ path }) => ({
+      path,
+      redirect: () => {
+        useToast().info(i18n.global.t("logistics.screenNotOpenHere"));
+        return { path: "/dashboard" };
+      },
+    }));
+  return screens.map(({ title, ...route }) => ({
+    ...route,
+    meta: {
+      title,
+      breadcrumb: "Bildirim şablonları",
+      section: "system",
+      roles,
+      notificationTemplates: true,
     },
   }));
 }
@@ -1216,6 +1271,7 @@ const routes = [
       // dosyadaki bayrak açılır, route ve menü kendiliğinden oluşur.
       ...logisticsRoutes(),
       ...kapaliLogisticsRoutes(),
+      ...notificationTemplateRoutes(),
     ],
   },
   {
@@ -1249,24 +1305,28 @@ router.beforeEach(async (to, _from, next) => {
     return next({ path: "/login", query: { redirect: to.fullPath } });
   }
   if (to.meta.guest && auth.isAuthenticated) {
-    if (!auth.isAdmin && !auth.isSeller && !auth.isFieldAgent) {
+    if (!auth.isPanelUser) {
       await auth.logout();
       auth.error = "Bu panel yalnızca satıcı ve yöneticilere açıktır.";
       return next("/login");
     }
-    return next("/dashboard");
+    return next(auth.homeRoute);
   }
-  // Admins and sellers can access the panel
-  if (
-    !to.meta.guest &&
-    auth.isAuthenticated &&
-    !auth.isAdmin &&
-    !auth.isSeller &&
-    !auth.isFieldAgent
-  ) {
+  // Panel kapısı: admin, satıcı, saha ajanı ve bildirim içerik rolleri
+  // ("Notification Content Manager" / "Notification Viewer").
+  if (!to.meta.guest && auth.isAuthenticated && !auth.isPanelUser) {
     await auth.logout();
     auth.error = "Bu panel yalnızca satıcı ve yöneticilere açıktır.";
     return next("/login");
+  }
+  // Yalnız bildirim içerik rolü olan kullanıcı (is_admin/is_seller DEĞİL) YALNIZ bildirim
+  // şablonları rotalarına girer; başka her rota (dashboard dahil) modülün köküne döner.
+  // Genel yönetim kapılarının (requiresAdmin, meta.roles, DB modül kapısı) hiçbiri bu
+  // kullanıcıya bir şey açmaz — burada erken karar verilip çıkılır.
+  if (!to.meta.guest && auth.isNotificationOnly) {
+    if (!to.meta.notificationTemplates || !isNotificationTemplatesPath(to.path))
+      return next(auth.homeRoute);
+    return next();
   }
   // Super-admin gerektiren sayfalar (ör. Site Teması) — satıcı giremez
   if (to.meta.requiresSuperAdmin && !auth.isAdmin) {

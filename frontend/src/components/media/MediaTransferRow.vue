@@ -8,8 +8,8 @@
   import { useI18n } from "vue-i18n";
   import MediaPhaseThumb from "./MediaPhaseThumb.vue";
   import { formatBytes } from "@/utils/mediaFormat";
-  import { byteReduction } from "@/lib/media/status.js";
-  import { hasShimmer, rowTone } from "@/lib/media/uploadTray.js";
+  import { READY_BACKGROUND, byteReduction } from "@/lib/media/status.js";
+  import { backgroundNoteKey, hasShimmer, rowTone } from "@/lib/media/uploadTray.js";
   const props = defineProps({
     name: { type: String, required: true },
     kind: { type: String, default: "document" },
@@ -49,6 +49,7 @@
   // Hazırlama satırı sunucunun kanıtını söyler: "Yüklendi" bir hazırlama sonucu değildir.
   const preparationText = computed(() => {
     if (props.phase === "ready") return t("mediaFlow.phase.ready");
+    if (props.phase === READY_BACKGROUND) return t("mediaFlow.background");
     if (["processing", "preparing"].includes(props.phase)) return t("mediaFlow.phase.processing");
     if (props.phase === "processingFailed") return t("mediaFlow.phase.processingFailed");
     return t("mediaFlow.unknown");
@@ -88,6 +89,9 @@
             · {{ t("mediaFlow.tray.percent", { percent }) }}</span
           ></span
         >
+        <span v-if="backgroundNoteKey(phase)" class="utray-row__note">{{
+          t(backgroundNoteKey(phase))
+        }}</span>
       </button>
       <div
         v-if="phase === 'uploading'"

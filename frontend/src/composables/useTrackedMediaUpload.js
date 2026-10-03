@@ -60,6 +60,7 @@ export function useTrackedMediaUpload() {
       (row) =>
         ![
           "ready",
+          "readyBackground",
           "cancelled",
           "uploadFailed",
           "blocked",

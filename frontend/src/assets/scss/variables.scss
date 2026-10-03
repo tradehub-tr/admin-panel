@@ -60,6 +60,17 @@ $brand-text: #5a4300;
 // rgba() ile açık zemin olarak kullanılıyor; koyulaştırmak oraları bozardı.
 $c-error-strong: #dc2626; // beyazla 4.83:1
 $c-info: #3b82f6;
+// Form alanı kenarlığı — metin dışı kontrast eşiği 3:1 (WCAG 1.4.11).
+// `$l-border` beyazda ~1.3:1 veriyor; alanın SINIRINI taşıyan çizgi için yetmez.
+// Ölçüm: açık #8a867c / #fff 3.63:1 · koyu #7d796f / #191816 4.09:1.
+$l-field-border: #8a867c;
+$d-field-border: #7d796f;
+// Koyu zeminde durum METNİ (rozet, alan altı mesaj). `cards.scss` bu tonları
+// rozetlerde zaten kullanıyordu; adlandırıldı ki ekranlar elle hex yazmasın.
+$d-success-text: #34d399;
+$d-warning-text: #fbbf24;
+$d-error-text: #f87171;
+$d-info-text: #93c5fd;
 
 // --- Motion: Easing eğrileri ---
 // Emil Kowalski çerçevesi: giriş ease-out, morph ease-in-out, sheet iOS eğrisi. UI'da ease-in YASAK.

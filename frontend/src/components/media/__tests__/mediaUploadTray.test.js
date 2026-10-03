@@ -366,7 +366,9 @@ test("her faz kendi küçük resim katmanını ve metin etiketini çizer", async
     ["uploading", { id: "u", name: "u.png", status: "uploading", progress: 30 }, null, "ring"],
     ["uploaded", ...F("d0", null), "shield"],
     ["scanning", ...F("d1", { scan_status: "pending" }), "shield"],
-    ["processing", ...F("d2", { scan_status: "clean", asset_states: ["processing"] }), "stack"],
+    // Tarama sonucu henüz yokken süren hazırlama; temiz taramadan sonra arka plan işi.
+    ["processing", ...F("d2", { scan_status: "", asset_states: ["processing"] }), "stack"],
+    ["readyBackground", ...F("d9", { scan_status: "clean" }), "check"],
     ["ready", ...F("d3", { scan_status: "clean", asset_states: ["ready"] }), "check"],
     ["blocked", ...F("d4", { scan_status: "infected" }), "lock"],
     ["scanFailed", ...F("d5", { scan_status: "failed" }), "error"],

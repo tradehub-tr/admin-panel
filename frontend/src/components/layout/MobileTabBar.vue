@@ -130,12 +130,7 @@
   import { computed, onMounted, onUnmounted, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
-  import {
-    adminRailSections,
-    sellerRailSections,
-    adminMobileTabSections,
-    sellerMobileTabSections,
-  } from "@/data/navigation";
+  import { navFor } from "@/data/navigation";
   import { useNavigationStore } from "@/stores/navigation";
   import { useAuthStore } from "@/stores/auth";
   import { useTourStore } from "@/stores/tour";
@@ -162,13 +157,9 @@
   // null → "Daha" modu; dolu → bölüm modu (rail section objesi)
   const sheetSection = ref(null);
 
-  const isSellerOnly = computed(() => auth.isSeller && !auth.isAdmin);
-  const railSections = computed(() =>
-    isSellerOnly.value ? sellerRailSections : adminRailSections
-  );
-  const tabIds = computed(() =>
-    isSellerOnly.value ? sellerMobileTabSections : adminMobileTabSections
-  );
+  const panelNav = computed(() => navFor(auth.panelKind));
+  const railSections = computed(() => panelNav.value.rail);
+  const tabIds = computed(() => panelNav.value.mobileTabs);
   const tabs = computed(() =>
     tabIds.value.map((id) => railSections.value.find((s) => s.id === id)).filter(Boolean)
   );

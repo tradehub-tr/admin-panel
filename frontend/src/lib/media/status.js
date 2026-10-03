@@ -1,3 +1,17 @@
+/**
+ * Kullanıcı için BİTMİŞ ama türevleri (görünüm kopyaları / Media Asset) henüz
+ * doğrulanmamış dosya: yüklendi + güvenlik taraması temiz. Satıcı için iş
+ * bitti — tepsi bunu "hazır" sayar, %100 gösterir, ilerleme çizgisi çizmez;
+ * yalnız nötr bir ikinci satır türevlerin arka planda sürdüğünü söyler.
+ * Yerleşim önizlemesi (`ready`) gibi türev isteyen akışlar bunu hazır SAYMAZ.
+ * Neden: prod'da türev kuyruğu yokken tepsi sonsuza dek %75'te kalıyordu
+ * (2026-10-02).
+ */
+export const READY_BACKGROUND = "readyBackground";
+
+/** Kullanıcının işi bitmiş fazlar (tepsi sayımı, yüzde, temizleme). */
+export const DONE_FOR_USER_PHASES = ["ready", READY_BACKGROUND];
+
 /** Server facts only: HTTP completion is not media readiness. */
 export function mediaPhase(facts, kind = "image") {
   if (!facts) return "uploaded";
@@ -13,7 +27,8 @@ export function mediaPhase(facts, kind = "image") {
     video === "processing" ||
     states.some((s) => ["draft", "pending", "validating", "processing", "reprocessing"].includes(s))
   )
-    return "processing";
+    // Temiz taramadan sonra hazırlama arka plan işidir; kullanıcı için bitti.
+    return scan === "clean" ? READY_BACKGROUND : "processing";
   if (states.includes("review")) return "review";
   if (scan !== "clean") return "unverified";
   if (
@@ -22,13 +37,14 @@ export function mediaPhase(facts, kind = "image") {
     (kind === "video" && video === "ready")
   )
     return "ready";
-  return "uploaded";
+  // Temiz tarama + türev henüz yok / sürüyor: kullanıcı için bitti.
+  return READY_BACKGROUND;
 }
 
 export function phaseTone(phase) {
   if (["blocked", "uploadFailed"].includes(phase)) return "danger";
   if (["scanFailed", "processingFailed", "review", "unverified"].includes(phase)) return "warning";
-  return phase === "ready" ? "success" : "neutral";
+  return DONE_FOR_USER_PHASES.includes(phase) ? "success" : "neutral";
 }
 
 export function uploadedKey(item) {
