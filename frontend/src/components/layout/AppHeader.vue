@@ -277,14 +277,7 @@
   import { useSidebarStore } from "@/stores/sidebar";
   import { useNotificationStore } from "@/stores/notification";
   import { useOverlay } from "@/composables/useOverlay";
-  import {
-    adminPanelSections,
-    adminSectionTitles,
-    sellerPanelSections,
-    sellerSectionTitles,
-    lookupNavItem,
-    getFirstSectionRoute,
-  } from "@/data/navigation";
+  import { navFor, lookupNavItem, getFirstSectionRoute } from "@/data/navigation";
   import { useNavigationStore } from "@/stores/navigation";
   import { useAuthStore } from "@/stores/auth";
   import GlobalSearch from "@/components/common/GlobalSearch.vue";
@@ -304,13 +297,8 @@
   // Rol-bazlı navigasyon kaynağı — breadcrumb satıcıda satıcı, admin'de admin
   // section/başlıklarını kullanmalı. Aksi hâlde satıcının /seller-orders'ı
   // admin'in "commerce" (Ticaret ve Siparişler) bölümünde bulunuyordu.
-  const isSellerPanel = computed(() => auth.isSeller && !auth.isAdmin);
-  const navSections = computed(() =>
-    isSellerPanel.value ? sellerPanelSections : adminPanelSections
-  );
-  const navTitles = computed(() =>
-    isSellerPanel.value ? sellerSectionTitles : adminSectionTitles
-  );
+  const navSections = computed(() => navFor(auth.panelKind).sections);
+  const navTitles = computed(() => navFor(auth.panelKind).titles);
 
   const searchQuery = ref("");
   const showSearchResults = ref(false);

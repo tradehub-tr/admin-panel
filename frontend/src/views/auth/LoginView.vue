@@ -122,7 +122,9 @@
     auth.error = null;
     try {
       await auth.login(email.value, password.value);
-      if (!auth.isAdmin && !auth.isSeller) {
+      // Bildirim içerik rolleri de girer, ama yalnız bildirim şablonlarına
+      // (hedef `auth.homeRoute`; diğer rotaları router guard kapatır).
+      if (!auth.isAdmin && !auth.isSeller && !auth.isNotificationOnly) {
         await auth.logout();
         localError.value = t("auth.errors.sellerAdminOnly");
         return;
@@ -139,7 +141,7 @@
         !raw.includes("\\") &&
         !raw.includes(":")
           ? raw
-          : "/dashboard";
+          : auth.homeRoute;
       router.push(redirectTo);
     } catch (err) {
       localError.value = err.message || t("auth.errors.loginFailed");

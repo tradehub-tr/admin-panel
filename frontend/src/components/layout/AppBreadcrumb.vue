@@ -33,14 +33,28 @@
     sellerPanelSections,
     adminSectionTitles,
     sellerSectionTitles,
+    navFor,
   } from "@/data/navigation";
 
   const { t } = useI18n();
   const route = useRoute();
   const auth = useAuthStore();
 
-  const sections = computed(() => (auth.isAdmin ? adminPanelSections : sellerPanelSections));
-  const titles = computed(() => (auth.isAdmin ? adminSectionTitles : sellerSectionTitles));
+  const notificationsOnly = computed(() => auth.panelKind === "notifications");
+  const sections = computed(() =>
+    notificationsOnly.value
+      ? navFor("notifications").sections
+      : auth.isAdmin
+        ? adminPanelSections
+        : sellerPanelSections
+  );
+  const titles = computed(() =>
+    notificationsOnly.value
+      ? navFor("notifications").titles
+      : auth.isAdmin
+        ? adminSectionTitles
+        : sellerSectionTitles
+  );
 
   // Find nav item by current route or doctype
   const navItem = computed(() => {

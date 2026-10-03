@@ -1,0 +1,396 @@
+// ============================================================
+// Bildirim şablonları modülü — ortak stil dili (.nt)
+//
+// Üç ekranın (olaylar, düzenleyici, sürüm geçmişi) ve gövdeye taşınan
+// katmanların (çekmece, modal) paylaştığı atomlar. main.scss'e EKLENMEZ:
+// `components/notifications/NtPage.vue` yükler, böylece modül açılmadıkça
+// açılış paketine girmez.
+//
+// Panel dili korunur (card, form-input, hdr-btn-*, tbl-*); burada yalnız
+// modülün kabul ölçütlerinin gerektirdiği farklar var:
+//   * en küçük yazı 12px (panelin 10px tablo başlığı/rozeti burada 12px)
+//   * form alanı kenarlığı ≥ 3:1 (`$l-field-border` / `$d-field-border`)
+//   * mobilde gövde 14px, dokunma hedefi ≥ 44×44
+// Renkler `.nt` kökünde CSS değişkenine bağlanır: açık/koyu tema tek yerde
+// çözülür, alt kurallar tema bilmez.
+// ============================================================
+
+@use "variables" as *;
+@use "media" as media;
+
+.nt {
+  --nt-fg: #{$l-text-900};
+  --nt-fg-2: #{$l-text-700};
+  --nt-muted: #{$l-text-500};
+  --nt-bg: #{$l-bg};
+  --nt-bg-soft: #{$l-bg-soft};
+  --nt-bg-muted: #{$l-bg-muted};
+  --nt-line: #{$l-border};
+  --nt-line-soft: #{$l-border-alt};
+  --nt-field-line: #{$l-field-border};
+  --nt-ok-fg: #{$c-success-text};
+  --nt-ok-bg: #{rgba($c-success, 0.12)};
+  --nt-warn-fg: #{$c-warning-text};
+  --nt-warn-bg: #{rgba($c-warning, 0.16)};
+  --nt-err-fg: #{$c-error-text};
+  --nt-err-bg: #{rgba($c-error, 0.1)};
+  --nt-err-line: #{$c-error-strong};
+  --nt-info-fg: #{$c-info-text};
+  --nt-info-bg: #{rgba($c-info, 0.1)};
+  --nt-brand-bg: #{rgba($brand, 0.22)};
+  --nt-brand-line: #{rgba($brand, 0.55)};
+  --nt-brand-fg: #{$brand-text};
+  --nt-link: #{$c-info-text};
+  --nt-shadow: 0 12px 40px #{rgba(#000, 0.16)};
+
+  color: var(--nt-fg);
+  font-size: 13px;
+  line-height: 1.45;
+
+  @include dark {
+    --nt-fg: #{$d-text};
+    --nt-fg-2: #{$d-text};
+    --nt-muted: #{$d-text-muted};
+    --nt-bg: #{$d-bg-card};
+    --nt-bg-soft: #{$d-bg-elevated};
+    --nt-bg-muted: #{$d-bg-elevated};
+    --nt-line: #{$d-border};
+    --nt-line-soft: #{$d-border-inner};
+    --nt-field-line: #{$d-field-border};
+    --nt-ok-fg: #{$d-success-text};
+    --nt-ok-bg: #{rgba($c-success, 0.14)};
+    --nt-warn-fg: #{$d-warning-text};
+    --nt-warn-bg: #{rgba($c-warning, 0.14)};
+    --nt-err-fg: #{$d-error-text};
+    --nt-err-bg: #{rgba($c-error, 0.14)};
+    --nt-err-line: #{$d-error-text};
+    --nt-info-fg: #{$d-info-text};
+    --nt-info-bg: #{rgba($c-info, 0.16)};
+    --nt-brand-bg: #{rgba($brand, 0.16)};
+    --nt-brand-line: #{rgba($brand, 0.45)};
+    --nt-brand-fg: #{$brand};
+    --nt-link: #{$d-info-text};
+    --nt-shadow: 0 12px 40px #{rgba(#000, 0.5)};
+  }
+
+  @media (max-width: media.$m-bp-md) {
+    font-size: 14px;
+  }
+
+  // ── Tipografi ────────────────────────────────────────────
+  // Sayfa başlığı panel standardında (scss.md §8): 15px kalın.
+  .nt-h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--nt-fg);
+  }
+
+  .nt-h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--nt-fg);
+  }
+
+  .nt-h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--nt-fg);
+
+    @media (max-width: media.$m-bp-md) {
+      font-size: 14px;
+    }
+  }
+
+  .nt-sub,
+  .nt-hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--nt-muted);
+
+    @media (max-width: media.$m-bp-md) {
+      font-size: 13px;
+    }
+  }
+
+  .nt-mono,
+  code {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px;
+  }
+
+  .nt-num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nt-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // ── Düğmeler: panel standardı + modül ölçüleri ────────────
+  .hdr-btn-outlined,
+  .hdr-btn-primary,
+  .hdr-btn-danger {
+    justify-content: center;
+    min-height: 34px;
+    font-size: 13px;
+
+    @media (max-width: media.$m-bp-md) {
+      min-height: 44px;
+      font-size: 14px;
+    }
+  }
+
+  .hdr-btn-outlined {
+    border-color: var(--nt-field-line);
+    color: var(--nt-fg-2);
+
+    @include dark {
+      border-color: var(--nt-field-line) !important;
+      color: var(--nt-fg) !important;
+    }
+  }
+
+  .hdr-btn-outlined:disabled,
+  .hdr-btn-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .nt-btn--sm {
+    min-height: 30px;
+    height: auto;
+    padding: 0 10px;
+    font-size: 12px;
+
+    @media (max-width: media.$m-bp-md) {
+      min-height: 44px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+  }
+
+  .nt-btn--block {
+    width: 100%;
+  }
+
+  .nt-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--nt-link);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    @media (max-width: media.$m-bp-md) {
+      min-height: 44px;
+      padding: 0 4px;
+    }
+  }
+
+  .nt-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--nt-fg-2);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--nt-bg-muted);
+    }
+
+    @media (max-width: media.$m-bp-md) {
+      width: 44px;
+      height: 44px;
+    }
+  }
+
+  // ── Form alanları: kenarlık ≥ 3:1 ─────────────────────────
+  .form-input {
+    border-color: var(--nt-field-line);
+    font-size: 13px;
+
+    @include dark {
+      border-color: var(--nt-field-line) !important;
+    }
+
+    &[aria-invalid="true"] {
+      border-color: var(--nt-err-line);
+      box-shadow: inset 0 0 0 1px var(--nt-err-line);
+
+      @include dark {
+        border-color: var(--nt-err-line) !important;
+      }
+    }
+
+    &[readonly] {
+      background: var(--nt-bg-soft);
+    }
+
+    @media (max-width: media.$m-bp-md) {
+      min-height: 44px;
+      // 16px altı alanda iOS otomatik yakınlaştırır.
+      font-size: 16px;
+    }
+  }
+
+  select.form-input {
+    min-height: 34px;
+
+    @media (max-width: media.$m-bp-md) {
+      min-height: 44px;
+    }
+  }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 600;
+
+    @media (max-width: media.$m-bp-md) {
+      font-size: 13px;
+    }
+  }
+
+  // ── Tablo: panel sınıfları, 12px alt sınırıyla ────────────
+  .tbl-th {
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+  }
+
+  .tbl-td {
+    font-size: 13px;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  // ── Ortak segment (BaseSegmented) ─────────────────────────
+  // Bileşenin etkin metni marka sarısı üstünde BEYAZ (1.8:1); modülde koyu
+  // mürekkep kullanılır. Mobilde dokunma hedefi 44px.
+  .seg-btn {
+    white-space: nowrap;
+    font-size: 12px;
+    padding-block: 6px;
+
+    &.active {
+      color: $brand-ink;
+
+      @include dark {
+        color: $brand-ink;
+      }
+    }
+
+    &:focus-visible {
+      box-shadow: none;
+      outline: 2px solid $c-info;
+      outline-offset: 1px;
+    }
+
+    @media (max-width: media.$m-bp-md) {
+      min-height: 44px;
+      font-size: 13px;
+    }
+  }
+
+  // ── Kart yüzeyi (panel `card`'ı, gölge geçişi olmadan) ────
+  .nt-surface {
+    background: var(--nt-bg);
+    border: 1px solid var(--nt-line);
+    border-radius: 12px;
+  }
+
+  // ── Odak: özel etkileşimli öğeler ─────────────────────────
+  [contenteditable="true"]:focus-visible,
+  [tabindex]:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid $c-info;
+    outline-offset: 2px;
+  }
+
+  // ── Çip (filtre, kapsam) ─────────────────────────────────
+  .nt-chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--nt-line);
+    border-radius: 999px;
+    background: var(--nt-bg);
+    color: var(--nt-fg-2);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &[aria-pressed="true"] {
+      border-color: var(--nt-brand-line);
+      background: var(--nt-brand-bg);
+      color: var(--nt-fg);
+      font-weight: 600;
+    }
+
+    @media (max-width: media.$m-bp-md) {
+      min-height: 44px;
+      padding: 0 14px;
+      font-size: 13px;
+    }
+  }
+
+  // ── İskelet ──────────────────────────────────────────────
+  .nt-sk {
+    display: block;
+    height: 14px;
+    border-radius: 6px;
+    background: var(--nt-bg-muted);
+    animation: nt-pulse 1.2s ease-in-out infinite;
+  }
+
+  // Değişken belirteci vurgusu (alan arka planı, fark, önizleme)
+  .nt-bad {
+    border-bottom: 2px solid var(--nt-err-line);
+    background: var(--nt-err-bg);
+    color: inherit;
+  }
+}
+
+@keyframes nt-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt .nt-sk {
+    animation: none;
+  }
+}

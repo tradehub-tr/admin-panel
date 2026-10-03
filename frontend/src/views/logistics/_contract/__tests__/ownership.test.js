@@ -216,7 +216,14 @@ test("src/api dizinindeki her lojistik dosya sahiplik haritasında", () => {
   // dışı (lojistik-dışı) dosyalar AÇIKÇA listelenir, kalan her dosya
   // haritada olmak zorunda.
   // seoHelper.js: SEO Helper süper admin ekranı (MOGEM-663, 22 Eyl) — lojistik değil.
-  const NON_LOGISTICS_API_FILES = ["seo.js", "seoHelper.js", "seoRedirects.js"];
+  // notificationTemplates*.js: bildirim şablonları modülü (F2, 3 Eki) — lojistik değil.
+  const NON_LOGISTICS_API_FILES = [
+    "seo.js",
+    "seoHelper.js",
+    "seoRedirects.js",
+    "notificationTemplates.js",
+    "notificationTemplatesGate.js",
+  ];
   const onDisk = readdirSync(join(SRC_DIR, "api"), { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
     .map((entry) => entry.name);
@@ -253,6 +260,7 @@ test("src/stores dizinindeki her lojistik store sahiplik haritasında", () => {
     "media.js",
     "navigation.js",
     "notification.js",
+    "notificationTemplates.js", // bildirim şablonları (F2, 3 Eki) — lojistik değil
     "permission.js",
     "reservation.js",
     "salesTeams.js", // saha satış ekipleri (18 Eyl) — lojistik değil

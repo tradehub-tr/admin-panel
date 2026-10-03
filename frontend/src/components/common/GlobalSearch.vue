@@ -38,7 +38,8 @@
   import { computed } from "vue";
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
-  import { searchData } from "@/data/navigation";
+  import { navFor, searchData, searchIndexFor } from "@/data/navigation";
+  import { useAuthStore } from "@/stores/auth";
   import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
@@ -49,6 +50,14 @@
 
   const emit = defineEmits(["select"]);
   const router = useRouter();
+  const auth = useAuthStore();
+
+  // Yalnız bildirim içerik rolü genel yönetim modüllerini aramada da görmez.
+  const index = computed(() => {
+    if (auth.panelKind !== "notifications") return searchData;
+    const { sections, titles } = navFor("notifications");
+    return searchIndexFor(sections, titles);
+  });
 
   // searchData carries i18n KEY strings (label/sectionLabel). Translate to the
   // active locale first, then match & display. `tx` = translate-or-passthrough:
@@ -58,7 +67,7 @@
   // Pre-translate once per query/locale so we don't call t() repeatedly while
   // filtering & rendering (computed cache + reactive on locale change).
   const translatedData = computed(() =>
-    searchData.map((item) => ({
+    index.value.map((item) => ({
       ...item,
       labelText: tx(item.label),
       sectionText: tx(item.sectionTitle || item.sectionLabel),

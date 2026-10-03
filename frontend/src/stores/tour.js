@@ -2,12 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useNavigationStore } from "@/stores/navigation";
-import {
-  adminRailSections,
-  sellerRailSections,
-  adminPanelSections,
-  sellerPanelSections,
-} from "@/data/navigation";
+import { navFor } from "@/data/navigation";
 
 // Rehberli onboarding — iki katman, tek overlay:
 //  1) BÖLÜM turu: bir bölüme (IconRail) ilk girişte o bölümün menü öğelerini tanıtır.
@@ -57,9 +52,7 @@ export const useTourStore = defineStore("tour", () => {
 
   // ── BÖLÜM turu ────────────────────────────────────────
   function buildSectionSteps(secId) {
-    const isSeller = auth.isSeller && !auth.isAdmin;
-    const rail = isSeller ? sellerRailSections : adminRailSections;
-    const sectionsMap = isSeller ? sellerPanelSections : adminPanelSections;
+    const { rail, sections: sectionsMap } = navFor(auth.panelKind);
     const sec = rail.find((s) => s.id === secId);
     if (!sec) return [];
     const entries = [];

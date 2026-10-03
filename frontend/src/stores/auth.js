@@ -3,6 +3,10 @@ import { ref, computed } from "vue";
 import api from "@/utils/api";
 import { useNavigationStore } from "@/stores/navigation";
 import { useSubscriptionStore } from "@/stores/subscription";
+import {
+  NOTIFICATION_TEMPLATES_HOME,
+  resolveTemplateRole,
+} from "@/utils/notificationTemplates/permissions";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
@@ -49,6 +53,34 @@ export const useAuthStore = defineStore("auth", () => {
   );
   const isFieldLeader = computed(
     () => !!user.value?.is_field_leader || userRoles.value.includes("Saha Ekip Lideri")
+  );
+
+  // Bildirim şablonları içerik rolleri ("Notification Content Manager" / "Notification
+  // Viewer"). Bu rollerden birine sahip ama admin/satıcı/saha ajanı OLMAYAN kullanıcı panele
+  // YALNIZ bildirim şablonları modülü için girer: is_admin atanmaz, genel modüller açılmaz.
+  // Asıl yetki sunucudadır (`notifications/authz.py`); bu yalnız kapı ve menü kararıdır.
+  const notificationTemplateRole = computed(() =>
+    user.value ? resolveTemplateRole({ isAdmin: isAdmin.value, roles: userRoles.value }) : null
+  );
+  const isNotificationOnly = computed(
+    () =>
+      !!notificationTemplateRole.value && !isAdmin.value && !isSeller.value && !isFieldAgent.value
+  );
+  /** Panele girebilir mi? (admin · satıcı · saha ajanı · bildirim içerik rolü) */
+  const isPanelUser = computed(
+    () => isAdmin.value || isSeller.value || isFieldAgent.value || isNotificationOnly.value
+  );
+  /** Panel türü: menü/rail/breadcrumb kaynağını seçer. */
+  const panelKind = computed(() =>
+    isNotificationOnly.value
+      ? "notifications"
+      : isSeller.value && !isAdmin.value
+        ? "seller"
+        : "admin"
+  );
+  /** Giriş sonrası ve yetkisiz rotadan dönüş hedefi. */
+  const homeRoute = computed(() =>
+    isNotificationOnly.value ? NOTIFICATION_TEMPLATES_HOME : "/dashboard"
   );
 
   // Seller capability check — backend require_seller_capability ile tutarlı.
@@ -250,6 +282,11 @@ export const useAuthStore = defineStore("auth", () => {
     isSeller,
     isAdmin,
     isFieldAgent,
+    notificationTemplateRole,
+    isNotificationOnly,
+    isPanelUser,
+    panelKind,
+    homeRoute,
     isFieldLeader,
     isVerifiedSeller,
     kybStatus,

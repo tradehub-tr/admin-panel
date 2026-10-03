@@ -1,11 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import {
-  adminPanelSections,
-  adminSectionTitles,
-  sellerPanelSections,
-  sellerSectionTitles,
-} from "@/data/navigation";
+import { navFor } from "@/data/navigation";
 import { useSidebarStore } from "@/stores/sidebar";
 import { useAuthStore } from "@/stores/auth";
 import { useEntitlement } from "@/composables/useEntitlement";
@@ -117,6 +112,8 @@ export const useNavigationStore = defineStore("navigation", () => {
     // paylaşır; eski `if (dbLoading) return` erken dönüp bekleyeni boş veriyle
     // bırakıyordu.
     if (dbInflight && !force) return dbInflight;
+    // Yalnız bildirim içerik rolü: DB menüsü yok (sabit tek grup, `navFor("notifications")`).
+    if (useAuthStore().isNotificationOnly) return;
     if (dbLoaded.value && !force) return;
     if (!force && dbFailedAt && Date.now() - dbFailedAt < DB_RETRY_AFTER_MS) return;
     dbLoading.value = true;
@@ -164,6 +161,7 @@ export const useNavigationStore = defineStore("navigation", () => {
   //     eder. Sprint 7'de admin tarafı seed tamamlanınca buradaki kontrol kalkar.
   function getActiveSections() {
     const auth = useAuthStore();
+    if (auth.panelKind === "notifications") return navFor("notifications").sections;
     const isSeller = auth.isSeller && !auth.isAdmin;
     if (isSeller && dbLoaded.value) {
       // Sprint 6 fail-secure: backend gating tamamlandıktan sonra hard-coded
@@ -171,7 +169,7 @@ export const useNavigationStore = defineStore("navigation", () => {
       // sub-user'a gizli modülleri sızdırmamalıyız.
       return dbSellerSections.value || {};
     }
-    return isSeller ? sellerPanelSections : adminPanelSections;
+    return navFor(isSeller ? "seller" : "admin").sections;
   }
 
   // Sprint 6 — Modül key → mode Map (composable.useNavigation için O(1) lookup).
@@ -300,8 +298,7 @@ export const useNavigationStore = defineStore("navigation", () => {
   }
 
   function getActiveSectionTitles() {
-    const auth = useAuthStore();
-    return auth.isSeller && !auth.isAdmin ? sellerSectionTitles : adminSectionTitles;
+    return navFor(useAuthStore().panelKind).titles;
   }
 
   const sectionTitle = computed(() => getActiveSectionTitles()[activeSection.value] || "iStoc");

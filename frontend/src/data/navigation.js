@@ -17,6 +17,33 @@
 // Göreli yol: `@/` alias'ı yalnız Vite'ta çözülüyor, bu dosyanın
 // node:test'ten okunabilmesi menü kalemlerinin sınanmasını sağlıyor.
 import { menuScreens, sellerMenuScreens } from "../router/logisticsScreens.js";
+import { notificationTemplatesAvailable } from "../api/notificationTemplatesGate.js";
+import { accessTags as notificationTemplateAccessTags } from "../utils/notificationTemplates/permissions.js";
+
+/**
+ * Bildirim şablonları menü grubu. Kapı (`api/notificationTemplatesGate.js`) kapatılırsa
+ * grup hiç üretilmez — ucu olmayan ekranın menüde durması ölü bağlantı olurdu.
+ * Lojistiğin "Bildirim" girişiyle BİRLEŞTİRİLMEZ; iki menü ayrı kalır.
+ */
+function notificationMenuGroups() {
+  if (!notificationTemplatesAvailable()) return [];
+  const requires = notificationTemplateAccessTags();
+  return [
+    {
+      title: "nav.group.notifications",
+      color: "#d39c00",
+      requires,
+      items: [
+        {
+          label: "nav.item.notificationTemplates",
+          icon: "bell",
+          route: "/bildirim-sablonlari",
+          requires,
+        },
+      ],
+    },
+  ];
+}
 
 /**
  * Hazır lojistik ekranlarını menü kalemine çevirir.
@@ -595,6 +622,7 @@ export const adminPanelSections = {
         { label: "nav.item.seoHelper", icon: "bot", route: "/seo/helper" },
       ],
     },
+    ...notificationMenuGroups(),
     {
       title: "nav.group.automation",
       color: "#d39c00",
@@ -890,6 +918,59 @@ export const sellerPanelSections = {
   ],
 };
 
+// ── Yalnız bildirim içerik rolü olan kullanıcının paneli ──
+// "Notification Content Manager" / "Notification Viewer" rolü olup admin/satıcı/saha ajanı
+// OLMAYAN kullanıcı menüde YALNIZ bildirim şablonlarını görür (`auth.panelKind`).
+export const notificationRailSections = [
+  { id: "system", icon: "bell", label: "nav.item.notificationTemplates" },
+];
+export const notificationSectionTitles = { system: "nav.item.notificationTemplates" };
+export const notificationPanelSections = { system: notificationMenuGroups() };
+export const notificationMobileTabSections = ["system"];
+
+/**
+ * Panel türüne göre menü kaynağı — rail, bölüm başlıkları, menü grupları, mobil sekmeler
+ * tek yerden seçilir. `kind`: `auth.panelKind` ("admin" | "seller" | "notifications").
+ */
+export function navFor(kind) {
+  if (kind === "notifications")
+    return {
+      rail: notificationRailSections,
+      titles: notificationSectionTitles,
+      sections: notificationPanelSections,
+      mobileTabs: notificationMobileTabSections,
+    };
+  if (kind === "seller")
+    return {
+      rail: sellerRailSections,
+      titles: sellerSectionTitles,
+      sections: sellerPanelSections,
+      mobileTabs: sellerMobileTabSections,
+    };
+  return {
+    rail: adminRailSections,
+    titles: adminSectionTitles,
+    sections: adminPanelSections,
+    mobileTabs: adminMobileTabSections,
+  };
+}
+
+/** Arama indeksi (verilen bölüm haritasından) — label/sectionLabel i18n KEY'leridir. */
+export function searchIndexFor(sections, titles) {
+  return Object.entries(sections).flatMap(([sectionId, groups]) =>
+    groups.flatMap((group) =>
+      group.items.map((item) => ({
+        label: item.label,
+        icon: item.icon,
+        section: sectionId,
+        sectionLabel: titles[sectionId] || sectionId,
+        route: item.route || (item.doctype ? `/app/${encodeURIComponent(item.doctype)}` : null),
+        doctype: item.doctype || null,
+      }))
+    )
+  );
+}
+
 // ── Geriye dönük uyum (admin default olarak export) ──
 
 export const railSections = adminRailSections;
@@ -899,22 +980,16 @@ export const panelSections = adminPanelSections;
 // ── Yardımcı fonksiyonlar ────────────────────────────
 
 /** GlobalSearch için düz arama indeksi (admin) — label/sectionLabel i18n KEY'leridir */
-export const searchData = Object.entries(adminPanelSections).flatMap(([sectionId, groups]) =>
-  groups.flatMap((group) =>
-    group.items.map((item) => ({
-      label: item.label,
-      icon: item.icon,
-      section: sectionId,
-      sectionLabel: adminSectionTitles[sectionId] || sectionId,
-      route: item.route || (item.doctype ? `/app/${encodeURIComponent(item.doctype)}` : null),
-      doctype: item.doctype || null,
-    }))
-  )
-);
+export const searchData = searchIndexFor(adminPanelSections, adminSectionTitles);
 
 /** Route, doctype veya report ile navigasyon öğesi ara */
 export function lookupNavItem(value, type = "route", sections = adminPanelSections) {
-  const titles = sections === sellerPanelSections ? sellerSectionTitles : adminSectionTitles;
+  const titles =
+    sections === sellerPanelSections
+      ? sellerSectionTitles
+      : sections === notificationPanelSections
+        ? notificationSectionTitles
+        : adminSectionTitles;
   for (const [sectionId, groups] of Object.entries(sections)) {
     for (const group of groups) {
       for (const item of group.items) {

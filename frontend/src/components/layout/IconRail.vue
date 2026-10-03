@@ -110,7 +110,7 @@
   import { computed, onMounted, onUnmounted, ref } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
-  import { adminRailSections, sellerRailSections } from "@/data/navigation";
+  import { navFor } from "@/data/navigation";
   import { useNavigationStore } from "@/stores/navigation";
   import { useTourStore } from "@/stores/tour";
   import { useTenantStore } from "@/stores/tenant";
@@ -135,9 +135,7 @@
   const uploadProgress = ref(0);
 
   // Rol bazlı rail sections
-  const railSections = computed(() =>
-    auth.isSeller && !auth.isAdmin ? sellerRailSections : adminRailSections
-  );
+  const railSections = computed(() => navFor(auth.panelKind).rail);
   const toast = useToast();
   const router = useRouter();
   const { currentTheme, setTheme } = useTheme();

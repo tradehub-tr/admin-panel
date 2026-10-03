@@ -15,3 +15,7 @@ src/lib/media/vendor
 # satırlık sahte diff üretti (hiçbir DEĞER değişmemişti, yalnız girinti).
 # Yukarıdaki media/*/vendor satırları da aynı gerekçeyle burada.
 src/mocks/logistics
+
+# Sunucuyla BAYT BAYT aynı tutulan şablon dili fixture'ı (kaynak:
+# tradehub_core/tradehub_core/tests/fixtures/notification_template_cases.json).
+src/utils/notificationTemplates/__tests__/fixtures/notification_template_cases.json
