@@ -1,3 +1,36 @@
+## [v1.19.2-alpha.1] - 2026-10-03 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(bildirimler): bildirim şablonları paneli ve medya yükleme tepsisi iyileştirmeleri (#235) (@ahmeetseker)
+  - Süper admin için satış ekipleri sayfası, rota ve menü kaydı eklendi
+  - Lider ve üye atama akışını backend API'lerine bağlayan Pinia store eklendi
+  - Satış ekibi form yardımcıları testlerle ayrıştırıldı
+  - Medya politika senkronu library.image slotu ve AVIF çıktılarıyla güncellendi
+  - Politika durumunu, izolasyon bilgisini ve temiz oranı görünür hale getir
+  - Mobilde karantina listesini kart düzenine taşıyarak tablo sıkışmasını azalt
+  - Serbest bırakma işlemi için yanlış pozitif uyarılı onay akışı ekle
+  - Yeni arayüz metinlerini TR/EN/RU/AR yerelleştirmelerine ekle
+  - Önizle düğmesinin tıklanabilirliğini ve yükleme durumunu netleştirerek plan isteğinin katlama davranışına takılmasını engelle
+  - Arşivdeki orijinalleri koşuda atlayıp onay sayısını gerçek taşınacak dosyalara göre göstererek geri alma akışını koru
+  - Dry-run sonuçlarını gelecek zamanlı sayaçlar ve açıklama notuyla göstererek dosya taşındığı izlenimini kaldır
+  - Çift nokta ve arşiv sayaçları ile yeni durum metinlerini dört dilde ekle
+  - Hash taşıyan okunur SEO görsel URL'lerini non-original kümesine al
+  - LCP profilinde kökeni kanıtlanamayan türevlerin yanlış original etiketlenmesini önle
+  - Eski shard türevleri ve hash'siz düz dosya adı ayrımı için test ekle
+  - Medya yükleme akışını sayfadan bağımsız yüzen tepsiye taşıyarak aktarım, tarama ve işleme durumlarını ortak satır görünümüyle izlenebilir yaptı
+  - Görsellerin mağaza, ürün ve logo yerleşimlerinde nasıl kırpılacağını gösteren önizleme penceresi ve odak noktası kaydını ekledi
+  - Ürün görsellerini kareye tamamlama, ürün görseli optimize etme ve eski AVIF dosyalarını inceleme ekranlarını bağladı
+  - Medya kalite, türev, durum, erişilebilirlik ve hareket davranışları için test kapsamını genişletti
+  - Temiz taranmış ama türevi henüz doğrulanmamış medyayı kullanıcı için hazır göstererek tepsinin %75'te takılmasını önle
+  - Arka plan hazırlığını nötr ikinci satır, yavaş sınırlı yoklama ve dört dilde metinlerle ayır
+  - readyBackground fazı için sayım, yüzde, temizleme, rozet ve test kapsamını güncelle
+  - Gerçek backend uçlarına bağlı olay listesi, düzenleyici ve sürüm geçmişi ekranları eklendi; mock akışı kaldırılarak sözleşmeden sapma riski azaltıldı
+  - Bildirim içerik rolleri için ayrı menü, route guard ve arama kapsamı eklendi; bu kullanıcılar genel admin modüllerini görmeden panele girebilir
+  - Şablon dili, önizleme, doğrulama, diff, SMS ölçümü ve zengin metin yardımcıları testlerle eklendi; sunucuyla ortak fixture korunacak şekilde ayarlandı
+
+---
 ## [v1.19.0] - 2026-10-02 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
